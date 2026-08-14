@@ -46,16 +46,24 @@
   .stat-label { color:var(--muted); }
   .stat-value { color:var(--text); font-weight:600; }
 
-  .stock-grid { display:grid; gap:10px; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); margin-bottom:12px; }
-  .card { background:var(--panel); border:1px solid var(--border); border-radius:8px; overflow:hidden; }
-  .card-chart { height:50px; margin-bottom:8px; background:rgba(88,166,255,.04); }
-  .card .top { display:flex; align-items:center; gap:6px; padding:8px 10px; }
-  .card .name { font-weight:600; }
-  .card .id { color:var(--muted); font-size:11px; }
-  .card .px { margin-left:auto; font-weight:600; }
-  .remark { padding:4px 10px; font-size:11px; border-top:1px solid var(--border); }
-  .fund { padding:4px 10px; font-size:11px; border-top:1px solid var(--border); color:var(--muted); }
-  .catalyst { padding:4px 10px; font-size:10px; border-top:1px solid var(--border); color:#9fd0ff; }
+  .stock-detail { background:var(--panel); border:1px solid var(--border); border-radius:8px; margin-bottom:16px; overflow:hidden; }
+  .detail-header { padding:12px; border-bottom:1px solid var(--border); }
+  .detail-title { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px; }
+  .detail-title .name { font-weight:700; font-size:14px; }
+  .detail-title .price { font-weight:600; font-size:16px; margin-left:auto; }
+  .detail-meta { display:flex; gap:12px; font-size:11px; color:var(--muted); margin-top:6px; flex-wrap:wrap; }
+  .detail-meta .pct { color:var(--up); font-weight:600; }
+  .detail-meta .pct.down { color:var(--down); }
+  .detail-chart { height:250px; padding:12px; }
+  .detail-catalysts { padding:12px; border-top:1px solid var(--border); font-size:11px; }
+  .catalyst-item { margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid rgba(88,166,255,.1); }
+  .catalyst-item:last-child { border-bottom:none; margin-bottom:0; padding-bottom:0; }
+  .catalyst-label { font-weight:600; color:#9fd0ff; margin-bottom:3px; }
+  .catalyst-desc { color:var(--muted); line-height:1.4; }
+  .catalyst-upcoming { color:#f5c518; font-weight:600; }
+  .catalyst-impact { margin-top:6px; font-size:10px; color:var(--muted); }
+  .arrow-up { color:var(--up); margin-right:4px; }
+  .arrow-down { color:var(--down); margin-right:4px; }
 
   .stock-history { margin-top:20px; padding:12px 0; border-top:2px solid var(--border); }
   .stock-history .sh-title { font-size:12px; font-weight:700; color:#9fd0ff; text-transform:uppercase; margin-bottom:12px; }
@@ -175,45 +183,56 @@ function renderStockCard(ticker) {
   const last = inst.last_close;
   const bars = inst.bars || [];
   const pct24h = bars.length > 1 ? ((bars[bars.length-1].c / bars[bars.length-2].c) - 1) * 100 : 0;
-  const now = bars.length > 0 ? bars[bars.length-1].c : last;
-  const pct1m = bars.length > 21 ? ((now / bars[Math.max(0, bars.length-21)].c) - 1) * 100 : 0;
-  const pct3m = bars.length > 63 ? ((now / bars[Math.max(0, bars.length-63)].c) - 1) * 100 : 0;
-  const pct1y = bars.length > 252 ? ((now / bars[Math.max(0, bars.length-252)].c) - 1) * 100 : 0;
+  const pct1y = bars.length > 252 ? ((last / bars[Math.max(0, bars.length-252)].c) - 1) * 100 : 0;
+  const rsi = inst.rsi || 0;
 
   const fund = FUND && FUND[ticker] || {};
   const fwdPE = fund.fwd_pe ? fund.fwd_pe.toFixed(1) : "—";
+  const earningsDate = inst.next_earnings ? inst.next_earnings : "—";
 
-  const latest2 = getLatest2Catalysts(ticker);
-  const past2Earnings = getPast2Earnings(ticker);
+  const moves = MOVES && MOVES[ticker] && MOVES[ticker].moves ? MOVES[ticker].moves : [];
+  const past2Earnings = moves.filter(m => isEarnings(m.reason)).slice(0, 2);
 
+  // Build catalyst section
   let catalystHtml = '';
-  if (latest2.length > 0) {
-    const cat = latest2[0];
-    catalystHtml += `<div class="catalyst">Latest: ${cat.d} ${cat.pct >= 0 ? '+' : ''}${cat.pct.toFixed(1)}%<br>${esc((cat.reason || '').substring(0, 60))}</div>`;
-  }
-  if (latest2.length > 1) {
-    const cat = latest2[1];
-    catalystHtml += `<div class="catalyst">Prev: ${cat.d} ${cat.pct >= 0 ? '+' : ''}${cat.pct.toFixed(1)}%<br>${esc((cat.reason || '').substring(0, 60))}</div>`;
-  }
-
-  let earningsHtml = '';
   if (past2Earnings.length > 0) {
-    earningsHtml += `<div class="catalyst">E1: ${past2Earnings[0].d} ${past2Earnings[0].pct >= 0 ? '+' : ''}${past2Earnings[0].pct.toFixed(1)}%</div>`;
-  }
-  if (past2Earnings.length > 1) {
-    earningsHtml += `<div class="catalyst">E2: ${past2Earnings[1].d} ${past2Earnings[1].pct >= 0 ? '+' : ''}${past2Earnings[1].pct.toFixed(1)}%</div>`;
+    const e1 = past2Earnings[0];
+    const daysUntilOrAgo = Math.ceil((new Date(e1.d) - new Date()) / (1000 * 60 * 60 * 24));
+    catalystHtml += `<div class="catalyst-item">
+      <div class="catalyst-label catalyst-upcoming">📊 Earnings ${e1.d} (${Math.abs(daysUntilOrAgo)}d)</div>
+      <div class="catalyst-desc">${esc(e1.reason)}</div>
+      <div class="catalyst-impact">${e1.pct >= 0 ? '✓' : '✗'} Impact: ${e1.pct >= 0 ? '+' : ''}${e1.pct.toFixed(1)}%</div>
+    </div>`;
   }
 
-  return `<div class="card">
-    <div id="sparkline-${ticker}" class="card-chart"></div>
-    <div class="top">
-      <div><div class="name">${esc(inst.label)}</div><div class="id">${esc(ticker)}</div></div>
-      <div class="px">$${last.toLocaleString(undefined, {maximumFractionDigits:2})}</div>
+  for (const move of moves.slice(0, 3)) {
+    if (!isEarnings(move.reason)) {
+      catalystHtml += `<div class="catalyst-item">
+        <div class="catalyst-label">${move.d}</div>
+        <div class="catalyst-desc">${esc(move.reason)}</div>
+        <div class="catalyst-impact">${move.pct >= 0 ? '<span class="arrow-up">↑</span>' : '<span class="arrow-down">↓</span>'} ${move.pct >= 0 ? '+' : ''}${move.pct.toFixed(1)}%</div>
+      </div>`;
+    }
+  }
+
+  return `<div class="stock-detail">
+    <div class="detail-header">
+      <div class="detail-title">
+        <div><span class="name">${esc(inst.label)}</span> <span style="color:var(--muted);font-size:12px;margin-left:8px;">${esc(ticker)}</span></div>
+        <div class="price">$${last.toLocaleString(undefined, {maximumFractionDigits:2})}</div>
+      </div>
+      <div class="detail-meta">
+        <span class="pct ${pct24h < 0 ? 'down' : ''}">${pct24h >= 0 ? '+' : ''}${pct24h.toFixed(2)}%</span>
+        <span class="pct ${pct1y < 0 ? 'down' : ''}">${pct1y >= 0 ? '+' : ''}${pct1y.toFixed(2)}%</span>
+        <span>Fwd P/E: ${fwdPE}x</span>
+        <span>RSI: ${rsi.toFixed(1)}</span>
+        <span>Earnings: ${earningsDate}</span>
+      </div>
     </div>
-    <div class="remark">${getPerfBadge(pct24h)} 24h | 1m: ${pct1m >= 0 ? '+' : ''}${pct1m.toFixed(1)}% | 3m: ${pct3m >= 0 ? '+' : ''}${pct3m.toFixed(1)}% | 1y: ${pct1y >= 0 ? '+' : ''}${pct1y.toFixed(1)}%</div>
-    <div class="fund">Fwd P/E: <b>${fwdPE}x</b></div>
-    ${catalystHtml}
-    ${earningsHtml}
+    <div class="detail-chart" id="chart-${ticker}"></div>
+    <div class="detail-catalysts">
+      ${catalystHtml}
+    </div>
   </div>`;
 }
 
@@ -275,49 +294,9 @@ function renderCategoryTab(categoryName) {
   const idx = getCategoryIndex();
   const tickers = idx[categoryName] || [];
 
-  html += `<div class="stock-grid">`;
   for (const ticker of tickers) {
     html += renderStockCard(ticker);
   }
-  html += `</div>`;
-
-  // Stock History section
-  html += `<div class="stock-history">
-    <div class="sh-title">Stock History</div>`;
-
-  for (const ticker of tickers) {
-    const inst = DATA.instruments.find(i => i.id === ticker);
-    if (!inst) continue;
-
-    const moves = MOVES && MOVES[ticker] && MOVES[ticker].moves ? MOVES[ticker].moves : [];
-
-    html += `<div class="sh-card">
-      <div class="sh-top">${esc(inst.label)} (${esc(ticker)})</div>
-      <div id="chart-${ticker}" class="chart"></div>`;
-
-    // Earnings labels
-    const past2Earnings = moves.filter(m => isEarnings(m.reason)).slice(0, 2);
-    if (past2Earnings.length > 0) {
-      html += `<div class="earnings-label">E1: ${past2Earnings[0].d} ${past2Earnings[0].pct >= 0 ? '+' : ''}${past2Earnings[0].pct.toFixed(1)}%</div>`;
-      html += `<div class="earnings-reason">${esc(past2Earnings[0].reason)}</div>`;
-    }
-    if (past2Earnings.length > 1) {
-      html += `<div class="earnings-label" style="margin-top:8px;">E2: ${past2Earnings[1].d} ${past2Earnings[1].pct >= 0 ? '+' : ''}${past2Earnings[1].pct.toFixed(1)}%</div>`;
-      html += `<div class="earnings-reason">${esc(past2Earnings[1].reason)}</div>`;
-    }
-
-    html += `<table class="moves-table" style="margin-top:12px;">
-      <tr><th>Date</th><th>Move %</th><th>Reason</th></tr>`;
-
-    for (const move of moves) {
-      const pctClass = move.pct >= 0 ? 'u' : 'd';
-      html += `<tr><td>${move.d}</td><td class="pct ${pctClass}">${move.pct >= 0 ? '+' : ''}${move.pct.toFixed(1)}%</td><td>${esc((move.reason || '').substring(0, 80))}</td></tr>`;
-    }
-
-    html += `</table></div>`;
-  }
-
-  html += `</div>`;
 
   return html;
 }
@@ -379,25 +358,6 @@ function renderCharts(categoryId) {
   const idx = getCategoryIndex();
   const tickers = idx[categoryId] || [];
 
-  console.log(`[${categoryId}] renderCharts: ${tickers.length} tickers`);
-
-  // Render sparklines (in cards)
-  for (const ticker of tickers) {
-    const inst = DATA.instruments.find(i => i.id === ticker);
-    if (!inst || !inst.bars || inst.bars.length === 0) continue;
-
-    const sparkContainer = document.getElementById(`sparkline-${ticker}`);
-    if (sparkContainer) {
-      try {
-        renderSparkline(sparkContainer, inst);
-        console.log(`  ${ticker}: ✓ sparkline`);
-      } catch (e) {
-        console.error(`  ${ticker} sparkline:`, e.message);
-      }
-    }
-  }
-
-  // Render large history charts
   for (const ticker of tickers) {
     const inst = DATA.instruments.find(i => i.id === ticker);
     if (!inst || !inst.bars || inst.bars.length === 0) continue;
@@ -406,19 +366,12 @@ function renderCharts(categoryId) {
     if (!chartContainer) continue;
 
     try {
-      const width = chartContainer.clientWidth;
-      if (width === 0) {
-        setTimeout(() => {
-          const w = chartContainer.clientWidth;
-          if (w > 0) renderLargeChart(chartContainer, inst);
-        }, 100);
-        continue;
-      }
-
-      renderLargeChart(chartContainer, inst);
-      console.log(`  ${ticker}: ✓ history chart`);
+      setTimeout(() => {
+        const w = chartContainer.clientWidth;
+        if (w > 0) renderLargeChart(chartContainer, inst);
+      }, 50);
     } catch (e) {
-      console.error(`  ${ticker} chart:`, e.message);
+      console.error(`${ticker}:`, e.message);
     }
   }
 }
@@ -437,73 +390,42 @@ function calcSMA(bars, period) {
   return result;
 }
 
-function renderSparkline(container, inst) {
-  const chart = LightweightCharts.createChart(container, {
-    width: container.clientWidth,
-    height: 50,
-    layout: { background: { color: 'transparent' }, textColor: '#e6edf3' },
-    timeScale: { visible: false },
-    rightPriceScale: { visible: false },
-    grid: { vertLines: { visible: false }, horzLines: { visible: false } },
-  });
-
-  const bars = inst.bars.slice(-90);
-  const closes = bars.map(b => b.c);
-  const sma20 = calcSMA(bars, 20);
-  const sma50 = calcSMA(bars, 50);
-
-  const priceSeries = chart.addLineSeries({ color: '#ff6b9d', lineWidth: 2 });
-  priceSeries.setData(bars.map((b, i) => ({ time: b.d, value: b.c })));
-
-  const sma20Series = chart.addLineSeries({ color: '#58a6ff', lineWidth: 1 });
-  sma20Series.setData(bars.map((b, i) => ({ time: b.d, value: sma20[i] })).filter(d => d.value !== null));
-
-  const sma50Series = chart.addLineSeries({ color: '#8866dd', lineWidth: 1 });
-  sma50Series.setData(bars.map((b, i) => ({ time: b.d, value: sma50[i] })).filter(d => d.value !== null));
-
-  chart.timeScale().fitContent();
-}
-
 function renderLargeChart(container, inst) {
+  if (!container || container.clientWidth === 0) return;
+
   const chart = LightweightCharts.createChart(container, {
     width: container.clientWidth,
-    height: 200,
+    height: 250,
     layout: { background: { color: '#0d1117' }, textColor: '#e6edf3' },
     timeScale: { timeVisible: true, secondsVisible: false },
     grid: { vertLines: { visible: false }, horzLines: { visible: false } },
   });
 
   const bars = inst.bars;
-  const closes = bars.map(b => b.c);
   const sma20 = calcSMA(bars, 20);
   const sma50 = calcSMA(bars, 50);
+  const lastPrice = bars[bars.length - 1].c;
 
-  const priceSeries = chart.addLineSeries({ color: '#ff6b9d', lineWidth: 2 });
-  priceSeries.setData(bars.map((b, i) => ({ time: b.d, value: b.c })));
+  // Price line (pink)
+  const priceSeries = chart.addLineSeries({ color: '#ff6b9d', lineWidth: 2.5 });
+  priceSeries.setData(bars.map(b => ({ time: b.d, value: b.c })));
 
-  const sma20Series = chart.addLineSeries({ color: '#58a6ff', lineWidth: 1.5 });
+  // SMA20 (gold)
+  const sma20Series = chart.addLineSeries({ color: '#d4a85f', lineWidth: 1.5 });
   sma20Series.setData(bars.map((b, i) => ({ time: b.d, value: sma20[i] })).filter(d => d.value !== null));
 
-  const sma50Series = chart.addLineSeries({ color: '#8866dd', lineWidth: 1.5 });
+  // SMA50 (blue)
+  const sma50Series = chart.addLineSeries({ color: '#58a6ff', lineWidth: 1.5 });
   sma50Series.setData(bars.map((b, i) => ({ time: b.d, value: sma50[i] })).filter(d => d.value !== null));
 
-  // Add support/resistance levels if available
-  if (inst.levels && inst.levels['3m']) {
-    const support = inst.levels['3m'].support || [];
-    const resistance = inst.levels['3m'].resistance || [];
+  // Support line (lowest support level or SMA200 proxy)
+  const sma200 = calcSMA(bars, 200);
+  const supportSeries = chart.addLineSeries({ color: '#ff6b9d', lineWidth: 1 });
+  supportSeries.setData(bars.map((b, i) => ({ time: b.d, value: sma200[i] })).filter(d => d.value !== null));
 
-    [...support, ...resistance].slice(0, 3).forEach(level => {
-      if (level.price) {
-        const series = chart.addLineSeries({
-          color: resistance.includes(level) ? '#ff4444' : '#44ff44',
-          lineWidth: 1,
-          lineStyle: 2
-        });
-        const fixedLine = bars.map(b => ({ time: b.d, value: level.price }));
-        series.setData(fixedLine);
-      }
-    });
-  }
+  // Current price line (dotted)
+  const currentSeries = chart.addLineSeries({ color: '#ff6b9d', lineWidth: 1, lineStyle: 2 });
+  currentSeries.setData(bars.map(b => ({ time: b.d, value: lastPrice })));
 
   chart.timeScale().fitContent();
 }
