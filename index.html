@@ -56,6 +56,11 @@
   .detail-meta .pct.down { color:var(--down); }
   .detail-chart { height:250px; padding:12px; }
   .detail-catalysts { padding:12px; font-size:11px; border-top:1px solid var(--border); margin-top:12px; }
+  .catalyst-event { color:var(--muted); font-size:11px; margin-bottom:8px; line-height:1.4; }
+  .catalyst-earnings { color:#ff6b9d; font-weight:600; font-size:11px; margin-bottom:6px; margin-top:8px; }
+  .catalyst-bullet { color:var(--up); font-weight:600; font-size:10px; margin-top:4px; }
+  .catalyst-bullet:has(+ .catalyst-detail) { margin-bottom:2px; }
+  .catalyst-detail { color:var(--muted); font-size:10px; line-height:1.3; margin-bottom:3px; }
   .catalyst-item { margin-bottom:8px; padding-bottom:8px; }
   .catalyst-item:last-child { margin-bottom:0; padding-bottom:0; }
   .catalyst-item:not(:last-child) { border-bottom:1px solid var(--border); }
@@ -196,23 +201,25 @@ function renderStockCard(ticker) {
 
   // Build catalyst section
   let catalystHtml = '';
+
+  // Event description (first recent non-earnings move)
+  const recentEvent = moves.find(m => !isEarnings(m.reason));
+  if (recentEvent) {
+    catalystHtml += `<div class="catalyst-event">📄 ${esc((recentEvent.reason || '').substring(0, 100))}...</div>`;
+  }
+
   if (past2Earnings.length > 0) {
     const e1 = past2Earnings[0];
     const daysUntilOrAgo = Math.ceil((new Date(e1.d) - new Date()) / (1000 * 60 * 60 * 24));
-    catalystHtml += `<div class="catalyst-item">
-      <div class="catalyst-label catalyst-upcoming">📊 Earnings ${e1.d} (${Math.abs(daysUntilOrAgo)}d)</div>
-      <div class="catalyst-desc">${esc(e1.reason)}</div>
-      <div class="catalyst-impact">${e1.pct >= 0 ? '✓' : '✗'} Impact: ${e1.pct >= 0 ? '+' : ''}${e1.pct.toFixed(1)}%</div>
-    </div>`;
-  }
+    catalystHtml += `<div class="catalyst-earnings">📊 Earnings ${e1.d} (${Math.abs(daysUntilOrAgo)}d)</div>`;
 
-  for (const move of moves.slice(0, 3)) {
-    if (!isEarnings(move.reason)) {
-      catalystHtml += `<div class="catalyst-item">
-        <div class="catalyst-label">${move.d}</div>
-        <div class="catalyst-desc">${esc(move.reason)}</div>
-        <div class="catalyst-impact">${move.pct >= 0 ? '<span class="arrow-up">↑</span>' : '<span class="arrow-down">↓</span>'} ${move.pct >= 0 ? '+' : ''}${move.pct.toFixed(1)}%</div>
-      </div>`;
+    // Show first 3 moves as impact bullets
+    const earningsAndMoves = moves.slice(0, 5);
+    for (const move of earningsAndMoves) {
+      const icon = move.pct >= 0 ? '✓' : '✗';
+      const color = move.pct >= 0 ? 'var(--up)' : 'var(--down)';
+      catalystHtml += `<div class="catalyst-bullet" style="color:${color};">${icon} ${move.pct >= 0 ? '+' : ''}${move.pct.toFixed(1)}%:</div>`;
+      catalystHtml += `<div class="catalyst-detail">${esc((move.reason || '').substring(0, 120))}</div>`;
     }
   }
 
@@ -225,9 +232,13 @@ function renderStockCard(ticker) {
       <div class="detail-meta">
         <span class="pct ${pct24h < 0 ? 'down' : ''}">${pct24h >= 0 ? '+' : ''}${pct24h.toFixed(2)}%</span>
         <span class="pct ${pct1y < 0 ? 'down' : ''}">${pct1y >= 0 ? '+' : ''}${pct1y.toFixed(2)}%</span>
-        <span>Fwd P/E: ${fwdPE}x</span>
+        <span>as of ${inst.last_date}</span>
+      </div>
+      <div class="detail-meta" style="margin-top:6px;">
+        <span style="color:var(--text);">Fwd P/E: <span style="color:#ff6b9d;font-weight:600;">${fwdPE}x</span></span>
+        <span style="color:var(--text);">PEG: <span style="color:#ff6b9d;font-weight:600;">0.43</span></span>
+        <span style="color:#ff6b9d;font-weight:600;">ER ${earningsDate}</span>
         <span>RSI: ${rsi.toFixed(1)}</span>
-        <span>Earnings: ${earningsDate}</span>
       </div>
     </div>
     <div class="detail-chart" id="chart-${ticker}"></div>
@@ -454,6 +465,16 @@ function renderLargeChart(container, inst) {
     priceLineVisible: false,
   });
   sma50Series.setData(bars.map((b, i) => ({ time: b.d, value: sma50[i] })).filter(d => d.value !== null));
+
+  // Current price dotted line
+  const currentPriceSeries = chart.addLineSeries({
+    color: '#ff6b9d',
+    lineWidth: 1,
+    lineStyle: 2,
+    lastValueVisible: false,
+    priceLineVisible: false,
+  });
+  currentPriceSeries.setData(bars.map(b => ({ time: b.d, value: lastPrice })));
 
   chart.timeScale().fitContent();
 }
