@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Supply Chain Intelligence</title><!-- Cache bust: 1786645109 -->
+<title>Supply Chain Intelligence</title>
 <style>
   :root {
     --bg:#0d1117; --panel:#161b22; --border:#21262d; --text:#e6edf3;
@@ -17,28 +17,12 @@
     background:var(--bg); z-index:5; }
   header h1 { margin:0 0 3px; font-size:15px; font-weight:600; letter-spacing:.3px; display:inline; }
   header .meta { color:var(--muted); font-size:12px; margin-left:10px; }
-  header .tabs { display:flex; gap:0; margin-top:8px; border-bottom:1px solid var(--border); }
-  header .tab { padding:8px 12px; cursor:pointer; color:var(--muted); font-size:12px; font-weight:600;
-    text-transform:uppercase; letter-spacing:.4px; border-bottom:2px solid transparent; }
-  header .tab.active { color:var(--text); border-bottom-color:#58a6ff; }
-  header .tab:hover { color:var(--text); }
   #stale { display:none; background:var(--down); color:#fff; padding:10px 16px; font-weight:600; text-align:center; }
   #stale.show { display:block; }
-  main { padding:12px; display:none; }
-  main.active { display:block; }
-  .category-header { background:#1b2835; border:1px solid #2d3f5a; border-radius:8px; padding:10px 12px;
-    margin-bottom:12px; font-size:11px; }
-  .category-title { font-weight:700; color:#58a6ff; text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
-  .category-stats { display:flex; gap:16px; flex-wrap:wrap; font-size:11px; color:var(--muted); }
-  .stat { display:flex; gap:4px; }
-  .stat-label { color:var(--muted); }
-  .stat-value { color:var(--text); font-weight:600; }
-  .region-label { font-size:12px; font-weight:700; color:#58a6ff; text-transform:uppercase;
-    letter-spacing:.4px; margin-top:16px; margin-bottom:8px; padding:8px 0; border-top:1px solid var(--border); }
-  .region-label:first-child { margin-top:0; border-top:none; }
-  .subcategory { font-size:11px; color:var(--muted); margin-bottom:8px; padding:6px 8px;
-    background:rgba(88,166,255,.06); border-radius:4px; }
-  .stock-grid { display:grid; gap:10px; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); margin-bottom:16px; }
+  .monitor-grid { padding:12px; display:grid; gap:10px; grid-template-columns:repeat(auto-fill,minmax(460px,1fr)); }
+  .section { grid-column:1/-1; font-size:12px; font-weight:600; color:var(--muted);
+    text-transform:uppercase; letter-spacing:.5px; padding:8px 2px 2px; border-bottom:1px solid var(--border); }
+  .section.subcat { color:#d4a85f; }
   .card { background:var(--panel); border:1px solid var(--border); border-radius:8px; overflow:hidden; }
   .card .top { display:flex; align-items:center; gap:6px; padding:8px 10px; flex-wrap:wrap; }
   .card .name { font-weight:600; }
@@ -50,272 +34,643 @@
   .badge.up { color:var(--up); background:rgba(38,166,65,.14); }
   .badge.down { color:var(--down); background:rgba(248,81,73,.14); }
   .badge.flat { color:var(--muted); background:rgba(125,133,144,.14); }
-  .fund { padding:6px 10px; font-size:10px; color:var(--muted); border-top:1px solid var(--border);
-    font-variant-numeric:tabular-nums; }
-  .remark { padding:6px 10px; font-size:10px; border-top:1px solid var(--border);
+  .badge.cta-long { color:var(--up); background:rgba(38,166,65,.10); }
+  .badge.cta-short { color:var(--down); background:rgba(248,81,73,.10); }
+  .remark { padding:5px 10px; font-size:11px; border-bottom:1px solid var(--border);
     font-variant-numeric:tabular-nums; }
   .remark.enter { color:var(--up); }
   .remark.exit { color:var(--down); }
-  .cat { padding:5px 10px; font-size:10px; color:var(--text); border-top:1px solid var(--border); }
+  .remark.muted { color:var(--muted); }
+  .remark .muted { color:var(--muted); }
+  .fund { padding:4px 10px; font-size:11px; color:var(--muted); border-bottom:1px solid var(--border);
+    font-variant-numeric:tabular-nums; }
+  .news { padding:5px 10px; font-size:11px; color:#9fd0ff; border-bottom:1px solid var(--border); }
+  .cat { padding:5px 10px; font-size:11px; color:var(--text); border-top:1px solid var(--border); }
   .cat b.e { color:var(--down); }
+  .catline { padding:5px 10px; font-size:11px; color:#c9a5f0; border-top:1px solid var(--border); }
+  .teleblock { padding:6px 10px; font-size:11px; border-top:1px solid var(--border); background:rgba(240,180,41,.05); }
+  .teleblock .th { color:#f0b429; font-weight:600; margin-bottom:2px; }
+  .teleblock .tb { color:var(--text); margin:2px 0; white-space:pre-line; }
+  .teleblock .tb:last-child { margin-bottom:0; }
+  .earn { padding:6px 10px; font-size:11px; border-top:1px solid var(--border); background:rgba(88,166,255,.05); }
+  .earn .eh { color:var(--muted); }
+  .earn .efocus { color:#9fd0ff; margin-top:3px; }
+  .ct-prev { color:#c9a5f0; margin-top:3px; }
+  .ct-event { font-weight:600; }
+  .ct-focus { color:#9fd0ff; margin-top:2px; }
+  .chart { height:300px; }
+  #ideas { padding:10px 12px; border-bottom:1px solid var(--border); background:#12161c; }
+  #catalysts30 { padding:10px 12px; border-bottom:1px solid var(--border); background:#12161c; }
+  #pastCatalysts { padding:10px 12px; border-bottom:1px solid var(--border); background:#12161c; }
+  .ct-head { font-size:11px; font-weight:700; letter-spacing:.5px; text-transform:uppercase;
+    color:#9fd0ff; margin:2px 0 6px; }
+  .ct-table { width:100%; border-collapse:collapse; font-size:12px; }
+  .ct-table th { text-align:left; color:var(--muted); font-weight:600; font-size:10px;
+    text-transform:uppercase; letter-spacing:.4px; padding:4px 8px; border-bottom:1px solid var(--border); }
+  .ct-table td { padding:5px 8px; border-bottom:1px solid #1b2027; vertical-align:top; }
+  .ct-table tr { cursor:pointer; }
+  .ct-table tr:hover td { background:rgba(88,166,255,.06); }
+  .ct-tk { white-space:nowrap; }
+  .ct-dt { white-space:nowrap; font-variant-numeric:tabular-nums; color:var(--text); }
+  .ct-tx b.e { color:#9fd0ff; }
+  .ideas-head { font-size:11px; font-weight:700; letter-spacing:.5px; text-transform:uppercase;
+    color:#f5c518; margin:2px 0 6px; }
+  .ideas-head.tp { color:var(--down); margin-top:10px; }
+  .ideas-row { display:flex; gap:8px; flex-wrap:wrap; }
+  .ideabox { border:1px solid #f5c518; border-radius:8px; padding:7px 10px; min-width:210px;
+    background:rgba(245,197,24,.06); font-size:12px; }
+  .ideabox .ih { font-weight:600; margin-bottom:2px; }
+  .ideabox .ih .id { color:var(--muted); font-size:10px; font-weight:400; }
+  .ideabox .ir { color:var(--muted); font-size:11px; margin-bottom:3px; }
+  .ideabox .nw { color:#9fd0ff; font-size:11px; margin-top:3px; }
+  .tpchip { border:1px solid var(--down); border-radius:6px; padding:4px 8px; font-size:11px;
+    color:var(--down); background:rgba(248,81,73,.06); }
+  .tpchip .id { color:var(--muted); font-size:10px; font-weight:400; }
+  .card.enter-idea { border-color:#f5c518; box-shadow:inset 0 0 0 2px #f5c518; }
+  .er-soon { color:var(--down); font-weight:600; }
+  .ideabox, .tpchip { cursor:pointer; }
+  .ideabox:hover, .tpchip:hover { filter:brightness(1.25); }
+  .card.flash { animation:flash 1.2s ease-out; }
+  @keyframes flash { 0% { box-shadow:inset 0 0 0 2px #58a6ff; } 100% { box-shadow:none; } }
+  .tabs { display:flex; gap:4px; margin-top:6px; flex-wrap:wrap; }
+  .tabs button { background:transparent; border:1px solid var(--border); border-bottom:none;
+    color:var(--muted); padding:5px 14px; border-radius:6px 6px 0 0; cursor:pointer; font-size:13px; font-family:inherit; }
+  .tabs button.active { background:var(--panel); color:var(--text); }
+  /* Per-sector stock history (below the cards) */
+  .hist-wrap { padding:0 12px 12px; }
+  .hist-head { font-size:12px; font-weight:700; letter-spacing:.5px; text-transform:uppercase;
+    color:#9fd0ff; padding:14px 2px 8px; border-top:2px solid var(--border); margin-top:6px; }
+  .hist-grid { display:grid; gap:12px; grid-template-columns:repeat(auto-fill,minmax(470px,1fr)); }
+  .hcard { background:var(--panel); border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+  .hcard .htop { padding:8px 10px; font-weight:600; border-bottom:1px solid var(--border); }
+  .hcard .htop .id { color:var(--muted); font-size:11px; font-weight:400; }
+  .hchart { height:120px; }
+  .moves { padding:4px 10px 8px; font-size:12px; }
+  .mv { display:flex; gap:8px; padding:3px 0; border-top:1px solid #1b2027; align-items:baseline; }
+  .mv .md { color:var(--muted); font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .mv .mp { font-variant-numeric:tabular-nums; font-weight:600; white-space:nowrap; min-width:48px; }
+  .mv .mp.u { color:var(--up); } .mv .mp.d { color:var(--down); }
+  .mv .mr b { color:var(--text); } .mv .mr .mw { color:var(--muted); }
+  .mv .msrc { color:var(--muted); font-size:10px; }
 </style>
 </head>
 <body>
+<div id="stale"></div>
 <header>
-  <h1>Supply Chain Intelligence</h1>
-  <div class="meta">52 stocks · <span id="meta">loading...</span> · <a href="./index.html" style="color:#58a6ff;text-decoration:none;">← Stock Monitor</a></div>
-  <div class="tabs" id="tabs"></div>
+  <h1>Supply Chain Intelligence</h1><span class="meta" id="meta">loading…</span> · <a href="./index.html" style="color:#58a6ff;text-decoration:none;font-size:12px;margin-left:10px;">← monitor</a>
+  <nav class="tabs" id="tabs"></nav>
 </header>
-<div id="stale">Data is stale (>30 hours). Check back soon.</div>
-<main id="summary"></main>
-<main id="platform"></main>
-<main id="compute"></main>
-<main id="foundry"></main>
-<main id="memory"></main>
-<main id="equipment"></main>
-<main id="power"></main>
-<main id="history"></main>
+<div id="ideas"></div>
+<div id="catalysts30"></div>
+<div id="pastCatalysts"></div>
+<div id="grids"></div>
 
-<script src="https://unpkg.com/lightweight-charts@3/dist/lightweight-charts.standalone.production.js"></script>
+<script src="./vendor/lightweight-charts.standalone.production.js"></script>
 <script>
-let DATA = null, MOVES = null, FUND = null, SC_MAP = null;
+"use strict";
+const TREND_ORDER = { up: 0, flat: 1, down: 2 };
+let DATA = null, MOVES = null, SC_MAP = null, STALE = false, OBSERVER = null;
 
+// Supply-chain category tabs. Keys must match getCategory() output.
 const CATEGORIES = [
-  { id: "summary", label: "Summary" },
-  { id: "platform", label: "Platform & Hyperscaler" },
-  { id: "compute", label: "Compute" },
-  { id: "foundry", label: "Foundry" },
-  { id: "memory", label: "Memory" },
-  { id: "equipment", label: "Equipment" },
-  { id: "power", label: "Power/Analog" },
-  { id: "history", label: "Stock History" }
+  { key: "hyperscaler-cloud", label: "Tech Platforms" },
+  { key: "compute",           label: "Compute" },
+  { key: "foundry",           label: "Foundry" },
+  { key: "memory",            label: "Memory" },
+  { key: "equipment",         label: "Equipment" },
+  { key: "power-analog",      label: "Power/Analog" },
+  { key: "china-internet",    label: "China Internet" },
+  { key: "china-ev",          label: "China EV" },
+  { key: "singapore",         label: "Singapore" },
+  { key: "se-asia-tech",      label: "SE Asia" },
+  { key: "consumer",          label: "Consumer" },
 ];
+const CAT_KEYS = new Set(CATEGORIES.map(c => c.key));
 
-function esc(s) { return (s||"").replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;" })[c]); }
-
-function checkStale(data) {
-  if (!data || !data.generated_at) return false;
-  const age = (Date.now() - new Date(data.generated_at).getTime()) / 3600000;
-  return age > 30;
+// Map a raw supply-chain-map category to a tab key (consolidates small buckets).
+function getCategory(inst) {
+  const m = SC_MAP && SC_MAP[inst.id];
+  if (!m) return null;
+  let c = m.category;
+  if (c === "platform") c = "hyperscaler-cloud";
+  if (c.startsWith("singapore")) c = "singapore";
+  if (c === "china-hardware") c = "china-ev";
+  if (c === "global-consumer" || c === "consumer-electronics") c = "consumer";
+  return CAT_KEYS.has(c) ? c : null;   // benchmarks (SPY/QQQ) -> no tab, summary only
+}
+function getSubcategory(inst) {
+  const m = SC_MAP && SC_MAP[inst.id];
+  return m && m.subcategory ? m.subcategory : "Other";
 }
 
-function getPerfBadge(pct) {
-  if (!pct && pct !== 0) return "";
-  const cls = pct >= 0 ? "up" : "down";
-  const sign = pct >= 0 ? "+" : "";
-  return `<span class="badge ${cls}">${sign}${pct.toFixed(1)}%</span>`;
+function esc(s) {
+  if (s == null) return "";
+  const div = document.createElement("div");
+  div.textContent = String(s);
+  return div.innerHTML;
 }
 
-function categoryIndex() {
-  if (!SC_MAP) return {};
-  const idx = {};
-  for (const ticker of Object.keys(SC_MAP)) {
-    const info = SC_MAP[ticker];
-    const cat = info.category;
-    if (!idx[cat]) idx[cat] = {};
-    if (!idx[cat][info.region]) idx[cat][info.region] = [];
-    idx[cat][info.region].push(ticker);
+function smaSeries(closes, period) {
+  const out = []; let sum = 0;
+  for (let i = 0; i < closes.length; i++) {
+    sum += closes[i]; if (i >= period) sum -= closes[i - period];
+    out.push(i >= period - 1 ? sum / period : null);
   }
-  return idx;
+  return out;
 }
-
-function getCategoryStats(categoryName, region) {
-  const idx = categoryIndex();
-  const tickers = (idx[categoryName] && idx[categoryName][region]) || [];
-  if (!tickers.length) return null;
-
-  let perf1m = 0, perf3m = 0, perf1y = 0, count = 0;
-  let catalystCount = 0;
-
-  for (const ticker of tickers) {
-    const inst = DATA.instruments.find(i => i.id === ticker);
-    if (!inst || !inst.bars || !inst.bars.length) continue;
-
-    const bars = inst.bars;
-    const now = bars[bars.length - 1].c;
-    const bar21 = bars[Math.max(0, bars.length - 21)].c;
-    const bar63 = bars[Math.max(0, bars.length - 63)].c;
-    const bar252 = bars[Math.max(0, bars.length - 252)].c;
-
-    perf1m += (now / bar21 - 1) * 100;
-    perf3m += (now / bar63 - 1) * 100;
-    perf1y += (now / bar252 - 1) * 100;
-    count++;
-
-    if (MOVES && MOVES[ticker]) {
-      const upcoming = (MOVES[ticker].upcoming || []).filter(e => new Date(e.date) >= new Date()).length;
-      catalystCount += upcoming;
-    }
+function fmtPct(v) {
+  if (v === null || v === undefined) return "";
+  return `<span class="pct ${v >= 0 ? "u" : "d"}">${v >= 0 ? "+" : ""}${v.toFixed(2)}%</span>`;
+}
+function checkStale(p) {
+  const ageH = (Date.now() - new Date(p.generated_at).getTime()) / 3.6e6;
+  const limit = p.stale_after_hours || 30;
+  const b = document.getElementById("stale");
+  if (ageH > limit) {
+    b.textContent = `⚠ DATA STALE — ${ageH.toFixed(1)}h old (limit ${limit}h). Levels hidden; don't trade off this until it refreshes.`;
+    b.classList.add("show"); return true;
   }
-
-  if (count === 0) return null;
-  return { perf1m: perf1m/count, perf3m: perf3m/count, perf1y: perf1y/count, catalystCount };
+  return false;
+}
+function daysTo(ds) {
+  // Pure UTC calendar-day difference (see stock-monitor index.html for why).
+  if (!ds) return null;
+  const [y, m, d] = ds.split("-").map(Number);
+  const target = Date.UTC(y, m - 1, d);
+  const now = new Date();
+  const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  return Math.round((target - today) / 8.64e7);
 }
 
-function renderCategoryTab(categoryName) {
-  if (categoryName === "summary") return renderSummaryTab();
-  if (categoryName === "history") return renderHistoryTab();
-
-  const idx = categoryIndex();
-  const regions = idx[categoryName] ? Object.keys(idx[categoryName]) : [];
-
-  let html = `<div class="category-header">
-    <div class="category-title">${esc(categoryName)}</div>
+function earnTag(dateStr) {
+  if (!dateStr) return "";
+  const days = daysTo(dateStr);
+  if (days == null || days < 0) return "";
+  if (days <= 30) return `<span class="er-soon">ER ${dateStr} (${days}d)</span>`;
+  return `ER ${dateStr}`;
+}
+function fundLine(inst) {
+  const f = inst.fund, iv = inst.iv, p = [];
+  if (f) {
+    if (f.fwd_pe != null) p.push(`fwd P/E ${f.fwd_pe.toFixed(1)}`);
+    if (f.peg != null) p.push(`PEG ${f.peg.toFixed(2)}`);
+    if (f.next_earnings) p.push(earnTag(f.next_earnings));
+  }
+  if (iv) {
+    const hot = iv.iv_rank >= 80 ? ' class="er-soon"' : "";
+    p.push(`<span${hot}>IVr ${iv.iv_rank}% · ±${iv.move_1m}%/mo</span>`);
+  } else if (inst.rvol != null) {
+    p.push(`vol ${inst.rvol}% · ±${inst.rmove}%/mo`);
+  }
+  return p.join(" · ");
+}
+function teleResearch(inst) {
+  const t = inst.tele;
+  if (!t) return "";
+  const rows = [];
+  if (t.catalysts) rows.push(`<div class="tb">🗓 ${esc(t.catalysts.replace(/\*\*/g, ""))}</div>`);
+  if (t.fundamentals) rows.push(`<div class="tb">📊 ${esc(t.fundamentals.replace(/\*\*/g, ""))}</div>`);
+  if (t.historicals) rows.push(`<div class="tb">📈 ${esc(t.historicals.replace(/\*\*/g, ""))}</div>`);
+  if (!rows.length) return "";
+  return `<div class="teleblock"><div class="th">🔒 Your research (via Telegram)</div>${rows.join("")}</div>`;
+}
+function ideaBox(inst) {
+  const i = inst.idea, f = inst.fund;
+  const val = f ? [f.fwd_pe != null ? `fwd P/E ${f.fwd_pe.toFixed(1)}` : "", f.peg != null ? `PEG ${f.peg.toFixed(2)}` : ""].filter(Boolean).join(" · ") : "";
+  const er = f && f.next_earnings ? earnTag(f.next_earnings) : "";
+  const types = i.types.join(" + ");
+  const exitList = (inst.exit_triggers || []).length
+    ? `<div class="ir">watch for: ${inst.exit_triggers.join(" · ")}</div>` : "";
+  return `<div class="ideabox" onclick="goTo('${inst.id}')">
+    <div class="ih"><b>${inst.label}</b> <span class="id">${inst.id}</span> · ${val}</div>
+    <div class="ir"><b>${types}</b>${er ? " · " + er : ""} · RSI ${inst.rsi ?? "–"}${inst.weekly_rsi != null ? ` (wk ${inst.weekly_rsi})` : ""}</div>
+    ${exitList}
+    ${inst.iv && inst.iv.iv_rank >= 80 ? `<div class="nw" style="color:var(--down)">⚠ event risk — IV rank ${inst.iv.iv_rank}%, options pricing ±${inst.iv.move_1m}%/mo</div>` : ""}
+    ${inst.catalyst ? `<div class="catline">🎯 ${esc(inst.catalyst)}</div>` : ""}
+    ${inst.news ? `<div class="nw">📰 ${esc(inst.news)}</div>` : ""}
+    ${teleResearch(inst)}
   </div>`;
+}
+function filterByCategory(instruments, category) {
+  if (!category) return instruments;
+  return instruments.filter(i => getCategory(i) === category);
+}
 
-  for (const region of regions) {
-    const stats = getCategoryStats(categoryName, region);
-    if (stats) {
-      html += `<div class="category-header" style="margin-top:8px;">
-        <div style="font-size:12px; color:var(--muted);">${region === "US" ? "🇺🇸 US/Global" : "🇨🇳 China"}</div>
-        <div class="category-stats">
-          <div class="stat"><span class="stat-label">1m:</span> <span class="stat-value">${stats.perf1m >= 0 ? "+" : ""}${stats.perf1m.toFixed(1)}%</span></div>
-          <div class="stat"><span class="stat-label">3m:</span> <span class="stat-value">${stats.perf3m >= 0 ? "+" : ""}${stats.perf3m.toFixed(1)}%</span></div>
-          <div class="stat"><span class="stat-label">1y:</span> <span class="stat-value">${stats.perf1y >= 0 ? "+" : ""}${stats.perf1y.toFixed(1)}%</span></div>
-          <div class="stat"><span class="stat-label">Catalysts:</span> <span class="stat-value">${stats.catalystCount}</span></div>
-        </div>
-      </div>`;
-    }
+function renderIdeas(category) {
+  const el = document.getElementById("ideas");
+  if (STALE) { el.innerHTML = ""; return; }
+  const insts = category ? filterByCategory(DATA.instruments, category) : DATA.instruments;
+  const enters = insts.filter(i => i.idea && i.idea.kind === "enter");
+  const tps = insts.filter(i => i.idea && i.idea.kind === "take_profit");
+  let html = "";
+  if (enters.length) {
+    html += `<div class="ideas-head">⬤ Enter now (1-month) — dig fundamentals, then execute</div>`;
+    html += `<div class="ideas-row">${enters.map(ideaBox).join("")}</div>`;
+  }
+  if (tps.length) {
+    html += `<div class="ideas-head tp">Exit signal (profit-take OR stop-type — see trigger)</div>`;
+    html += `<div class="ideas-row">${tps.map(i => `<span class="tpchip" onclick="goTo('${i.id}')"><b>${i.label}</b> <span class="id">${i.id}</span> ${i.idea.types.join(" · ")}</span>`).join("")}</div>`;
+  }
+  el.innerHTML = html || `<div class="ideas-head">No confirmed entries right now — cash is a position.</div>`;
+}
 
-    const tickers = idx[categoryName][region] || [];
-    if (!tickers.length) continue;
-
-    html += `<div class="region-label">${region === "US" ? "🇺🇸 US/Global Stocks" : "🇨🇳 China Stocks"}</div>`;
-
-    // Group by subcategory
-    const subgroups = {};
-    for (const ticker of tickers) {
-      const subcat = SC_MAP[ticker].subcategory;
-      if (!subgroups[subcat]) subgroups[subcat] = [];
-      subgroups[subcat].push(ticker);
-    }
-
-    for (const [subcat, stickers] of Object.entries(subgroups)) {
-      html += `<div class="subcategory">${esc(subcat)}: ${stickers.map(t => esc(SC_MAP[t].name || t)).join(", ")}</div>`;
-
-      html += `<div class="stock-grid">`;
-      for (const ticker of stickers) {
-        html += renderStockCard(ticker);
+function prevPerfBlock(prev, label) {
+  const list = Array.isArray(prev) ? prev : (prev ? [prev] : []);
+  if (!list.length) return "";
+  const line = (p) => {
+    const cls = p.pct >= 0 ? "u" : "d";
+    const src = p.source ? ` <span class="msrc">[${esc(p.source)}]</span>` : "";
+    return `<div class="ct-prev">↩ <span class="pct ${cls}">${p.pct >= 0 ? "+" : ""}${p.pct}%</span>: ${esc(p.reason)}${src}</div>`;
+  };
+  return list.map(p => line(p)).join("");
+}
+function catalystRows(category) {
+  const rows = [];
+  const insts = category ? filterByCategory(DATA.instruments, category) : DATA.instruments;
+  for (const inst of insts) {
+    const f = inst.fund || {};
+    if (f.next_earnings) {
+      const d = daysTo(f.next_earnings);
+      if (d != null && d >= 0 && d <= 30) {
+        const focus = inst.earn ? inst.earn.split(/\s*Sources?:/i)[0].replace(/\((https?:[^)]+)\)/g, "").trim() : "";
+        rows.push({ id: inst.id, label: inst.label, date: f.next_earnings, days: d,
+          event: "Earnings", focus, prev: inst.prev_earnings, prevLabel: "Last earnings", earn: true });
       }
-      html += `</div>`;
+    }
+    (inst.events || []).forEach(e => {
+      const d = daysTo(e.date);
+      if (d != null && d >= 0 && d <= 30) {
+        rows.push({ id: inst.id, label: inst.label, date: e.date, days: d,
+          event: e.event, focus: "", prev: e.prev_reaction, prevLabel: "Last time", earn: false });
+      }
+    });
+  }
+  rows.sort((a, b) => a.days - b.days || a.id.localeCompare(b.id));
+  return rows;
+}
+function renderCatalystsTable(category) {
+  const el = document.getElementById("catalysts30");
+  if (STALE) { el.innerHTML = ""; return; }
+  const rows = catalystRows(category);
+  if (!rows.length) { el.innerHTML = ""; return; }
+  const trs = rows.map(r => `<tr onclick="goTo('${r.id}')">
+    <td class="ct-tk"><b>${r.id}</b> <span class="muted">${r.label}</span></td>
+    <td class="ct-dt">${r.date ? `${r.date} <span class="muted">(${r.days}d)</span>` : '<span class="muted">—</span>'}</td>
+    <td class="ct-tx">
+      <div class="ct-event">${r.earn ? `<b class="e">${esc(r.event)}</b>` : esc(r.event)}</div>
+      ${r.focus ? `<div class="ct-focus">🎯 ${esc(r.focus)}</div>` : ""}
+      ${prevPerfBlock(r.prev, r.prevLabel)}
+    </td>
+  </tr>`).join("");
+  el.innerHTML = `<div class="ct-head">📅 Catalysts — next 30 days (event · investor focus · prev performance & why)</div>
+    <table class="ct-table"><thead><tr><th>Ticker</th><th>Date</th><th>Event / Focus / Prev Performance</th></tr></thead><tbody>${trs}</tbody></table>`;
+}
+
+function pastCatalystRows(category, lookbackDays = 30) {
+  const rows = [];
+  const today = new Date(), cutoff = new Date(today.getTime() - lookbackDays * 24 * 60 * 60 * 1000);
+  const insts = category ? filterByCategory(DATA.instruments, category) : DATA.instruments;
+  for (const inst of insts) {
+    const m = MOVES && MOVES[inst.id];
+    if (!m) continue;
+    const researched = (m.moves || []).filter(mv => mv.reason);
+    for (const mv of researched) {
+      const d = new Date(mv.d);
+      if (d >= cutoff && d < today) {
+        const label = mv.catalyst_type === "earnings" ? "<b style=\"color:#58a6ff\">📊 EARNINGS</b>" : "";
+        rows.push({
+          id: inst.id, label: inst.label, date: mv.d,
+          event: (label ? `<div style="font-weight:600;margin-bottom:4px">${label}</div>` : "") + prevPerfBlock({ date: mv.d, pct: mv.pct, reason: mv.reason, source: mv.source }, "Move")
+        });
+      }
     }
   }
-
-  return html;
+  rows.sort((a, b) => new Date(b.date) - new Date(a.date));
+  return rows;
+}
+function renderPastCatalysts(category, lookbackDays = 30) {
+  const el = document.getElementById("pastCatalysts");
+  if (STALE) { el.innerHTML = ""; return; }
+  const rows = pastCatalystRows(category, lookbackDays);
+  if (!rows.length) { el.innerHTML = ""; return; }
+  const trs = rows.map(r => `<tr onclick="goTo('${r.id}')">
+    <td class="ct-tk"><b>${r.id}</b> <span class="muted">${r.label}</span></td>
+    <td class="ct-dt">${r.date}</td>
+    <td class="ct-tx">${r.event}</td>
+  </tr>`).join("");
+  el.innerHTML = `<div class="ct-head">📅 Past Key Events — last ${lookbackDays} days</div>
+    <table class="ct-table"><thead><tr><th>Ticker</th><th>Date</th><th>Event</th></tr></thead><tbody>${trs}</tbody></table>`;
 }
 
-function renderStockCard(ticker) {
-  const inst = DATA.instruments.find(i => i.id === ticker);
-  if (!inst) return "";
-
-  const last = inst.last_close;
-  const bars = inst.bars || [];
-  const pct24h = bars.length > 1 ? ((bars[bars.length-1].c / bars[bars.length-2].c) - 1) * 100 : 0;
-
-  const fund = FUND && FUND[ticker] || {};
-  const fwdPE = fund.fwd_pe ? fund.fwd_pe.toFixed(1) : "—";
-
-  const fundHtml = `<div class="fund">Fwd P/E: <b>${fwdPE}x</b></div>`;
-
-  return `<div class="card" onclick="goTo('${ticker}')">
-    <div class="top">
-      <div><div class="name">${esc(inst.label)}</div><div class="id">${esc(ticker)}</div></div>
-      <div class="px">$${last.toLocaleString(undefined, {maximumFractionDigits:2})}</div>
-    </div>
-    <div class="remark">${getPerfBadge(pct24h)} 24h</div>
-    ${fundHtml}
-  </div>`;
-}
-
-function renderSummaryTab() {
-  const idx = categoryIndex();
-  let html = `<div class="category-header">
-    <div class="category-title">All Categories Overview</div>
-  </div>`;
-
-  for (const [catName, regions] of Object.entries(idx)) {
-    const stats = {};
-    for (const region of Object.keys(regions)) {
-      stats[region] = getCategoryStats(catName, region);
-    }
-
-    html += `<div class="category-header" style="margin-top:12px;">
-      <div class="category-title">${esc(catName)}</div>`;
-
-    for (const [region, stat] of Object.entries(stats)) {
-      if (!stat) continue;
-      html += `<div class="category-stats" style="margin-top:4px;">
-        <span style="color:var(--muted);">${region}:</span>
-        <div class="stat"><span class="stat-label">1m:</span> <span class="stat-value">${stat.perf1m >= 0 ? "+" : ""}${stat.perf1m.toFixed(1)}%</span></div>
-        <div class="stat"><span class="stat-label">3m:</span> <span class="stat-value">${stat.perf3m >= 0 ? "+" : ""}${stat.perf3m.toFixed(1)}%</span></div>
-        <div class="stat"><span class="stat-label">1y:</span> <span class="stat-value">${stat.perf1y >= 0 ? "+" : ""}${stat.perf1y.toFixed(1)}%</span></div>
-      </div>`;
-    }
-    html += `</div>`;
-  }
-
-  return html;
-}
-
-function renderHistoryTab() {
-  return `<div style="padding:16px; color:var(--muted);">Coming soon: historical view of all stock moves</div>`;
-}
-
-function showTab(tabId) {
-  document.querySelectorAll("main").forEach(m => m.classList.remove("active"));
-  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-  document.getElementById(tabId).classList.add("active");
-  document.querySelector(`[data-tab="${tabId}"]`).classList.add("active");
-}
-
-window.goTo = function(ticker) {
-  console.log("Clicked:", ticker);
+window.goTo = function (id) {
+  const el = document.getElementById("t-" + id);
+  if (!el) return;
+  el.scrollIntoView({ behavior: "smooth", block: "center" });
+  el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash");
 };
 
-function load() {
-  document.getElementById("meta").textContent = "loading...";
-
-  Promise.all([
-    fetch("./data.json?t=" + Date.now()).then(r => r.json()),
-    fetch("./moves.json?t=" + Date.now()).then(r => r.json()).catch(() => ({})),
-    fetch("./data/fundamentals.json?t=" + Date.now()).then(r => r.json()).catch(() => ({})),
-    fetch("./data/supply-chain-map.json?t=" + Date.now()).then(r => r.json()).catch(() => ({}))
-  ]).then(([data, moves, fund, scmap]) => {
-    DATA = data;
-    MOVES = moves;
-    FUND = fund;
-    SC_MAP = scmap;
-
-    document.getElementById("meta").textContent =
-      `${DATA.instruments.length} stocks · ${new Date(DATA.generated_at).toLocaleString()}`;
-
-    // Render tabs
-    const tabsDiv = document.getElementById("tabs");
-    CATEGORIES.forEach((cat, idx) => {
-      const tab = document.createElement("div");
-      tab.className = "tab" + (idx === 0 ? " active" : "");
-      tab.textContent = cat.label;
-      tab.setAttribute("data-tab", cat.id);
-      tab.onclick = () => {
-        showTab(cat.id);
-        document.getElementById(cat.id).innerHTML = renderCategoryTab(cat.id);
-      };
-      tabsDiv.appendChild(tab);
-    });
-
-    showTab("summary");
-    document.getElementById("summary").innerHTML = renderCategoryTab("summary");
-
-    if (checkStale(DATA)) {
-      document.getElementById("stale").classList.add("show");
-    }
-  }).catch(err => {
-    console.error(err);
-    document.getElementById("meta").textContent = "error loading data";
-  });
+function keyRemark(inst) {
+  const last = inst.last_close, items = [];
+  const add = (label, ref) => {
+    if (!ref) return;
+    const d = (last / ref - 1) * 100;
+    if (Math.abs(d) <= 3) items.push(`${label} ${d >= 0 ? "+" : ""}${d.toFixed(1)}%`);
+  };
+  add("20DMA", inst.sma20);
+  add("50DMA", inst.sma50);
+  (inst.flags || []).forEach(f => items.push(
+    `${f.kind === "support" ? "Sup" : "Res"} ${f.price.toLocaleString(undefined, { maximumFractionDigits: 1 })} ${f.distance_pct >= 0 ? "+" : ""}${f.distance_pct.toFixed(1)}%`));
+  const i = inst.idea;
+  let tag = "", cls = "muted";
+  if (i && i.kind === "enter") { tag = `⬤ ENTER — ${i.types.join(" + ")}`; cls = "enter"; }
+  else if (i && i.kind === "take_profit") { tag = `▲ EXIT — ${i.types.join(" + ")}`; cls = "exit"; }
+  else if (inst.trend === "down") { tag = "downtrend — not a long"; cls = "muted"; }
+  const rsiStr = inst.rsi != null ? ` <span class="muted">RSI ${inst.rsi}</span>` : "";
+  return { html: (tag ? `<b>${tag}</b>` : "") + (items.length ? " · " + items.join(" · ") : "") + rsiStr, cls };
 }
 
-window.addEventListener("load", load);
+function recentPastEvents(inst) {
+  if (!MOVES || !MOVES[inst.id]) return "";
+  const m = MOVES[inst.id];
+  const researched = (m.moves || []).filter(mv => mv.reason).slice(-2).reverse();
+  if (!researched.length) return "";
+  const today = new Date();
+  const rows = researched.map(mv => {
+    const d = new Date(mv.d);
+    if (d >= today) return "";
+    const daysAgo = Math.floor((today - d) / (24 * 60 * 60 * 1000));
+    const cls = mv.pct >= 0 ? "u" : "d";
+    const label = mv.catalyst_type === "earnings" ? "📊" : (mv.catalyst_type === "beta" ? "📈" : "•");
+    return `<div style="font-size:11px; margin:4px 0; padding:4px 0; border-top:1px solid var(--border);">
+      ${label} <span class="pct ${cls}">${mv.pct >= 0 ? "+" : ""}${mv.pct.toFixed(2)}%</span>
+      <span style="color:var(--muted); font-size:10px;">(${daysAgo}d ago)</span>
+      <div style="font-size:10px; color:var(--muted); margin-top:2px;">${esc(mv.reason.substring(0, 90))}${mv.reason.length > 90 ? "..." : ""}</div>
+    </div>`;
+  }).join("");
+  return rows ? `<div style="padding:6px 10px; border-top:1px solid var(--border); background:rgba(88,166,255,.03);">${rows}</div>` : "";
+}
+
+function catalystTimeline(inst) {
+  const f = inst.fund;
+  const items = [];
+  if (f) {
+    const ed = daysTo(f.next_earnings);
+    if (ed != null && ed >= 0 && ed <= 45) items.push({ d: f.next_earnings, days: ed, label: "Earnings", earn: true });
+  }
+  (inst.events || []).forEach(e => { const dd = daysTo(e.date); if (dd != null && dd >= 0 && dd <= 30) items.push({ d: e.date, days: dd, label: e.event, earn: false }); });
+  if (!items.length) return "";
+  items.sort((a, b) => a.days - b.days);
+  return `<div class="cat">📅 ${items.map(i => i.earn ? `<b class="e">${esc(i.label)} ${i.d} (${i.days}d)</b>` : `${esc(i.label)} ${i.d} (${i.days}d)`).join(" · ")}</div>`;
+}
+function earningsBox(inst) {
+  const f = inst.fund;
+  if (!f || !f.next_earnings) return "";
+  const days = daysTo(f.next_earnings);
+  if (days == null || days < 0 || days > 35) return "";
+  const beats = (f.earnings_history || []).map(q => {
+    const s = q.surprise;
+    if (s == null) return "";
+    const num = Math.abs(s) >= 100 ? "(n/m)" : `${s >= 0 ? "+" : ""}${s}%`;
+    return `<span class="pct ${s >= 0 ? "u" : "d"}">${(q.q || "").slice(0, 7)} ${s >= 0 ? "beat" : "miss"} ${num}</span>`;
+  }).filter(Boolean).join(" ");
+  const focusText = inst.earn ? inst.earn.split(/\s*Sources?:/i)[0].replace(/\((https?:[^)]+)\)/g, "").trim() : "";
+  const focus = focusText ? `<div class="efocus">🎯 ${esc(focusText)}</div>` : "";
+  const prevBlock = prevPerfBlock(inst.prev_earnings, "Last earnings");
+  return `<div class="earn"><b>⏰ Earnings ${f.next_earnings} (${days}d)</b>${f.curr_est ? ` · est $${f.curr_est.toFixed(2)}` : ""}<br><span class="eh">Last 4Q:</span> ${beats || "—"}${focus}${prevBlock}</div>`;
+}
+
+function badges(inst) {
+  const t = inst.trend || "flat";
+  const tl = t === "up" ? "▲" : t === "down" ? "▼" : "–";
+  let cta = "";
+  if (inst.cta === "long") cta = `<span class="badge cta-long" title="trend-followers long">CTA↑</span>`;
+  else if (inst.cta === "short") cta = `<span class="badge cta-short" title="trend-followers flipping short">CTA↓</span>`;
+  const staleBadge = inst.stale
+    ? `<span class="badge down" title="this ticker's fetch failed on the latest build">⚠ STALE</span>` : "";
+  return `<span class="badge ${t}" title="trend: price vs 50/200DMA">${tl}</span>${cta}${staleBadge}`;
+}
+
+function drawChart(el, inst) {
+  const chart = LightweightCharts.createChart(el, {
+    layout: { background: { color: "transparent" }, textColor: "#7d8590", fontSize: 10 },
+    grid: { vertLines: { color: "#1b2027" }, horzLines: { color: "#1b2027" } },
+    rightPriceScale: { borderColor: "#21262d" },
+    timeScale: { borderColor: "#21262d", timeVisible: false },
+    crosshair: { mode: 0 }, height: 300,
+  });
+  const area = chart.addAreaSeries({
+    lineColor: "#f0648b", lineWidth: 2,
+    topColor: "rgba(240,100,139,.28)", bottomColor: "rgba(240,100,139,.02)",
+    priceLineVisible: true, lastValueVisible: true,
+  });
+  area.setData(inst.bars.map(b => ({ time: b.d, value: b.c })));
+  const closes = inst.bars.map(b => b.c);
+  const overlays = [
+    ["#e3b341", smaSeries(closes, 20)],
+    ["#58a6ff", smaSeries(closes, 50)],
+    ["#f778ba", smaSeries(closes, 200)],
+  ];
+  for (const [color, series] of overlays) {
+    const line = chart.addLineSeries({ color, lineWidth: 1, priceLineVisible: false, lastValueVisible: false });
+    line.setData(inst.bars.map((b, i) => ({ time: b.d, value: series[i] })).filter(x => x.value != null));
+  }
+  if (!STALE && inst.levels && inst.levels["3m"]) {
+    const lv = inst.levels["3m"];
+    (lv.support || []).forEach(s => area.createPriceLine({ price: s.price, color: "rgba(38,166,65,.5)", lineWidth: 1, lineStyle: 2, axisLabelVisible: false }));
+    (lv.resistance || []).forEach(r => area.createPriceLine({ price: r.price, color: "rgba(248,81,73,.5)", lineWidth: 1, lineStyle: 2, axisLabelVisible: false }));
+  }
+  const lastDate = inst.bars[inst.bars.length - 1].d;
+  try { chart.timeScale().setVisibleRange({ from: `${lastDate.slice(0, 4)}-04-30`, to: lastDate }); }
+  catch (e) { chart.timeScale().fitContent(); }
+}
+
+function drawHistChart(el, inst) {
+  const chart = LightweightCharts.createChart(el, {
+    layout: { background: { color: "transparent" }, textColor: "#7d8590", fontSize: 9 },
+    grid: { vertLines: { color: "#1b2027" }, horzLines: { color: "#1b2027" } },
+    rightPriceScale: { borderColor: "#21262d" }, timeScale: { borderColor: "#21262d" }, height: 120,
+  });
+  const a = chart.addAreaSeries({ lineColor: "#f0648b", lineWidth: 2, topColor: "rgba(240,100,139,.25)", bottomColor: "rgba(240,100,139,.02)", priceLineVisible: false, lastValueVisible: true });
+  a.setData(inst.bars.map(b => ({ time: b.d, value: b.c })));
+  chart.timeScale().fitContent();
+}
+
+function card(inst) {
+  const el = document.createElement("div");
+  el.id = "t-" + inst.id;
+  const isEnter = inst.idea && inst.idea.kind === "enter";
+  el.className = "card" + (isEnter ? " enter-idea" : "");
+  const rem = keyRemark(inst);
+  const fl = fundLine(inst);
+  el.innerHTML = `
+    <div class="top">
+      <span class="name">${inst.label}</span>
+      <span class="id">${inst.id}</span>
+      ${badges(inst)}
+      <span class="px">${inst.last_close.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+      ${fmtPct(inst.change_pct)} ${fmtPct(inst.ytd_pct)}
+      <span class="muted" style="font-size:10px" title="the trading day this price/technicals reflect">as of ${inst.last_date}</span>
+    </div>
+    ${fl ? `<div class="fund">${fl}</div>` : ""}
+    ${inst.news ? `<div class="news">📰 ${esc(inst.news)}</div>` : ""}
+    <div class="remark ${rem.cls}">${rem.html}</div>
+    <div class="chart" data-pending="1"></div>
+    ${inst.catalyst ? `<div class="catline">🎯 ${esc(inst.catalyst)}</div>` : ""}
+    ${catalystTimeline(inst)}
+    ${recentPastEvents(inst)}
+    ${earningsBox(inst)}
+    ${teleResearch(inst)}`;
+  el.querySelector(".chart")._inst = inst;
+  return el;
+}
+
+function sortFn(a, b) {
+  const ai = a.idea && a.idea.kind === "enter" ? 1 : 0, bi = b.idea && b.idea.kind === "enter" ? 1 : 0;
+  if (ai !== bi) return bi - ai;
+  return (TREND_ORDER[a.trend] ?? 3) - (TREND_ORDER[b.trend] ?? 3);
+}
+
+function render() {
+  const byCat = {};
+  for (const cat of CATEGORIES) byCat[cat.key] = [];
+  for (const inst of DATA.instruments) {
+    const cat = getCategory(inst);
+    if (cat && byCat[cat]) byCat[cat].push(inst);
+  }
+
+  for (const cat of CATEGORIES) {
+    const grid = document.getElementById("grid-" + cat.key);
+    grid.innerHTML = "";
+    // Group by subcategory (gold section headers), sort within each group.
+    const bySub = new Map();
+    for (const inst of byCat[cat.key]) {
+      const sub = getSubcategory(inst);
+      if (!bySub.has(sub)) bySub.set(sub, []);
+      bySub.get(sub).push(inst);
+    }
+    for (const [sub, insts] of bySub) {
+      if (bySub.size > 1) {
+        const head = document.createElement("div");
+        head.className = "section subcat";
+        head.textContent = sub;
+        grid.appendChild(head);
+      }
+      insts.sort(sortFn).forEach(i => grid.appendChild(card(i)));
+    }
+  }
+
+  // Lazy-render charts as they scroll into view (75 cards + history = heavy).
+  OBSERVER = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (!e.isIntersecting) continue;
+      if (e.target.dataset.pending) {
+        delete e.target.dataset.pending;
+        drawChart(e.target, e.target._inst);
+        OBSERVER.unobserve(e.target);
+      } else if (e.target.dataset.pendingHist) {
+        delete e.target.dataset.pendingHist;
+        drawHistChart(e.target, e.target._inst);
+        OBSERVER.unobserve(e.target);
+      }
+    }
+  }, { rootMargin: "200px" });
+  document.querySelectorAll(".chart").forEach(c => OBSERVER.observe(c));
+}
+
+// Per-sector stock history: below the cards, every researched move for that
+// sector's names (the old Stock History tab, scoped to the current sector).
+const HIST_RENDERED = new Set();
+function renderSectorHistory(catKey) {
+  if (HIST_RENDERED.has(catKey)) return;
+  HIST_RENDERED.add(catKey);
+  const wrap = document.getElementById("hist-" + catKey);
+  const insts = filterByCategory(DATA.instruments, catKey);
+  const cards = [];
+  for (const inst of insts) {
+    const m = MOVES && MOVES[inst.id];
+    if (!m) continue;
+    const researched = (m.moves || []).filter(mv => mv.reason);
+    if (!researched.length) continue;
+    const rows = researched.map(mv => {
+      const cls = mv.pct >= 0 ? "u" : "d";
+      const reason = mv.market_wide ? `<span class="mw">${esc(mv.reason)} <i>(market-wide)</i></span>` : `<b>${esc(mv.reason)}</b>`;
+      const src = mv.source ? ` <span class="msrc">[${esc(mv.source)}]</span>` : "";
+      return `<div class="mv"><span class="md">${mv.d}</span><span class="mp ${cls}">${mv.pct >= 0 ? "+" : ""}${mv.pct}%</span><span class="mr">${reason}${src}</span></div>`;
+    }).join("");
+    const el = document.createElement("div");
+    el.className = "hcard";
+    el.innerHTML = `<div class="htop">${inst.label} <span class="id">${inst.id}</span></div><div class="hchart" data-pending-hist="1"></div><div class="moves">${rows}</div>`;
+    el.querySelector(".hchart")._inst = inst;
+    cards.push(el);
+  }
+  if (!cards.length) { wrap.innerHTML = ""; return; }
+  wrap.innerHTML = `<div class="hist-head">📜 Stock History — big moves & root causes</div>`;
+  const grid = document.createElement("div");
+  grid.className = "hist-grid";
+  cards.forEach(c => grid.appendChild(c));
+  wrap.appendChild(grid);
+  grid.querySelectorAll(".hchart").forEach(c => OBSERVER.observe(c));
+}
+
+window.showTab = function (tabKey) {
+  document.getElementById("tab-summary").classList.toggle("active", tabKey === "summary");
+  for (const c of CATEGORIES) {
+    document.getElementById("tab-" + c.key).classList.toggle("active", tabKey === c.key);
+    const show = tabKey === c.key;
+    document.getElementById("grid-" + c.key).style.display = show ? "" : "none";
+    document.getElementById("hist-" + c.key).style.display = show ? "" : "none";
+  }
+  const category = tabKey === "summary" ? null : tabKey;
+  if (DATA) {
+    renderIdeas(category);
+    renderCatalystsTable(category);
+    renderPastCatalysts(category, 30);
+    if (category) renderSectorHistory(category);
+  }
+};
+
+function buildShell() {
+  const tabs = document.getElementById("tabs");
+  const grids = document.getElementById("grids");
+  const mk = (key, label) => {
+    const b = document.createElement("button");
+    b.id = "tab-" + key; b.textContent = label;
+    b.onclick = () => showTab(key);
+    tabs.appendChild(b);
+  };
+  mk("summary", "Summary");
+  for (const c of CATEGORIES) {
+    mk(c.key, c.label);
+    const main = document.createElement("main");
+    main.id = "grid-" + c.key; main.className = "monitor-grid"; main.style.display = "none";
+    grids.appendChild(main);
+    const hist = document.createElement("div");
+    hist.id = "hist-" + c.key; hist.className = "hist-wrap"; hist.style.display = "none";
+    grids.appendChild(hist);
+  }
+}
+
+function load() {
+  document.getElementById("meta").textContent = "fetching data...";
+  buildShell();
+  Promise.all([
+    fetch("./data.json?t=" + Date.now(), { cache: "no-store" }).then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
+    fetch("./moves.json", { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
+    fetch("./supply-chain-map.json?t=" + Date.now(), { cache: "no-store" }).then(r => { if (!r.ok) throw new Error(`map HTTP ${r.status}`); return r.json(); }),
+  ]).then(([data, moves, scmap]) => {
+    DATA = data; MOVES = moves; SC_MAP = scmap;
+    STALE = checkStale(DATA);
+    const ideas = DATA.instruments.filter(i => i.idea && i.idea.kind === "enter").length;
+    document.getElementById("meta").textContent =
+      `${DATA.instruments.length} names · ${ideas} enter ideas · ${DATA.source} · ${new Date(DATA.generated_at).toLocaleString()}`;
+    render();
+    showTab("summary");
+  }).catch(err => {
+    console.error("load error:", err);
+    document.getElementById("meta").textContent = `ERROR: ${err.message}`;
+  });
+}
+load();
 </script>
 </body>
 </html>
