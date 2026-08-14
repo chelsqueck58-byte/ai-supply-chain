@@ -429,6 +429,7 @@ function renderSparkline(container, inst) {
     layout: { background: { color: 'transparent' }, textColor: '#e6edf3' },
     timeScale: { visible: false },
     rightPriceScale: { visible: false },
+    grid: { vertLines: { visible: false }, horzLines: { visible: false } },
   });
 
   const lineSeries = chart.addLineSeries({ color: '#58a6ff', lineWidth: 1 });
@@ -443,6 +444,7 @@ function renderLargeChart(container, inst) {
     height: 200,
     layout: { background: { color: '#0d1117' }, textColor: '#e6edf3' },
     timeScale: { timeVisible: true, secondsVisible: false },
+    grid: { vertLines: { visible: false }, horzLines: { visible: false } },
   });
 
   const lineSeries = chart.addLineSeries({ color: '#58a6ff' });
