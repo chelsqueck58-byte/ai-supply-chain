@@ -58,11 +58,11 @@
 
   .stock-history { margin-top:20px; padding:12px 0; border-top:2px solid var(--border); }
   .stock-history .sh-title { font-size:12px; font-weight:700; color:#9fd0ff; text-transform:uppercase; margin-bottom:12px; }
-  .sh-grid { display:grid; gap:12px; grid-template-columns:repeat(2,1fr); }
-  @media (max-width:1400px) { .sh-grid { grid-template-columns:1fr; } }
-  .sh-card { background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:12px; }
+  .sh-card { background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:12px; margin-bottom:12px; }
   .sh-card .sh-top { font-weight:600; margin-bottom:8px; font-size:12px; }
   .chart { height:200px; margin-bottom:8px; }
+  .earnings-label { font-size:11px; font-weight:600; color:#9fd0ff; margin-top:4px; margin-bottom:2px; }
+  .earnings-reason { font-size:10px; color:var(--muted); line-height:1.3; }
   .moves-table { width:100%; font-size:11px; }
   .moves-table th { padding:4px; font-size:9px; }
   .moves-table td { padding:3px 4px; }
@@ -281,8 +281,7 @@ function renderCategoryTab(categoryName) {
 
   // Stock History section
   html += `<div class="stock-history">
-    <div class="sh-title">Stock History</div>
-    <div class="sh-grid">`;
+    <div class="sh-title">Stock History</div>`;
 
   for (const ticker of tickers) {
     const inst = DATA.instruments.find(i => i.id === ticker);
@@ -292,9 +291,21 @@ function renderCategoryTab(categoryName) {
 
     html += `<div class="sh-card">
       <div class="sh-top">${esc(inst.label)} (${esc(ticker)})</div>
-      <div id="chart-${ticker}" class="chart"></div>
-      <table class="moves-table">
-        <tr><th>Date</th><th>Move %</th><th>Reason</th></tr>`;
+      <div id="chart-${ticker}" class="chart"></div>`;
+
+    // Earnings labels
+    const past2Earnings = moves.filter(m => isEarnings(m.reason)).slice(0, 2);
+    if (past2Earnings.length > 0) {
+      html += `<div class="earnings-label">E1: ${past2Earnings[0].d} ${past2Earnings[0].pct >= 0 ? '+' : ''}${past2Earnings[0].pct.toFixed(1)}%</div>`;
+      html += `<div class="earnings-reason">${esc(past2Earnings[0].reason)}</div>`;
+    }
+    if (past2Earnings.length > 1) {
+      html += `<div class="earnings-label" style="margin-top:8px;">E2: ${past2Earnings[1].d} ${past2Earnings[1].pct >= 0 ? '+' : ''}${past2Earnings[1].pct.toFixed(1)}%</div>`;
+      html += `<div class="earnings-reason">${esc(past2Earnings[1].reason)}</div>`;
+    }
+
+    html += `<table class="moves-table" style="margin-top:12px;">
+      <tr><th>Date</th><th>Move %</th><th>Reason</th></tr>`;
 
     for (const move of moves) {
       const pctClass = move.pct >= 0 ? 'u' : 'd';
@@ -304,7 +315,7 @@ function renderCategoryTab(categoryName) {
     html += `</table></div>`;
   }
 
-  html += `</div></div>`;
+  html += `</div>`;
 
   return html;
 }
