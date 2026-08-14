@@ -368,6 +368,7 @@ function load() {
 
     showTab("summary");
     document.getElementById("main-summary").innerHTML = renderCategoryTab("summary");
+    setTimeout(() => renderCharts("summary"), 0);
   }).catch(err => {
     console.error(err);
     document.getElementById("meta").textContent = "error loading data";
@@ -422,6 +423,20 @@ function renderCharts(categoryId) {
   }
 }
 
+function calcSMA(bars, period) {
+  const closes = bars.map(b => b.c);
+  const result = [];
+  for (let i = 0; i < closes.length; i++) {
+    if (i < period - 1) {
+      result.push(null);
+    } else {
+      const sum = closes.slice(i - period + 1, i + 1).reduce((a, b) => a + b, 0);
+      result.push(sum / period);
+    }
+  }
+  return result;
+}
+
 function renderSparkline(container, inst) {
   const chart = LightweightCharts.createChart(container, {
     width: container.clientWidth,
@@ -432,9 +447,20 @@ function renderSparkline(container, inst) {
     grid: { vertLines: { visible: false }, horzLines: { visible: false } },
   });
 
-  const lineSeries = chart.addLineSeries({ color: '#58a6ff', lineWidth: 1 });
-  const data = inst.bars.slice(-90).map(b => ({ time: b.d, value: b.c }));
-  lineSeries.setData(data);
+  const bars = inst.bars.slice(-90);
+  const closes = bars.map(b => b.c);
+  const sma20 = calcSMA(bars, 20);
+  const sma50 = calcSMA(bars, 50);
+
+  const priceSeries = chart.addLineSeries({ color: '#ff6b9d', lineWidth: 2 });
+  priceSeries.setData(bars.map((b, i) => ({ time: b.d, value: b.c })));
+
+  const sma20Series = chart.addLineSeries({ color: '#58a6ff', lineWidth: 1 });
+  sma20Series.setData(bars.map((b, i) => ({ time: b.d, value: sma20[i] })).filter(d => d.value !== null));
+
+  const sma50Series = chart.addLineSeries({ color: '#8866dd', lineWidth: 1 });
+  sma50Series.setData(bars.map((b, i) => ({ time: b.d, value: sma50[i] })).filter(d => d.value !== null));
+
   chart.timeScale().fitContent();
 }
 
@@ -447,9 +473,38 @@ function renderLargeChart(container, inst) {
     grid: { vertLines: { visible: false }, horzLines: { visible: false } },
   });
 
-  const lineSeries = chart.addLineSeries({ color: '#58a6ff' });
-  const data = inst.bars.map(b => ({ time: b.d, value: b.c }));
-  lineSeries.setData(data);
+  const bars = inst.bars;
+  const closes = bars.map(b => b.c);
+  const sma20 = calcSMA(bars, 20);
+  const sma50 = calcSMA(bars, 50);
+
+  const priceSeries = chart.addLineSeries({ color: '#ff6b9d', lineWidth: 2 });
+  priceSeries.setData(bars.map((b, i) => ({ time: b.d, value: b.c })));
+
+  const sma20Series = chart.addLineSeries({ color: '#58a6ff', lineWidth: 1.5 });
+  sma20Series.setData(bars.map((b, i) => ({ time: b.d, value: sma20[i] })).filter(d => d.value !== null));
+
+  const sma50Series = chart.addLineSeries({ color: '#8866dd', lineWidth: 1.5 });
+  sma50Series.setData(bars.map((b, i) => ({ time: b.d, value: sma50[i] })).filter(d => d.value !== null));
+
+  // Add support/resistance levels if available
+  if (inst.levels && inst.levels['3m']) {
+    const support = inst.levels['3m'].support || [];
+    const resistance = inst.levels['3m'].resistance || [];
+
+    [...support, ...resistance].slice(0, 3).forEach(level => {
+      if (level.price) {
+        const series = chart.addLineSeries({
+          color: resistance.includes(level) ? '#ff4444' : '#44ff44',
+          lineWidth: 1,
+          lineStyle: 2
+        });
+        const fixedLine = bars.map(b => ({ time: b.d, value: level.price }));
+        series.setData(fixedLine);
+      }
+    });
+  }
+
   chart.timeScale().fitContent();
 }
 
