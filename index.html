@@ -117,7 +117,7 @@
 <body>
 <div id="stale"></div>
 <header>
-  <h1>Supply Chain Intelligence</h1><span class="meta" id="meta">loading…</span> · <a href="./index.html" style="color:#58a6ff;text-decoration:none;font-size:12px;margin-left:10px;">← monitor</a>
+  <h1>Supply Chain Intelligence</h1><span class="meta" id="meta">loading…</span>
   <nav class="tabs" id="tabs"></nav>
 </header>
 <div id="ideas"></div>
@@ -141,8 +141,7 @@ const CATEGORIES = [
   { key: "power-analog",      label: "Power/Analog" },
   { key: "china-internet",    label: "China Internet" },
   { key: "china-ev",          label: "China EV" },
-  { key: "singapore",         label: "Singapore" },
-  { key: "se-asia-tech",      label: "SE Asia" },
+  { key: "singapore",         label: "Singapore/SE Asia" },
   { key: "consumer",          label: "Consumer" },
 ];
 const CAT_KEYS = new Set(CATEGORIES.map(c => c.key));
@@ -153,7 +152,7 @@ function getCategory(inst) {
   if (!m) return null;
   let c = m.category;
   if (c === "platform") c = "hyperscaler-cloud";
-  if (c.startsWith("singapore")) c = "singapore";
+  if (c.startsWith("singapore") || c === "se-asia-tech") c = "singapore";
   if (c === "china-hardware") c = "china-ev";
   if (c === "global-consumer" || c === "consumer-electronics") c = "consumer";
   return CAT_KEYS.has(c) ? c : null;   // benchmarks (SPY/QQQ) -> no tab, summary only
@@ -662,7 +661,7 @@ function load() {
     STALE = checkStale(DATA);
     const ideas = DATA.instruments.filter(i => i.idea && i.idea.kind === "enter").length;
     document.getElementById("meta").textContent =
-      `${DATA.instruments.length} names · ${ideas} enter ideas · ${DATA.source} · ${new Date(DATA.generated_at).toLocaleString()}`;
+      `${DATA.instruments.length} names · ${ideas} enter ideas · ${new Date(DATA.generated_at).toLocaleString()}`;
     render();
     showTab("summary");
   }).catch(err => {
