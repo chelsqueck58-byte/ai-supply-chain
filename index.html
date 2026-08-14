@@ -412,7 +412,10 @@ function renderLargeChart(container, inst) {
     rightPriceScale: {
       autoScale: true,
       scaleMargins: { top: 0.2, bottom: 0.2 },
-      visible: false,
+      visible: true,
+      borderVisible: false,
+      drawTicks: false,
+      ticksVisible: false,
     },
     leftPriceScale: { visible: false },
     grid: {
@@ -429,7 +432,10 @@ function renderLargeChart(container, inst) {
   const priceSeries = chart.addLineSeries({
     color: '#ff6b9d',
     lineWidth: 2.5,
-    priceLineVisible: false,
+    priceLineVisible: true,
+    priceLineColor: '#ff6b9d',
+    priceLineWidth: 1,
+    priceLineStyle: 0,
   });
   priceSeries.setData(bars.map(b => ({ time: b.d, value: b.c })));
 
