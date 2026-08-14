@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Supply Chain Intelligence</title><!-- Cache bust: 1786689635535920000 -->
+<title>Supply Chain Intelligence</title><!-- Cache bust: 1786645109 -->
 <style>
   :root {
     --bg:#0d1117; --panel:#161b22; --border:#21262d; --text:#e6edf3;
@@ -69,11 +69,14 @@
 <div id="stale">Data is stale (>30 hours). Check back soon.</div>
 <main id="summary"></main>
 <main id="platform"></main>
+<main id="hyperscaler-cloud"></main>
 <main id="compute"></main>
 <main id="foundry"></main>
 <main id="memory"></main>
 <main id="equipment"></main>
-<main id="power"></main>
+<main id="power-analog"></main>
+<main id="china-internet"></main>
+<main id="global-consumer"></main>
 <main id="history"></main>
 
 <script src="https://unpkg.com/lightweight-charts@3/dist/lightweight-charts.standalone.production.js"></script>
@@ -82,12 +85,15 @@ let DATA = null, MOVES = null, FUND = null, SC_MAP = null;
 
 const CATEGORIES = [
   { id: "summary", label: "Summary" },
-  { id: "platform", label: "Platform & Hyperscaler" },
+  { id: "platform", label: "Platform" },
+  { id: "hyperscaler-cloud", label: "Hyperscaler/Cloud" },
   { id: "compute", label: "Compute" },
   { id: "foundry", label: "Foundry" },
   { id: "memory", label: "Memory" },
   { id: "equipment", label: "Equipment" },
-  { id: "power", label: "Power/Analog" },
+  { id: "power-analog", label: "Power/Analog" },
+  { id: "china-internet", label: "China Internet" },
+  { id: "global-consumer", label: "Global Consumer" },
   { id: "history", label: "Stock History" }
 ];
 
