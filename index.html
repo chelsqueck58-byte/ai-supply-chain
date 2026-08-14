@@ -218,18 +218,34 @@ function renderStockCard(ticker) {
   const bars = inst.bars || [];
   const pct24h = bars.length > 1 ? ((bars[bars.length-1].c / bars[bars.length-2].c) - 1) * 100 : 0;
 
+  // Calculate performance metrics
+  const now = bars.length > 0 ? bars[bars.length-1].c : last;
+  const pct1m = bars.length > 21 ? ((now / bars[Math.max(0, bars.length-21)].c) - 1) * 100 : 0;
+  const pct3m = bars.length > 63 ? ((now / bars[Math.max(0, bars.length-63)].c) - 1) * 100 : 0;
+  const pct1y = bars.length > 252 ? ((now / bars[Math.max(0, bars.length-252)].c) - 1) * 100 : 0;
+
   const fund = FUND && FUND[ticker] || {};
   const fwdPE = fund.fwd_pe ? fund.fwd_pe.toFixed(1) : "—";
 
+  // Get past catalysts from moves.json
+  const moves = MOVES && MOVES[ticker] && MOVES[ticker].moves ? MOVES[ticker].moves : [];
+  const recentMove = moves.length > 0 ? moves[0] : null;
+
   const fundHtml = `<div class="fund">Fwd P/E: <b>${fwdPE}x</b></div>`;
 
-  return `<div class="card" onclick="goTo('${ticker}')">
+  const perfHtml = `<div class="fund">1m: ${pct1m >= 0 ? '+' : ''}${pct1m.toFixed(1)}% | 3m: ${pct3m >= 0 ? '+' : ''}${pct3m.toFixed(1)}% | 1y: ${pct1y >= 0 ? '+' : ''}${pct1y.toFixed(1)}%</div>`;
+
+  const catalystHtml = recentMove ? `<div class="fund" style="color:#9fd0ff; font-size:10px;">Latest: ${esc(recentMove.d)} ${recentMove.pct >= 0 ? '+' : ''}${recentMove.pct.toFixed(1)}%<br>${esc((recentMove.reason || '').substring(0, 80))}</div>` : '';
+
+  return `<div class="card">
     <div class="top">
       <div><div class="name">${esc(inst.label)}</div><div class="id">${esc(ticker)}</div></div>
       <div class="px">$${last.toLocaleString(undefined, {maximumFractionDigits:2})}</div>
     </div>
     <div class="remark">${getPerfBadge(pct24h)} 24h</div>
     ${fundHtml}
+    ${perfHtml}
+    ${catalystHtml}
   </div>`;
 }
 
@@ -264,7 +280,47 @@ function renderSummaryTab() {
 }
 
 function renderHistoryTab() {
-  return `<div style="padding:16px; color:var(--muted);">Coming soon: historical view of all stock moves</div>`;
+  let html = `<div style="padding:16px;">
+    <h3 style="color:#58a6ff; margin-bottom:12px;">Recent Price Movements (Catalysts)</h3>
+    <table style="width:100%; font-size:11px; border-collapse:collapse;">
+      <tr style="border-bottom:1px solid #21262d;">
+        <th style="text-align:left; padding:8px; color:var(--muted);">Date</th>
+        <th style="text-align:left; padding:8px; color:var(--muted);">Ticker</th>
+        <th style="text-align:right; padding:8px; color:var(--muted);">Move %</th>
+        <th style="text-align:left; padding:8px; color:var(--muted);">Reason</th>
+        <th style="text-align:left; padding:8px; color:var(--muted);">Source</th>
+      </tr>`;
+
+  // Collect all recent moves
+  const allMoves = [];
+  for (const ticker in MOVES) {
+    const entry = MOVES[ticker];
+    if (entry.moves) {
+      for (const move of entry.moves.slice(0, 3)) {
+        allMoves.push({ ...move, ticker, label: entry.label });
+      }
+    }
+  }
+
+  // Sort by date descending
+  allMoves.sort((a, b) => new Date(b.d) - new Date(a.d));
+
+  // Show top 20 recent
+  for (const move of allMoves.slice(0, 20)) {
+    const moveColor = move.pct >= 0 ? '#26a641' : '#f85149';
+    const reason = move.reason ? move.reason.substring(0, 60) : 'N/A';
+    const source = move.source ? move.source.substring(0, 30) : '';
+    html += `<tr style="border-bottom:1px solid #1b2027;">
+      <td style="padding:8px;">${move.d}</td>
+      <td style="padding:8px;"><b>${esc(move.ticker)}</b></td>
+      <td style="padding:8px; text-align:right; color:${moveColor};">${move.pct >= 0 ? '+' : ''}${move.pct.toFixed(1)}%</td>
+      <td style="padding:8px; color:#9fd0ff;">${esc(reason)}</td>
+      <td style="padding:8px; color:var(--muted); font-size:10px;">${esc(source)}</td>
+    </tr>`;
+  }
+
+  html += `</table></div>`;
+  return html;
 }
 
 function showTab(tabId) {
