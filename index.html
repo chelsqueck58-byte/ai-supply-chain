@@ -58,8 +58,10 @@
 
   .stock-history { margin-top:20px; padding:12px 0; border-top:2px solid var(--border); }
   .stock-history .sh-title { font-size:12px; font-weight:700; color:#9fd0ff; text-transform:uppercase; margin-bottom:12px; }
-  .sh-card { background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:12px; margin-bottom:12px; }
-  .sh-card .sh-top { font-weight:600; margin-bottom:8px; }
+  .sh-grid { display:grid; gap:12px; grid-template-columns:repeat(2,1fr); }
+  @media (max-width:1400px) { .sh-grid { grid-template-columns:1fr; } }
+  .sh-card { background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:12px; }
+  .sh-card .sh-top { font-weight:600; margin-bottom:8px; font-size:12px; }
   .chart { height:200px; margin-bottom:8px; }
   .moves-table { width:100%; font-size:11px; }
   .moves-table th { padding:4px; font-size:9px; }
@@ -279,7 +281,8 @@ function renderCategoryTab(categoryName) {
 
   // Stock History section
   html += `<div class="stock-history">
-    <div class="sh-title">Stock History</div>`;
+    <div class="sh-title">Stock History</div>
+    <div class="sh-grid">`;
 
   for (const ticker of tickers) {
     const inst = DATA.instruments.find(i => i.id === ticker);
@@ -301,7 +304,7 @@ function renderCategoryTab(categoryName) {
     html += `</table></div>`;
   }
 
-  html += `</div>`;
+  html += `</div></div>`;
 
   return html;
 }
@@ -362,29 +365,56 @@ function renderCharts(categoryId) {
   const idx = getCategoryIndex();
   const tickers = idx[categoryId] || [];
 
+  console.log(`[${categoryId}] renderCharts: ${tickers.length} tickers`);
+
   for (const ticker of tickers) {
     const inst = DATA.instruments.find(i => i.id === ticker);
-    if (!inst || !inst.bars) continue;
+    if (!inst) {
+      console.log(`  ${ticker}: no instrument`);
+      continue;
+    }
+    if (!inst.bars || inst.bars.length === 0) {
+      console.log(`  ${ticker}: no bars`);
+      continue;
+    }
 
     const chartContainer = document.getElementById(`chart-${ticker}`);
-    if (!chartContainer) continue;
+    if (!chartContainer) {
+      console.log(`  ${ticker}: no chart container`);
+      continue;
+    }
 
     try {
-      const chart = LightweightCharts.createChart(chartContainer, {
-        width: chartContainer.clientWidth,
-        height: 200,
-        layout: { background: { color: '#0d1117' }, textColor: '#e6edf3' },
-        timeScale: { timeVisible: true, secondsVisible: false },
-      });
+      const width = chartContainer.clientWidth;
+      if (width === 0) {
+        console.log(`  ${ticker}: container width is 0, retrying...`);
+        setTimeout(() => {
+          const w = chartContainer.clientWidth;
+          if (w > 0) renderSingleChart(chartContainer, ticker, inst);
+        }, 100);
+        continue;
+      }
 
-      const lineSeries = chart.addLineSeries({ color: '#58a6ff' });
-      const data = inst.bars.map(b => ({ time: b.d, value: b.c }));
-      lineSeries.setData(data);
-      chart.timeScale().fitContent();
+      renderSingleChart(chartContainer, ticker, inst);
+      console.log(`  ${ticker}: ✓ chart rendered`);
     } catch (e) {
-      console.error(`Chart error for ${ticker}:`, e);
+      console.error(`  ${ticker}: error:`, e.message);
     }
   }
+}
+
+function renderSingleChart(container, ticker, inst) {
+  const chart = LightweightCharts.createChart(container, {
+    width: container.clientWidth,
+    height: 200,
+    layout: { background: { color: '#0d1117' }, textColor: '#e6edf3' },
+    timeScale: { timeVisible: true, secondsVisible: false },
+  });
+
+  const lineSeries = chart.addLineSeries({ color: '#58a6ff' });
+  const data = inst.bars.map(b => ({ time: b.d, value: b.c }));
+  lineSeries.setData(data);
+  chart.timeScale().fitContent();
 }
 
 window.addEventListener("load", load);
