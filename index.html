@@ -3,81 +3,84 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Supply Chain Intelligence</title><!-- Cache bust: 1786645109 -->
+<title>Supply Chain Intelligence</title>
 <style>
   :root {
     --bg:#0d1117; --panel:#161b22; --border:#21262d; --text:#e6edf3;
     --muted:#7d8590; --up:#26a641; --down:#f85149;
-    --ema:#e3b341; --sma:#58a6ff; --vwap:#bc8cff;
   }
   * { box-sizing:border-box; }
   body { margin:0; background:var(--bg); color:var(--text);
     font:13px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; }
   header { padding:10px 16px; border-bottom:1px solid var(--border); position:sticky; top:0;
     background:var(--bg); z-index:5; }
-  header h1 { margin:0 0 3px; font-size:15px; font-weight:600; letter-spacing:.3px; display:inline; }
+  header h1 { margin:0 0 3px; font-size:15px; font-weight:600; display:inline; }
   header .meta { color:var(--muted); font-size:12px; margin-left:10px; }
-  header .tabs { display:flex; gap:0; margin-top:8px; border-bottom:1px solid var(--border); }
-  header .tab { padding:8px 12px; cursor:pointer; color:var(--muted); font-size:12px; font-weight:600;
-    text-transform:uppercase; letter-spacing:.4px; border-bottom:2px solid transparent; }
-  header .tab.active { color:var(--text); border-bottom-color:#58a6ff; }
-  header .tab:hover { color:var(--text); }
-  #stale { display:none; background:var(--down); color:#fff; padding:10px 16px; font-weight:600; text-align:center; }
-  #stale.show { display:block; }
+  .tabs { display:flex; gap:4px; margin-top:6px; flex-wrap:wrap; }
+  .tabs button { background:transparent; border:1px solid var(--border); border-bottom:none;
+    color:var(--muted); padding:5px 14px; border-radius:6px 6px 0 0; cursor:pointer; font-size:13px; }
+  .tabs button.active { background:var(--panel); color:var(--text); }
+
   main { padding:12px; display:none; }
   main.active { display:block; }
-  .category-header { background:#1b2835; border:1px solid #2d3f5a; border-radius:8px; padding:10px 12px;
-    margin-bottom:12px; font-size:11px; }
-  .category-title { font-weight:700; color:#58a6ff; text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
-  .category-stats { display:flex; gap:16px; flex-wrap:wrap; font-size:11px; color:var(--muted); }
+
+  #ideas { padding:10px 12px; border-bottom:1px solid var(--border); background:#12161c; margin-bottom:12px; }
+  #catalysts30 { padding:10px 12px; border-bottom:1px solid var(--border); background:#12161c; margin-bottom:12px; }
+  #pastCatalysts { padding:10px 12px; border-bottom:1px solid var(--border); background:#12161c; }
+
+  .section-head { font-size:11px; font-weight:700; color:#9fd0ff; text-transform:uppercase; margin:2px 0 6px; }
+  .ideas-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
+  .ideabox { border:1px solid #f5c518; border-radius:8px; padding:7px 10px; background:rgba(245,197,24,.06); font-size:12px; }
+  .ideabox .ih { font-weight:600; margin-bottom:2px; }
+  .ideabox .ir { color:var(--muted); font-size:11px; }
+
+  table { width:100%; border-collapse:collapse; font-size:12px; }
+  th { text-align:left; color:var(--muted); font-weight:600; font-size:10px; padding:4px 8px; border-bottom:1px solid var(--border); }
+  td { padding:5px 8px; border-bottom:1px solid #1b2027; }
+  tr:hover td { background:rgba(88,166,255,.06); }
+
+  .category-header { padding:12px; background:#1b2835; border:1px solid #2d3f5a; border-radius:8px; margin-bottom:12px; }
+  .category-title { font-weight:700; color:#58a6ff; text-transform:uppercase; font-size:14px; margin-bottom:6px; }
+  .category-stats { display:flex; gap:16px; flex-wrap:wrap; font-size:11px; }
   .stat { display:flex; gap:4px; }
   .stat-label { color:var(--muted); }
   .stat-value { color:var(--text); font-weight:600; }
-  .region-label { font-size:12px; font-weight:700; color:#58a6ff; text-transform:uppercase;
-    letter-spacing:.4px; margin-top:16px; margin-bottom:8px; padding:8px 0; border-top:1px solid var(--border); }
-  .region-label:first-child { margin-top:0; border-top:none; }
-  .subcategory { font-size:11px; color:var(--muted); margin-bottom:8px; padding:6px 8px;
-    background:rgba(88,166,255,.06); border-radius:4px; }
-  .stock-grid { display:grid; gap:10px; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); margin-bottom:16px; }
+
+  .stock-grid { display:grid; gap:10px; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); margin-bottom:12px; }
   .card { background:var(--panel); border:1px solid var(--border); border-radius:8px; overflow:hidden; }
-  .card .top { display:flex; align-items:center; gap:6px; padding:8px 10px; flex-wrap:wrap; }
+  .card .top { display:flex; align-items:center; gap:6px; padding:8px 10px; }
   .card .name { font-weight:600; }
   .card .id { color:var(--muted); font-size:11px; }
-  .card .px { margin-left:auto; font-variant-numeric:tabular-nums; font-weight:600; }
-  .pct { font-variant-numeric:tabular-nums; font-size:11px; }
+  .card .px { margin-left:auto; font-weight:600; }
+  .remark { padding:4px 10px; font-size:11px; border-top:1px solid var(--border); }
+  .fund { padding:4px 10px; font-size:11px; border-top:1px solid var(--border); color:var(--muted); }
+  .catalyst { padding:4px 10px; font-size:10px; border-top:1px solid var(--border); color:#9fd0ff; }
+
+  .stock-history { margin-top:20px; padding:12px 0; border-top:2px solid var(--border); }
+  .stock-history .sh-title { font-size:12px; font-weight:700; color:#9fd0ff; text-transform:uppercase; margin-bottom:12px; }
+  .sh-card { background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:12px; margin-bottom:12px; }
+  .sh-card .sh-top { font-weight:600; margin-bottom:8px; }
+  .chart { height:200px; margin-bottom:8px; }
+  .moves-table { width:100%; font-size:11px; }
+  .moves-table th { padding:4px; font-size:9px; }
+  .moves-table td { padding:3px 4px; }
   .pct.u { color:var(--up); } .pct.d { color:var(--down); }
-  .badge { font-size:10px; font-weight:600; padding:1px 5px; border-radius:4px; white-space:nowrap; }
+  .badge { font-size:10px; font-weight:600; padding:1px 5px; border-radius:3px; }
   .badge.up { color:var(--up); background:rgba(38,166,65,.14); }
   .badge.down { color:var(--down); background:rgba(248,81,73,.14); }
-  .badge.flat { color:var(--muted); background:rgba(125,133,144,.14); }
-  .fund { padding:6px 10px; font-size:10px; color:var(--muted); border-top:1px solid var(--border);
-    font-variant-numeric:tabular-nums; }
-  .remark { padding:6px 10px; font-size:10px; border-top:1px solid var(--border);
-    font-variant-numeric:tabular-nums; }
-  .remark.enter { color:var(--up); }
-  .remark.exit { color:var(--down); }
-  .cat { padding:5px 10px; font-size:10px; color:var(--text); border-top:1px solid var(--border); }
-  .cat b.e { color:var(--down); }
 </style>
 </head>
 <body>
 <header>
   <h1>Supply Chain Intelligence</h1>
-  <div class="meta">52 stocks · <span id="meta">loading...</span> · <a href="./index.html" style="color:#58a6ff;text-decoration:none;">← Stock Monitor</a></div>
+  <div class="meta" id="meta">64 stocks · loading…</div>
   <div class="tabs" id="tabs"></div>
 </header>
-<div id="stale">Data is stale (>30 hours). Check back soon.</div>
+
 <main id="summary"></main>
-<main id="platform"></main>
-<main id="hyperscaler-cloud"></main>
-<main id="compute"></main>
-<main id="foundry"></main>
-<main id="memory"></main>
-<main id="equipment"></main>
-<main id="power-analog"></main>
-<main id="china-internet"></main>
-<main id="global-consumer"></main>
-<main id="history"></main>
+<div id="ideas"></div>
+<div id="catalysts30"></div>
+<div id="pastCatalysts"></div>
 
 <script src="https://unpkg.com/lightweight-charts@3/dist/lightweight-charts.standalone.production.js"></script>
 <script>
@@ -94,44 +97,41 @@ const CATEGORIES = [
   { id: "power-analog", label: "Power/Analog" },
   { id: "china-internet", label: "China Internet" },
   { id: "global-consumer", label: "Global Consumer" },
-  { id: "history", label: "Stock History" }
 ];
 
 function esc(s) { return (s||"").replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;" })[c]); }
 
-function checkStale(data) {
-  if (!data || !data.generated_at) return false;
-  const age = (Date.now() - new Date(data.generated_at).getTime()) / 3600000;
-  return age > 30;
+function isEarnings(reason) {
+  if (!reason) return false;
+  const r = reason.toLowerCase();
+  return r.includes('earnings') || r.includes('q1') || r.includes('q2') || r.includes('q3') || r.includes('q4');
 }
 
 function getPerfBadge(pct) {
-  if (!pct && pct !== 0) return "";
+  if (pct === null || pct === undefined) return "";
   const cls = pct >= 0 ? "up" : "down";
   const sign = pct >= 0 ? "+" : "";
   return `<span class="badge ${cls}">${sign}${pct.toFixed(1)}%</span>`;
 }
 
-function categoryIndex() {
+function getCategoryIndex() {
   if (!SC_MAP) return {};
   const idx = {};
   for (const ticker of Object.keys(SC_MAP)) {
     const info = SC_MAP[ticker];
     const cat = info.category;
-    if (!idx[cat]) idx[cat] = {};
-    if (!idx[cat][info.region]) idx[cat][info.region] = [];
-    idx[cat][info.region].push(ticker);
+    if (!idx[cat]) idx[cat] = [];
+    idx[cat].push(ticker);
   }
   return idx;
 }
 
-function getCategoryStats(categoryName, region) {
-  const idx = categoryIndex();
-  const tickers = (idx[categoryName] && idx[categoryName][region]) || [];
+function getCategoryStats(categoryName) {
+  const idx = getCategoryIndex();
+  const tickers = idx[categoryName] || [];
   if (!tickers.length) return null;
 
   let perf1m = 0, perf3m = 0, perf1y = 0, count = 0;
-  let catalystCount = 0;
 
   for (const ticker of tickers) {
     const inst = DATA.instruments.find(i => i.id === ticker);
@@ -147,67 +147,22 @@ function getCategoryStats(categoryName, region) {
     perf3m += (now / bar63 - 1) * 100;
     perf1y += (now / bar252 - 1) * 100;
     count++;
-
-    if (MOVES && MOVES[ticker]) {
-      const upcoming = (MOVES[ticker].upcoming || []).filter(e => new Date(e.date) >= new Date()).length;
-      catalystCount += upcoming;
-    }
   }
 
   if (count === 0) return null;
-  return { perf1m: perf1m/count, perf3m: perf3m/count, perf1y: perf1y/count, catalystCount };
+  return { perf1m: perf1m/count, perf3m: perf3m/count, perf1y: perf1y/count };
 }
 
-function renderCategoryTab(categoryName) {
-  if (categoryName === "summary") return renderSummaryTab();
-  if (categoryName === "history") return renderHistoryTab();
+function getLatest2Catalysts(ticker) {
+  if (!MOVES || !MOVES[ticker]) return [];
+  const mvs = MOVES[ticker].moves || [];
+  return mvs.slice(0, 2);
+}
 
-  const idx = categoryIndex();
-  const regions = idx[categoryName] ? Object.keys(idx[categoryName]) : [];
-
-  let html = `<div class="category-header">
-    <div class="category-title">${esc(categoryName)}</div>
-  </div>`;
-
-  for (const region of regions) {
-    const stats = getCategoryStats(categoryName, region);
-    if (stats) {
-      html += `<div class="category-header" style="margin-top:8px;">
-        <div style="font-size:12px; color:var(--muted);">${region === "US" ? "🇺🇸 US/Global" : "🇨🇳 China"}</div>
-        <div class="category-stats">
-          <div class="stat"><span class="stat-label">1m:</span> <span class="stat-value">${stats.perf1m >= 0 ? "+" : ""}${stats.perf1m.toFixed(1)}%</span></div>
-          <div class="stat"><span class="stat-label">3m:</span> <span class="stat-value">${stats.perf3m >= 0 ? "+" : ""}${stats.perf3m.toFixed(1)}%</span></div>
-          <div class="stat"><span class="stat-label">1y:</span> <span class="stat-value">${stats.perf1y >= 0 ? "+" : ""}${stats.perf1y.toFixed(1)}%</span></div>
-          <div class="stat"><span class="stat-label">Catalysts:</span> <span class="stat-value">${stats.catalystCount}</span></div>
-        </div>
-      </div>`;
-    }
-
-    const tickers = idx[categoryName][region] || [];
-    if (!tickers.length) continue;
-
-    html += `<div class="region-label">${region === "US" ? "🇺🇸 US/Global Stocks" : "🇨🇳 China Stocks"}</div>`;
-
-    // Group by subcategory
-    const subgroups = {};
-    for (const ticker of tickers) {
-      const subcat = SC_MAP[ticker].subcategory;
-      if (!subgroups[subcat]) subgroups[subcat] = [];
-      subgroups[subcat].push(ticker);
-    }
-
-    for (const [subcat, stickers] of Object.entries(subgroups)) {
-      html += `<div class="subcategory">${esc(subcat)}: ${stickers.map(t => esc(SC_MAP[t].name || t)).join(", ")}</div>`;
-
-      html += `<div class="stock-grid">`;
-      for (const ticker of stickers) {
-        html += renderStockCard(ticker);
-      }
-      html += `</div>`;
-    }
-  }
-
-  return html;
+function getPast2Earnings(ticker) {
+  if (!MOVES || !MOVES[ticker]) return [];
+  const mvs = MOVES[ticker].moves || [];
+  return mvs.filter(m => isEarnings(m.reason)).slice(0, 2);
 }
 
 function renderStockCard(ticker) {
@@ -217,8 +172,6 @@ function renderStockCard(ticker) {
   const last = inst.last_close;
   const bars = inst.bars || [];
   const pct24h = bars.length > 1 ? ((bars[bars.length-1].c / bars[bars.length-2].c) - 1) * 100 : 0;
-
-  // Calculate performance metrics
   const now = bars.length > 0 ? bars[bars.length-1].c : last;
   const pct1m = bars.length > 21 ? ((now / bars[Math.max(0, bars.length-21)].c) - 1) * 100 : 0;
   const pct3m = bars.length > 63 ? ((now / bars[Math.max(0, bars.length-63)].c) - 1) * 100 : 0;
@@ -227,126 +180,138 @@ function renderStockCard(ticker) {
   const fund = FUND && FUND[ticker] || {};
   const fwdPE = fund.fwd_pe ? fund.fwd_pe.toFixed(1) : "—";
 
-  // Get past catalysts from moves.json
-  const moves = MOVES && MOVES[ticker] && MOVES[ticker].moves ? MOVES[ticker].moves : [];
-  const recentMove = moves.length > 0 ? moves[0] : null;
+  const latest2 = getLatest2Catalysts(ticker);
+  const past2Earnings = getPast2Earnings(ticker);
 
-  const fundHtml = `<div class="fund">Fwd P/E: <b>${fwdPE}x</b></div>`;
+  let catalystHtml = '';
+  if (latest2.length > 0) {
+    const cat = latest2[0];
+    catalystHtml += `<div class="catalyst">Latest: ${cat.d} ${cat.pct >= 0 ? '+' : ''}${cat.pct.toFixed(1)}%<br>${esc((cat.reason || '').substring(0, 60))}</div>`;
+  }
+  if (latest2.length > 1) {
+    const cat = latest2[1];
+    catalystHtml += `<div class="catalyst">Prev: ${cat.d} ${cat.pct >= 0 ? '+' : ''}${cat.pct.toFixed(1)}%<br>${esc((cat.reason || '').substring(0, 60))}</div>`;
+  }
 
-  const perfHtml = `<div class="fund">1m: ${pct1m >= 0 ? '+' : ''}${pct1m.toFixed(1)}% | 3m: ${pct3m >= 0 ? '+' : ''}${pct3m.toFixed(1)}% | 1y: ${pct1y >= 0 ? '+' : ''}${pct1y.toFixed(1)}%</div>`;
-
-  const catalystHtml = recentMove ? `<div class="fund" style="color:#9fd0ff; font-size:10px;">Latest: ${esc(recentMove.d)} ${recentMove.pct >= 0 ? '+' : ''}${recentMove.pct.toFixed(1)}%<br>${esc((recentMove.reason || '').substring(0, 80))}</div>` : '';
-
-  // Mini chart: 52-week trend (last 52 bars = ~1 year weekly)
-  const chartData = bars.length > 0 ? bars.slice(-52).map((b, i) => {
-    const minPrice = Math.min(...bars.slice(-52).map(x => x.c));
-    const maxPrice = Math.max(...bars.slice(-52).map(x => x.c));
-    const range = maxPrice - minPrice || 1;
-    const normalizedPrice = (b.c - minPrice) / range;
-    const barHeight = Math.max(4, normalizedPrice * 35);
-    const isUp = b.c >= bars[Math.max(0,bars.length-252)].c;
-    return `<div style="display:inline-block; width:3px; height:${barHeight}px; background:${isUp ? '#26a641' : '#f85149'}; margin:0 1px; border-radius:1px;"></div>`;
-  }).join('') : '';
-
-  const chartHtml = chartData ? `<div style="padding:6px 10px; border-top:1px solid #21262d; height:50px; display:flex; align-items:flex-end; gap:0px; overflow-x:auto; background:rgba(38,166,65,.03);">${chartData}</div>` : '';
+  let earningsHtml = '';
+  if (past2Earnings.length > 0) {
+    earningsHtml += `<div class="catalyst">E1: ${past2Earnings[0].d} ${past2Earnings[0].pct >= 0 ? '+' : ''}${past2Earnings[0].pct.toFixed(1)}%</div>`;
+  }
+  if (past2Earnings.length > 1) {
+    earningsHtml += `<div class="catalyst">E2: ${past2Earnings[1].d} ${past2Earnings[1].pct >= 0 ? '+' : ''}${past2Earnings[1].pct.toFixed(1)}%</div>`;
+  }
 
   return `<div class="card">
     <div class="top">
       <div><div class="name">${esc(inst.label)}</div><div class="id">${esc(ticker)}</div></div>
       <div class="px">$${last.toLocaleString(undefined, {maximumFractionDigits:2})}</div>
     </div>
-    <div class="remark">${getPerfBadge(pct24h)} 24h</div>
-    ${fundHtml}
-    ${perfHtml}
-    ${chartHtml}
+    <div class="remark">${getPerfBadge(pct24h)} 24h | 1m: ${pct1m >= 0 ? '+' : ''}${pct1m.toFixed(1)}% | 3m: ${pct3m >= 0 ? '+' : ''}${pct3m.toFixed(1)}% | 1y: ${pct1y >= 0 ? '+' : ''}${pct1y.toFixed(1)}%</div>
+    <div class="fund">Fwd P/E: <b>${fwdPE}x</b></div>
     ${catalystHtml}
+    ${earningsHtml}
   </div>`;
 }
 
 function renderSummaryTab() {
-  const idx = categoryIndex();
-  let html = `<div class="category-header">
-    <div class="category-title">All Categories Overview</div>
-  </div>`;
+  let html = `<div id="ideas" style="display:block;"></div>
+    <div id="catalysts30" style="display:block;"></div>
+    <div id="pastCatalysts" style="display:block;"></div>`;
 
-  for (const [catName, regions] of Object.entries(idx)) {
-    const stats = {};
-    for (const region of Object.keys(regions)) {
-      stats[region] = getCategoryStats(catName, region);
-    }
+  // Ideas
+  const enterIdeas = DATA.instruments.filter(i => i.idea && i.idea.kind === 'enter');
+  const exitIdeas = DATA.instruments.filter(i => i.idea && i.idea.kind === 'take_profit');
 
-    html += `<div class="category-header" style="margin-top:12px;">
-      <div class="category-title">${esc(catName)}</div>`;
-
-    for (const [region, stat] of Object.entries(stats)) {
-      if (!stat) continue;
-      html += `<div class="category-stats" style="margin-top:4px;">
-        <span style="color:var(--muted);">${region}:</span>
-        <div class="stat"><span class="stat-label">1m:</span> <span class="stat-value">${stat.perf1m >= 0 ? "+" : ""}${stat.perf1m.toFixed(1)}%</span></div>
-        <div class="stat"><span class="stat-label">3m:</span> <span class="stat-value">${stat.perf3m >= 0 ? "+" : ""}${stat.perf3m.toFixed(1)}%</span></div>
-        <div class="stat"><span class="stat-label">1y:</span> <span class="stat-value">${stat.perf1y >= 0 ? "+" : ""}${stat.perf1y.toFixed(1)}%</span></div>
+  if (enterIdeas.length > 0) {
+    html += `<div style="background:#12161c; padding:10px 12px; margin-bottom:12px; border-radius:4px;">
+      <div class="section-head">ENTER IDEAS</div>
+      <div class="ideas-row">`;
+    for (const inst of enterIdeas) {
+      html += `<div class="ideabox" style="border-color:#26a641;">
+        <div class="ih">${esc(inst.label)} <span style="color:var(--muted);">${esc(inst.id)}</span></div>
+        <div class="ir">$${inst.last_close.toFixed(2)}</div>
       </div>`;
     }
-    html += `</div>`;
+    html += `</div></div>`;
+  }
+
+  if (exitIdeas.length > 0) {
+    html += `<div style="background:#12161c; padding:10px 12px; margin-bottom:12px; border-radius:4px;">
+      <div class="section-head" style="color:#f85149;">EXIT IDEAS</div>
+      <div class="ideas-row">`;
+    for (const inst of exitIdeas) {
+      html += `<div class="ideabox" style="border-color:#f85149;">
+        <div class="ih">${esc(inst.label)} <span style="color:var(--muted);">${esc(inst.id)}</span></div>
+        <div class="ir">$${inst.last_close.toFixed(2)}</div>
+      </div>`;
+    }
+    html += `</div></div>`;
   }
 
   return html;
 }
 
-function renderHistoryTab() {
-  let html = `<div style="padding:16px;">
-    <h3 style="color:#58a6ff; margin-bottom:12px;">Recent Price Movements (Catalysts)</h3>
-    <table style="width:100%; font-size:11px; border-collapse:collapse;">
-      <tr style="border-bottom:1px solid #21262d;">
-        <th style="text-align:left; padding:8px; color:var(--muted);">Date</th>
-        <th style="text-align:left; padding:8px; color:var(--muted);">Ticker</th>
-        <th style="text-align:right; padding:8px; color:var(--muted);">Move %</th>
-        <th style="text-align:left; padding:8px; color:var(--muted);">Reason</th>
-        <th style="text-align:left; padding:8px; color:var(--muted);">Source</th>
-      </tr>`;
+function renderCategoryTab(categoryName) {
+  if (categoryName === "summary") return renderSummaryTab();
 
-  // Collect all recent moves
-  const allMoves = [];
-  for (const ticker in MOVES) {
-    const entry = MOVES[ticker];
-    if (entry.moves) {
-      for (const move of entry.moves.slice(0, 3)) {
-        allMoves.push({ ...move, ticker, label: entry.label });
-      }
+  const stats = getCategoryStats(categoryName);
+  let html = `<div class="category-header">
+    <div class="category-title">${esc(categoryName)}</div>`;
+
+  if (stats) {
+    html += `<div class="category-stats">
+      <div class="stat"><span class="stat-label">1m:</span> <span class="stat-value">${stats.perf1m >= 0 ? '+' : ''}${stats.perf1m.toFixed(1)}%</span></div>
+      <div class="stat"><span class="stat-label">3m:</span> <span class="stat-value">${stats.perf3m >= 0 ? '+' : ''}${stats.perf3m.toFixed(1)}%</span></div>
+      <div class="stat"><span class="stat-label">1y:</span> <span class="stat-value">${stats.perf1y >= 0 ? '+' : ''}${stats.perf1y.toFixed(1)}%</span></div>
+    </div>`;
+  }
+
+  html += `</div>`;
+
+  const idx = getCategoryIndex();
+  const tickers = idx[categoryName] || [];
+
+  html += `<div class="stock-grid">`;
+  for (const ticker of tickers) {
+    html += renderStockCard(ticker);
+  }
+  html += `</div>`;
+
+  // Stock History section
+  html += `<div class="stock-history">
+    <div class="sh-title">Stock History</div>`;
+
+  for (const ticker of tickers) {
+    const inst = DATA.instruments.find(i => i.id === ticker);
+    if (!inst) continue;
+
+    const moves = MOVES && MOVES[ticker] && MOVES[ticker].moves ? MOVES[ticker].moves : [];
+
+    html += `<div class="sh-card">
+      <div class="sh-top">${esc(inst.label)} (${esc(ticker)})</div>
+      <div id="chart-${ticker}" class="chart"></div>
+      <table class="moves-table">
+        <tr><th>Date</th><th>Move %</th><th>Reason</th></tr>`;
+
+    for (const move of moves) {
+      const pctClass = move.pct >= 0 ? 'u' : 'd';
+      html += `<tr><td>${move.d}</td><td class="pct ${pctClass}">${move.pct >= 0 ? '+' : ''}${move.pct.toFixed(1)}%</td><td>${esc((move.reason || '').substring(0, 80))}</td></tr>`;
     }
+
+    html += `</table></div>`;
   }
 
-  // Sort by date descending
-  allMoves.sort((a, b) => new Date(b.d) - new Date(a.d));
+  html += `</div>`;
 
-  // Show top 20 recent
-  for (const move of allMoves.slice(0, 20)) {
-    const moveColor = move.pct >= 0 ? '#26a641' : '#f85149';
-    const reason = move.reason ? move.reason.substring(0, 60) : 'N/A';
-    const source = move.source ? move.source.substring(0, 30) : '';
-    html += `<tr style="border-bottom:1px solid #1b2027;">
-      <td style="padding:8px;">${move.d}</td>
-      <td style="padding:8px;"><b>${esc(move.ticker)}</b></td>
-      <td style="padding:8px; text-align:right; color:${moveColor};">${move.pct >= 0 ? '+' : ''}${move.pct.toFixed(1)}%</td>
-      <td style="padding:8px; color:#9fd0ff;">${esc(reason)}</td>
-      <td style="padding:8px; color:var(--muted); font-size:10px;">${esc(source)}</td>
-    </tr>`;
-  }
-
-  html += `</table></div>`;
   return html;
 }
 
 function showTab(tabId) {
   document.querySelectorAll("main").forEach(m => m.classList.remove("active"));
   document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-  document.getElementById(tabId).classList.add("active");
+  document.getElementById(`main-${tabId}`).classList.add("active");
   document.querySelector(`[data-tab="${tabId}"]`).classList.add("active");
 }
-
-window.goTo = function(ticker) {
-  console.log("Clicked:", ticker);
-};
 
 function load() {
   document.getElementById("meta").textContent = "loading...";
@@ -362,33 +327,64 @@ function load() {
     FUND = fund;
     SC_MAP = scmap;
 
-    document.getElementById("meta").textContent =
-      `${DATA.instruments.length} stocks · ${new Date(DATA.generated_at).toLocaleString()}`;
+    document.getElementById("meta").textContent = `${DATA.instruments.length} stocks · ${new Date(DATA.generated_at).toLocaleString()}`;
 
     // Render tabs
     const tabsDiv = document.getElementById("tabs");
     CATEGORIES.forEach((cat, idx) => {
-      const tab = document.createElement("div");
+      const tab = document.createElement("button");
       tab.className = "tab" + (idx === 0 ? " active" : "");
       tab.textContent = cat.label;
       tab.setAttribute("data-tab", cat.id);
       tab.onclick = () => {
         showTab(cat.id);
-        document.getElementById(cat.id).innerHTML = renderCategoryTab(cat.id);
+        document.getElementById(`main-${cat.id}`).innerHTML = renderCategoryTab(cat.id);
+        // Render charts after tab content is added
+        setTimeout(() => renderCharts(cat.id), 0);
       };
       tabsDiv.appendChild(tab);
+
+      // Create main container for this tab
+      const main = document.createElement("main");
+      main.id = `main-${cat.id}`;
+      document.body.appendChild(main);
     });
 
     showTab("summary");
-    document.getElementById("summary").innerHTML = renderCategoryTab("summary");
-
-    if (checkStale(DATA)) {
-      document.getElementById("stale").classList.add("show");
-    }
+    document.getElementById("main-summary").innerHTML = renderCategoryTab("summary");
   }).catch(err => {
     console.error(err);
     document.getElementById("meta").textContent = "error loading data";
   });
+}
+
+function renderCharts(categoryId) {
+  const idx = getCategoryIndex();
+  const tickers = idx[categoryId] || [];
+
+  for (const ticker of tickers) {
+    const inst = DATA.instruments.find(i => i.id === ticker);
+    if (!inst || !inst.bars) continue;
+
+    const chartContainer = document.getElementById(`chart-${ticker}`);
+    if (!chartContainer) continue;
+
+    try {
+      const chart = LightweightCharts.createChart(chartContainer, {
+        width: chartContainer.clientWidth,
+        height: 200,
+        layout: { background: { color: '#0d1117' }, textColor: '#e6edf3' },
+        timeScale: { timeVisible: true, secondsVisible: false },
+      });
+
+      const lineSeries = chart.addLineSeries({ color: '#58a6ff' });
+      const data = inst.bars.map(b => ({ time: b.d, value: b.c }));
+      lineSeries.setData(data);
+      chart.timeScale().fitContent();
+    } catch (e) {
+      console.error(`Chart error for ${ticker}:`, e);
+    }
+  }
 }
 
 window.addEventListener("load", load);
