@@ -49,7 +49,7 @@
   .stock-grid { display:grid; gap:12px; grid-template-columns:repeat(3,1fr); margin-bottom:12px; }
   @media (max-width:1200px) { .stock-grid { grid-template-columns:repeat(2,1fr); } }
   @media (max-width:768px) { .stock-grid { grid-template-columns:1fr; } }
-  .stock-detail { background:var(--panel); border:1px solid var(--border); border-radius:8px; display:flex; flex-direction:column; min-height:500px; }
+  .stock-detail { background:var(--panel); border:1px solid var(--border); border-radius:8px; display:flex; flex-direction:column; min-height:650px; }
   .detail-header { padding:8px; border-bottom:1px solid var(--border); flex-shrink:0; }
   .detail-title { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:2px; gap:6px; }
   .detail-title .name { font-weight:700; font-size:12px; }
@@ -309,11 +309,26 @@ function renderCategoryTab(categoryName) {
   const idx = getCategoryIndex();
   const tickers = idx[categoryName] || [];
 
-  html += `<div class="stock-grid">`;
+  // Group by region if info available
+  const byRegion = {};
   for (const ticker of tickers) {
-    html += renderStockCard(ticker);
+    const info = SC_MAP && SC_MAP[ticker];
+    const region = info && info.region ? info.region : 'Other';
+    if (!byRegion[region]) byRegion[region] = [];
+    byRegion[region].push(ticker);
   }
-  html += `</div>`;
+
+  // Render by region with labels
+  for (const region of Object.keys(byRegion).sort()) {
+    const regionLabel = region === 'US' ? '🇺🇸 US/Global Stocks' : region === 'China' ? '🇨🇳 China Stocks' : region;
+    html += `<div style="font-size:12px;font-weight:700;color:#58a6ff;text-transform:uppercase;letter-spacing:.4px;margin-top:16px;margin-bottom:8px;padding:8px 0;border-top:1px solid var(--border);">${regionLabel}</div>`;
+
+    html += `<div class="stock-grid">`;
+    for (const ticker of byRegion[region]) {
+      html += renderStockCard(ticker);
+    }
+    html += `</div>`;
+  }
 
   return html;
 }
