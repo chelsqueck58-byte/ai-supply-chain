@@ -237,12 +237,18 @@ function renderStockCard(ticker) {
 
   const catalystHtml = recentMove ? `<div class="fund" style="color:#9fd0ff; font-size:10px;">Latest: ${esc(recentMove.d)} ${recentMove.pct >= 0 ? '+' : ''}${recentMove.pct.toFixed(1)}%<br>${esc((recentMove.reason || '').substring(0, 80))}</div>` : '';
 
-  // Mini chart: 52-week trend (last 252 bars)
-  const chartData = bars.length > 0 ? bars.slice(-252).map((b, i) => {
-    return `<div style="display:inline-block; width:1.5px; height:${Math.min(40, Math.max(2, (b.c / bars[bars.length-1].c * 30)))}px; background:${b.c > bars[Math.max(0,bars.length-252)].c ? '#26a641' : '#f85149'}; margin:0 0.5px;"></div>`;
+  // Mini chart: 52-week trend (last 52 bars = ~1 year weekly)
+  const chartData = bars.length > 0 ? bars.slice(-52).map((b, i) => {
+    const minPrice = Math.min(...bars.slice(-52).map(x => x.c));
+    const maxPrice = Math.max(...bars.slice(-52).map(x => x.c));
+    const range = maxPrice - minPrice || 1;
+    const normalizedPrice = (b.c - minPrice) / range;
+    const barHeight = Math.max(4, normalizedPrice * 35);
+    const isUp = b.c >= bars[Math.max(0,bars.length-252)].c;
+    return `<div style="display:inline-block; width:3px; height:${barHeight}px; background:${isUp ? '#26a641' : '#f85149'}; margin:0 1px; border-radius:1px;"></div>`;
   }).join('') : '';
 
-  const chartHtml = chartData ? `<div style="padding:6px 10px; border-top:1px solid #21262d; height:45px; display:flex; align-items:flex-end; gap:1px; overflow-x:auto;">${chartData}</div>` : '';
+  const chartHtml = chartData ? `<div style="padding:6px 10px; border-top:1px solid #21262d; height:50px; display:flex; align-items:flex-end; gap:0px; overflow-x:auto; background:rgba(38,166,65,.03);">${chartData}</div>` : '';
 
   return `<div class="card">
     <div class="top">
