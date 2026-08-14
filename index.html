@@ -56,7 +56,7 @@
   .detail-meta .pct.down { color:var(--down); }
   .detail-chart { height:250px; padding:12px; }
   .detail-catalysts { padding:12px; border-top:1px solid var(--border); font-size:11px; }
-  .catalyst-item { margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid rgba(88,166,255,.1); }
+  .catalyst-item { margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid rgba(88,166,255,.1); }
   .catalyst-item:last-child { border-bottom:none; margin-bottom:0; padding-bottom:0; }
   .catalyst-label { font-weight:600; color:#9fd0ff; margin-bottom:3px; }
   .catalyst-desc { color:var(--muted); line-height:1.4; }
@@ -418,15 +418,6 @@ function renderLargeChart(container, inst) {
   // SMA50 (blue)
   const sma50Series = chart.addLineSeries({ color: '#58a6ff', lineWidth: 1.5 });
   sma50Series.setData(bars.map((b, i) => ({ time: b.d, value: sma50[i] })).filter(d => d.value !== null));
-
-  // Support line (lowest support level or SMA200 proxy)
-  const sma200 = calcSMA(bars, 200);
-  const supportSeries = chart.addLineSeries({ color: '#ff6b9d', lineWidth: 1 });
-  supportSeries.setData(bars.map((b, i) => ({ time: b.d, value: sma200[i] })).filter(d => d.value !== null));
-
-  // Current price line (dotted)
-  const currentSeries = chart.addLineSeries({ color: '#ff6b9d', lineWidth: 1, lineStyle: 2 });
-  currentSeries.setData(bars.map(b => ({ time: b.d, value: lastPrice })));
 
   chart.timeScale().fitContent();
 }
