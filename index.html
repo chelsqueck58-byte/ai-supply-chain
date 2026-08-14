@@ -400,6 +400,7 @@ function renderLargeChart(container, inst) {
     timeScale: { timeVisible: true, secondsVisible: false, showBorders: false },
     rightPriceScale: { scaleMargins: { top: 0.1, bottom: 0.1 } },
     grid: { vertLines: { visible: false }, horzLines: { visible: false } },
+    crosshairMode: 0,
   });
 
   const bars = inst.bars;
@@ -410,6 +411,7 @@ function renderLargeChart(container, inst) {
   // Price line (pink)
   const priceSeries = chart.addLineSeries({ color: '#ff6b9d', lineWidth: 2.5 });
   priceSeries.setData(bars.map(b => ({ time: b.d, value: b.c })));
+  priceSeries.applyOptions({ crosshairMarkerVisible: false });
 
   // SMA20 (gold)
   const sma20Series = chart.addLineSeries({ color: '#d4a85f', lineWidth: 1.5 });
