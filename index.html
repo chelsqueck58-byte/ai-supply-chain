@@ -253,8 +253,10 @@ function ideaBox(inst) {
     ${teleResearch(inst)}
   </div>`;
 }
+// Summary page focuses on the supply-chain core — periphery sectors excluded.
+const SUMMARY_EXCLUDE = new Set(["china-ev", "singapore", "consumer"]);
 function filterByCategory(instruments, category) {
-  if (!category) return instruments;
+  if (!category) return instruments.filter(i => !SUMMARY_EXCLUDE.has(getCategory(i)));
   return instruments.filter(i => getCategory(i) === category);
 }
 
@@ -307,6 +309,14 @@ function catalystRows(category) {
       }
     });
   }
+  // Key macro events (Fed/FOMC, CPI, PPI, NFP, ISM...) — they move every name.
+  (DATA.macro_events || []).forEach(e => {
+    const d = daysTo(e.date);
+    if (d != null && d >= 0 && d <= 30) {
+      rows.push({ id: "MACRO", label: e.source || "", date: e.date, days: d,
+        event: e.event, focus: "", prev: null, prevLabel: "", earn: false, macro: true });
+    }
+  });
   rows.sort((a, b) => a.days - b.days || a.id.localeCompare(b.id));
   return rows;
 }
@@ -315,11 +325,11 @@ function renderCatalystsTable(category) {
   if (STALE) { el.innerHTML = ""; return; }
   const rows = catalystRows(category);
   if (!rows.length) { el.innerHTML = ""; return; }
-  const trs = rows.map(r => `<tr onclick="goTo('${r.id}')">
-    <td class="ct-tk"><b>${r.id}</b> <span class="muted">${r.label}</span></td>
+  const trs = rows.map(r => `<tr ${r.macro ? "" : `onclick="goTo('${r.id}')"`}>
+    <td class="ct-tk">${r.macro ? `🌐 <b style="color:#f5c518">MACRO</b>` : `<b>${r.id}</b>`} <span class="muted">${r.label}</span></td>
     <td class="ct-dt">${r.date ? `${r.date} <span class="muted">(${r.days}d)</span>` : '<span class="muted">—</span>'}</td>
     <td class="ct-tx">
-      <div class="ct-event">${r.earn ? `<b class="e">${esc(r.event)}</b>` : esc(r.event)}</div>
+      <div class="ct-event">${r.earn ? `<b class="e">${esc(r.event)}</b>` : (r.macro ? `<b style="color:#f5c518">${esc(r.event)}</b>` : esc(r.event))}</div>
       ${r.focus ? `<div class="ct-focus">🎯 ${esc(r.focus)}</div>` : ""}
       ${prevPerfBlock(r.prev, r.prevLabel)}
     </td>
