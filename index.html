@@ -55,9 +55,10 @@
   .detail-meta .pct { color:var(--up); font-weight:600; }
   .detail-meta .pct.down { color:var(--down); }
   .detail-chart { height:250px; padding:12px; }
-  .detail-catalysts { padding:12px; border-top:1px solid var(--border); font-size:11px; }
-  .catalyst-item { margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid rgba(88,166,255,.1); }
-  .catalyst-item:last-child { border-bottom:none; margin-bottom:0; padding-bottom:0; }
+  .detail-catalysts { padding:12px; font-size:11px; }
+  .catalyst-item { margin-bottom:12px; padding-bottom:0; border:none; }
+  .catalyst-item:not(:last-child) { border-bottom:1px solid rgba(88,166,255,.1); padding-bottom:12px; }
+  .catalyst-item:last-child { margin-bottom:0; }
   .catalyst-label { font-weight:600; color:#9fd0ff; margin-bottom:3px; }
   .catalyst-desc { color:var(--muted); line-height:1.4; }
   .catalyst-upcoming { color:#f5c518; font-weight:600; }
@@ -397,10 +398,12 @@ function renderLargeChart(container, inst) {
     width: container.clientWidth,
     height: 250,
     layout: { background: { color: '#0d1117' }, textColor: '#e6edf3' },
-    timeScale: { timeVisible: true, secondsVisible: false, showBorders: false },
-    rightPriceScale: { scaleMargins: { top: 0.1, bottom: 0.1 } },
+    timeScale: { timeVisible: true, secondsVisible: false, showBorders: false, drawTicks: false },
+    rightPriceScale: { scaleMargins: { top: 0.1, bottom: 0.1 }, borderVisible: false, drawTicks: false },
     grid: { vertLines: { visible: false }, horzLines: { visible: false } },
     crosshairMode: 0,
+    handleScroll: true,
+    handleScale: true,
   });
 
   const bars = inst.bars;
