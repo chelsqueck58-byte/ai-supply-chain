@@ -309,22 +309,23 @@ function renderCategoryTab(categoryName) {
   const idx = getCategoryIndex();
   const tickers = idx[categoryName] || [];
 
-  // Group by region if info available
-  const byRegion = {};
+  // Group by subcategory
+  const bySubcategory = {};
   for (const ticker of tickers) {
     const info = SC_MAP && SC_MAP[ticker];
-    const region = info && info.region ? info.region : 'Other';
-    if (!byRegion[region]) byRegion[region] = [];
-    byRegion[region].push(ticker);
+    const subcat = info && info.subcategory ? info.subcategory : 'Other';
+    if (!bySubcategory[subcat]) bySubcategory[subcat] = [];
+    bySubcategory[subcat].push(ticker);
   }
 
-  // Render by region with labels
-  for (const region of Object.keys(byRegion).sort()) {
-    const regionLabel = region === 'US' ? '🇺🇸 US/Global Stocks' : region === 'China' ? '🇨🇳 China Stocks' : region;
-    html += `<div style="font-size:12px;font-weight:700;color:#58a6ff;text-transform:uppercase;letter-spacing:.4px;margin-top:16px;margin-bottom:8px;padding:8px 0;border-top:1px solid var(--border);">${regionLabel}</div>`;
+  // Render by subcategory with labels
+  for (const subcat of Object.keys(bySubcategory).sort()) {
+    if (subcat !== 'Other') {
+      html += `<div style="font-size:11px;font-weight:600;color:#d4a85f;margin-top:12px;margin-bottom:6px;padding:6px 0;">${subcat}</div>`;
+    }
 
     html += `<div class="stock-grid">`;
-    for (const ticker of byRegion[region]) {
+    for (const ticker of bySubcategory[subcat]) {
       html += renderStockCard(ticker);
     }
     html += `</div>`;
