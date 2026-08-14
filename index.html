@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Supply Chain Intelligence</title><!-- v1786704740 -->
+<title>Supply Chain Intelligence</title>
 <style>
   :root {
     --bg:#0d1117; --panel:#161b22; --border:#21262d; --text:#e6edf3;
@@ -263,7 +263,7 @@ function filterByCategory(instruments, category) {
 function renderIdeas(category) {
   const el = document.getElementById("ideas");
   if (STALE) { el.innerHTML = ""; return; }
-  const insts = category ? filterByCategory(DATA.instruments, category) : DATA.instruments;
+  const insts = filterByCategory(DATA.instruments, category);
   const enters = insts.filter(i => i.idea && i.idea.kind === "enter");
   const tps = insts.filter(i => i.idea && i.idea.kind === "take_profit");
   let html = "";
@@ -290,7 +290,7 @@ function prevPerfBlock(prev, label) {
 }
 function catalystRows(category) {
   const rows = [];
-  const insts = category ? filterByCategory(DATA.instruments, category) : DATA.instruments;
+  const insts = filterByCategory(DATA.instruments, category);
   for (const inst of insts) {
     const f = inst.fund || {};
     if (f.next_earnings) {
@@ -341,7 +341,7 @@ function renderCatalystsTable(category) {
 function pastCatalystRows(category, lookbackDays = 30) {
   const rows = [];
   const today = new Date(), cutoff = new Date(today.getTime() - lookbackDays * 24 * 60 * 60 * 1000);
-  const insts = category ? filterByCategory(DATA.instruments, category) : DATA.instruments;
+  const insts = filterByCategory(DATA.instruments, category);
   for (const inst of insts) {
     const m = MOVES && MOVES[inst.id];
     if (!m) continue;
