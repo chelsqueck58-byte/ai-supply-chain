@@ -48,6 +48,7 @@
 
   .stock-grid { display:grid; gap:10px; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); margin-bottom:12px; }
   .card { background:var(--panel); border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+  .card-chart { height:50px; margin-bottom:8px; background:rgba(88,166,255,.04); }
   .card .top { display:flex; align-items:center; gap:6px; padding:8px 10px; }
   .card .name { font-weight:600; }
   .card .id { color:var(--muted); font-size:11px; }
@@ -204,6 +205,7 @@ function renderStockCard(ticker) {
   }
 
   return `<div class="card">
+    <div id="sparkline-${ticker}" class="card-chart"></div>
     <div class="top">
       <div><div class="name">${esc(inst.label)}</div><div class="id">${esc(ticker)}</div></div>
       <div class="px">$${last.toLocaleString(undefined, {maximumFractionDigits:2})}</div>
@@ -378,43 +380,64 @@ function renderCharts(categoryId) {
 
   console.log(`[${categoryId}] renderCharts: ${tickers.length} tickers`);
 
+  // Render sparklines (in cards)
   for (const ticker of tickers) {
     const inst = DATA.instruments.find(i => i.id === ticker);
-    if (!inst) {
-      console.log(`  ${ticker}: no instrument`);
-      continue;
+    if (!inst || !inst.bars || inst.bars.length === 0) continue;
+
+    const sparkContainer = document.getElementById(`sparkline-${ticker}`);
+    if (sparkContainer) {
+      try {
+        renderSparkline(sparkContainer, inst);
+        console.log(`  ${ticker}: ✓ sparkline`);
+      } catch (e) {
+        console.error(`  ${ticker} sparkline:`, e.message);
+      }
     }
-    if (!inst.bars || inst.bars.length === 0) {
-      console.log(`  ${ticker}: no bars`);
-      continue;
-    }
+  }
+
+  // Render large history charts
+  for (const ticker of tickers) {
+    const inst = DATA.instruments.find(i => i.id === ticker);
+    if (!inst || !inst.bars || inst.bars.length === 0) continue;
 
     const chartContainer = document.getElementById(`chart-${ticker}`);
-    if (!chartContainer) {
-      console.log(`  ${ticker}: no chart container`);
-      continue;
-    }
+    if (!chartContainer) continue;
 
     try {
       const width = chartContainer.clientWidth;
       if (width === 0) {
-        console.log(`  ${ticker}: container width is 0, retrying...`);
         setTimeout(() => {
           const w = chartContainer.clientWidth;
-          if (w > 0) renderSingleChart(chartContainer, ticker, inst);
+          if (w > 0) renderLargeChart(chartContainer, inst);
         }, 100);
         continue;
       }
 
-      renderSingleChart(chartContainer, ticker, inst);
-      console.log(`  ${ticker}: ✓ chart rendered`);
+      renderLargeChart(chartContainer, inst);
+      console.log(`  ${ticker}: ✓ history chart`);
     } catch (e) {
-      console.error(`  ${ticker}: error:`, e.message);
+      console.error(`  ${ticker} chart:`, e.message);
     }
   }
 }
 
-function renderSingleChart(container, ticker, inst) {
+function renderSparkline(container, inst) {
+  const chart = LightweightCharts.createChart(container, {
+    width: container.clientWidth,
+    height: 50,
+    layout: { background: { color: 'transparent' }, textColor: '#e6edf3' },
+    timeScale: { visible: false },
+    rightPriceScale: { visible: false },
+  });
+
+  const lineSeries = chart.addLineSeries({ color: '#58a6ff', lineWidth: 1 });
+  const data = inst.bars.slice(-90).map(b => ({ time: b.d, value: b.c }));
+  lineSeries.setData(data);
+  chart.timeScale().fitContent();
+}
+
+function renderLargeChart(container, inst) {
   const chart = LightweightCharts.createChart(container, {
     width: container.clientWidth,
     height: 200,
