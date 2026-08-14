@@ -338,6 +338,15 @@ function renderCatalystsTable(category) {
     <table class="ct-table"><thead><tr><th>Ticker</th><th>Date</th><th>Event / Focus / Prev Performance</th></tr></thead><tbody>${trs}</tbody></table>`;
 }
 
+// Earnings detection for researched moves: explicit tag, or a quarter ref /
+// "earnings" within the reason's first 3 words (same heuristic as build.py).
+function isEarningsMove(mv) {
+  if (mv.catalyst_type === "earnings") return true;
+  const words = (mv.reason || "").match(/[a-zA-Z0-9]+/g) || [];
+  const head = words.slice(0, 3).join(" ").toLowerCase();
+  return /\bq[1-4]\b/.test(head) || head.includes("earnings");
+}
+
 function pastCatalystRows(category, lookbackDays = 30) {
   const rows = [];
   const today = new Date(), cutoff = new Date(today.getTime() - lookbackDays * 24 * 60 * 60 * 1000);
@@ -349,7 +358,7 @@ function pastCatalystRows(category, lookbackDays = 30) {
     for (const mv of researched) {
       const d = new Date(mv.d);
       if (d >= cutoff && d < today) {
-        const label = mv.catalyst_type === "earnings" ? "<b style=\"color:#58a6ff\">📊 EARNINGS</b>" : "";
+        const label = isEarningsMove(mv) ? "<b style=\"color:#58a6ff\">📊 EARNINGS</b>" : "";
         rows.push({
           id: inst.id, label: inst.label, date: mv.d,
           event: (label ? `<div style="font-weight:600;margin-bottom:4px">${label}</div>` : "") + prevPerfBlock({ date: mv.d, pct: mv.pct, reason: mv.reason, source: mv.source }, "Move")
@@ -605,9 +614,10 @@ function renderSectorHistory(catKey) {
     if (!researched.length) continue;
     const rows = researched.map(mv => {
       const cls = mv.pct >= 0 ? "u" : "d";
+      const eTag = isEarningsMove(mv) ? `<b style="color:#58a6ff">📊 EARNINGS</b> ` : "";
       const reason = mv.market_wide ? `<span class="mw">${esc(mv.reason)} <i>(market-wide)</i></span>` : `<b>${esc(mv.reason)}</b>`;
       const src = mv.source ? ` <span class="msrc">[${esc(mv.source)}]</span>` : "";
-      return `<div class="mv"><span class="md">${mv.d}</span><span class="mp ${cls}">${mv.pct >= 0 ? "+" : ""}${mv.pct}%</span><span class="mr">${reason}${src}</span></div>`;
+      return `<div class="mv"><span class="md">${mv.d}</span><span class="mp ${cls}">${mv.pct >= 0 ? "+" : ""}${mv.pct}%</span><span class="mr">${eTag}${reason}${src}</span></div>`;
     }).join("");
     const el = document.createElement("div");
     el.className = "hcard";
