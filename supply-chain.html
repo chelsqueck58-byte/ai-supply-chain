@@ -433,7 +433,10 @@ function keyRemark(inst) {
 function recentPastEvents(inst) {
   if (!MOVES || !MOVES[inst.id]) return "";
   const m = MOVES[inst.id];
-  const researched = (m.moves || []).filter(mv => mv.reason).slice(-2).reverse();
+  // moves.json arrays are stored newest-first (see movements.py) - take the
+  // front, not the tail. slice(-2) was silently grabbing the OLDEST 2
+  // researched moves instead, showing 500-600+ day-old events on every card.
+  const researched = (m.moves || []).filter(mv => mv.reason).slice(0, 2);
   if (!researched.length) return "";
   const today = new Date();
   const rows = researched.map(mv => {
