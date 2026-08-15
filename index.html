@@ -448,7 +448,7 @@ function recentPastEvents(inst) {
     return `<div style="font-size:11px; margin:4px 0; padding:4px 0; border-top:1px solid var(--border);">
       ${label} <span class="pct ${cls}">${mv.pct >= 0 ? "+" : ""}${mv.pct.toFixed(2)}%</span>
       <span style="color:var(--muted); font-size:10px;">(${daysAgo}d ago)</span>
-      <div style="font-size:10px; color:var(--muted); margin-top:2px;">${esc(mv.reason.substring(0, 90))}${mv.reason.length > 90 ? "..." : ""}</div>
+      <div style="font-size:10px; color:var(--muted); margin-top:2px;">${esc(mv.reason)}</div>
     </div>`;
   }).join("");
   return rows ? `<div style="padding:6px 10px; border-top:1px solid var(--border); background:rgba(88,166,255,.03);">${rows}</div>` : "";
