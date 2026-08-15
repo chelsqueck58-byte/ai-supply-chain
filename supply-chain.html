@@ -132,7 +132,7 @@
 <script>
 "use strict";
 const TREND_ORDER = { up: 0, flat: 1, down: 2 };
-let DATA = null, MOVES = null, SC_MAP = null, STALE = false, OBSERVER = null;
+let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, STALE = false, OBSERVER = null;
 
 // Supply-chain category tabs. Keys must match getCategory() output.
 const CATEGORIES = [
@@ -353,15 +353,35 @@ function pastCatalystRows(category, lookbackDays = 30) {
   const insts = filterByCategory(DATA.instruments, category);
   for (const inst of insts) {
     const m = MOVES && MOVES[inst.id];
-    if (!m) continue;
-    const researched = (m.moves || []).filter(mv => mv.reason);
-    for (const mv of researched) {
-      const d = new Date(mv.d);
+    if (m) {
+      const researched = (m.moves || []).filter(mv => mv.reason);
+      for (const mv of researched) {
+        const d = new Date(mv.d);
+        if (d >= cutoff && d < today) {
+          const label = isEarningsMove(mv) ? "<b style=\"color:#58a6ff\">📊 EARNINGS</b>" : "";
+          rows.push({
+            id: inst.id, label: inst.label, date: mv.d,
+            event: (label ? `<div style="font-weight:600;margin-bottom:4px">${label}</div>` : "") + prevPerfBlock({ date: mv.d, pct: mv.pct, reason: mv.reason, source: mv.source }, "Move")
+          });
+        }
+      }
+    }
+    // Quarters that reported but moved the stock <5% never make it into
+    // moves.json (movements.py's detection floor), so they'd otherwise
+    // vanish from every catalyst view. earnings_dates.json fills that gap
+    // with a real researched report date. Skip entries covered_by_move (a
+    // >=5% move already logged the same report - the block above has it).
+    const ed = EARN_DATES && EARN_DATES[inst.id];
+    if (ed && ed.report_date && !ed.covered_by_move) {
+      const d = new Date(ed.report_date);
       if (d >= cutoff && d < today) {
-        const label = isEarningsMove(mv) ? "<b style=\"color:#58a6ff\">📊 EARNINGS</b>" : "";
+        const pctPart = typeof ed.reaction_pct === "number"
+          ? `<span class="pct ${ed.reaction_pct >= 0 ? "u" : "d"}">${ed.reaction_pct >= 0 ? "+" : ""}${ed.reaction_pct}%</span>: ` : "";
+        const src = ed.source ? ` <span class="msrc">[${esc(ed.source)}]</span>` : "";
         rows.push({
-          id: inst.id, label: inst.label, date: mv.d,
-          event: (label ? `<div style="font-weight:600;margin-bottom:4px">${label}</div>` : "") + prevPerfBlock({ date: mv.d, pct: mv.pct, reason: mv.reason, source: mv.source }, "Move")
+          id: inst.id, label: inst.label, date: ed.report_date,
+          event: `<div style="font-weight:600;margin-bottom:4px"><b style="color:#58a6ff">📊 EARNINGS</b></div>`
+            + `<div class="ct-prev">${pctPart}${esc(ed.reason || "reported results")}${src}</div>`
         });
       }
     }
@@ -679,8 +699,9 @@ function load() {
     fetch("./data.json?t=" + Date.now(), { cache: "no-store" }).then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
     fetch("./moves.json", { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./supply-chain-map.json?t=" + Date.now(), { cache: "no-store" }).then(r => { if (!r.ok) throw new Error(`map HTTP ${r.status}`); return r.json(); }),
-  ]).then(([data, moves, scmap]) => {
-    DATA = data; MOVES = moves; SC_MAP = scmap;
+    fetch("./earnings-dates.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
+  ]).then(([data, moves, scmap, earnDates]) => {
+    DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates;
     STALE = checkStale(DATA);
     const ideas = DATA.instruments.filter(i => i.idea && i.idea.kind === "enter").length;
     document.getElementById("meta").textContent =
