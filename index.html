@@ -107,13 +107,13 @@
   .rev-top { display:flex; align-items:baseline; gap:6px; margin-bottom:2px; }
   .rev-top .name { font-weight:600; }
   .rev-top .id { color:var(--muted); font-size:11px; }
-  .rev-period { color:var(--muted); font-size:10px; margin-bottom:8px; }
-  .rev-seg { margin-bottom:6px; }
-  .rev-seg-label { display:flex; justify-content:space-between; font-size:11px; margin-bottom:2px; }
-  .rev-seg-name { color:var(--text); }
-  .rev-seg-pct { color:#9fd0ff; font-weight:600; font-variant-numeric:tabular-nums; }
-  .rev-bar-track { height:6px; background:#1b2027; border-radius:3px; overflow:hidden; }
-  .rev-bar-fill { height:100%; background:linear-gradient(90deg,#58a6ff,#9fd0ff); border-radius:3px; }
+  .rev-period { color:var(--muted); font-size:10px; margin-bottom:6px; }
+  .rev-mini-table { width:100%; border-collapse:collapse; font-size:11px; }
+  .rev-mini-table td { padding:3px 4px; border-bottom:1px solid #1b2027; }
+  .rev-mini-table tr:last-child td { border-bottom:none; }
+  .rev-mini-name { color:var(--text); }
+  .rev-mini-num { color:#9fd0ff; font-weight:600; font-variant-numeric:tabular-nums; text-align:right; white-space:nowrap; width:1%; }
+  .rev-qual { color:var(--muted); font-weight:400; font-style:italic; cursor:help; text-decoration:underline dotted; }
   .rev-src { color:var(--muted); font-size:9px; margin-top:6px; }
   .rev-none { color:var(--muted); font-size:11px; font-style:italic; }
   /* Compare tab */
@@ -778,20 +778,19 @@ function _renderRevenueMixImpl(wrap) {
       } else {
         html += `<div class="rev-period">${esc(rev.fiscal_period || "")}</div>`;
         const segs = [...rev.segments].sort((a, b) => (b.pct || 0) - (a.pct || 0));
+        html += `<table class="rev-mini-table"><tbody>`;
         for (const s of segs) {
           const pct = typeof s.pct === "number" ? s.pct : 0;
           const margin = findMargin(df && df.segment_margins, s.name);
-          let marginText = "";
+          let marginCell = `<span class="cmp-na">—</span>`;
           if (margin && typeof margin.margin_pct === "number") {
-            marginText = ` &middot; ${margin.margin_pct}% ${esc(margin.margin_type || "")} margin`;
+            marginCell = `${margin.margin_pct}% ${esc((margin.margin_type || "").slice(0, 1).toUpperCase())}`;
           } else if (margin && margin.note) {
-            marginText = ` &middot; <span title="${esc(margin.note)}">margin: qualitative only</span>`;
+            marginCell = `<span class="rev-qual" title="${esc(margin.note)}">qual.</span>`;
           }
-          html += `<div class="rev-seg">
-            <div class="rev-seg-label"><span class="rev-seg-name">${esc(s.name)}</span><span class="rev-seg-pct">${pct.toFixed(1)}%${marginText}</span></div>
-            <div class="rev-bar-track"><div class="rev-bar-fill" style="width:${Math.min(100, Math.max(0, pct))}%"></div></div>
-          </div>`;
+          html += `<tr><td class="rev-mini-name">${esc(s.name)}</td><td class="rev-mini-num">${pct.toFixed(1)}%</td><td class="rev-mini-num">${marginCell}</td></tr>`;
         }
+        html += `</tbody></table>`;
         if (df && df.filing_check_note && (!df.segment_margins || !df.segment_margins.length)) {
           html += `<div class="rev-src">Margins: ${esc(df.filing_check_note)}</div>`;
         }
@@ -800,13 +799,12 @@ function _renderRevenueMixImpl(wrap) {
       if (geo && geo.regions && geo.regions.length) {
         html += `<div class="rev-period" style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border)">By country/region &middot; ${esc(geo.fiscal_period || "")}</div>`;
         const gsegs = [...geo.regions].sort((a, b) => (b.pct || 0) - (a.pct || 0));
+        html += `<table class="rev-mini-table"><tbody>`;
         for (const g of gsegs) {
           const pct = typeof g.pct === "number" ? g.pct : 0;
-          html += `<div class="rev-seg">
-            <div class="rev-seg-label"><span class="rev-seg-name">${esc(g.name)}</span><span class="rev-seg-pct">${pct.toFixed(1)}%</span></div>
-            <div class="rev-bar-track"><div class="rev-bar-fill" style="width:${Math.min(100, Math.max(0, pct))}%;background:linear-gradient(90deg,#d4a85f,#f5c518)"></div></div>
-          </div>`;
+          html += `<tr><td class="rev-mini-name">${esc(g.name)}</td><td class="rev-mini-num" colspan="2">${pct.toFixed(1)}%</td></tr>`;
         }
+        html += `</tbody></table>`;
       }
       html += `</div>`;
     }
