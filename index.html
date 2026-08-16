@@ -101,6 +101,21 @@
   .tabs button.active { background:var(--panel); color:var(--text); }
   /* Per-sector stock history (below the cards) */
   .hist-wrap { padding:0 12px 12px; }
+  /* Revenue Mix tab */
+  .rev-wrap { padding:12px; display:grid; gap:12px; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); }
+  .rev-card { background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:10px 12px; }
+  .rev-top { display:flex; align-items:baseline; gap:6px; margin-bottom:2px; }
+  .rev-top .name { font-weight:600; }
+  .rev-top .id { color:var(--muted); font-size:11px; }
+  .rev-period { color:var(--muted); font-size:10px; margin-bottom:8px; }
+  .rev-seg { margin-bottom:6px; }
+  .rev-seg-label { display:flex; justify-content:space-between; font-size:11px; margin-bottom:2px; }
+  .rev-seg-name { color:var(--text); }
+  .rev-seg-pct { color:#9fd0ff; font-weight:600; font-variant-numeric:tabular-nums; }
+  .rev-bar-track { height:6px; background:#1b2027; border-radius:3px; overflow:hidden; }
+  .rev-bar-fill { height:100%; background:linear-gradient(90deg,#58a6ff,#9fd0ff); border-radius:3px; }
+  .rev-src { color:var(--muted); font-size:9px; margin-top:6px; }
+  .rev-none { color:var(--muted); font-size:11px; font-style:italic; }
   .hist-head { font-size:12px; font-weight:700; letter-spacing:.5px; text-transform:uppercase;
     color:#9fd0ff; padding:14px 2px 8px; border-top:2px solid var(--border); margin-top:6px; }
   .hist-grid { display:grid; gap:12px; grid-template-columns:repeat(auto-fill,minmax(470px,1fr)); }
@@ -132,7 +147,8 @@
 <script>
 "use strict";
 const TREND_ORDER = { up: 0, flat: 1, down: 2 };
-let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, STALE = false, OBSERVER = null;
+let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, STALE = false, OBSERVER = null;
+const REVENUE_TAB_CATEGORIES = new Set(["china-internet", "compute", "hyperscaler-cloud", "platform"]);
 
 // Supply-chain category tabs. Keys must match getCategory() output.
 const CATEGORIES = [
@@ -681,13 +697,62 @@ function renderSectorHistory(catKey) {
   grid.querySelectorAll(".hchart").forEach(c => OBSERVER.observe(c));
 }
 
+function renderRevenueMix() {
+  const wrap = document.getElementById("revenue-wrap");
+  if (wrap.dataset.rendered) return;
+  wrap.dataset.rendered = "1";
+  const insts = DATA.instruments.filter(i => {
+    const m = SC_MAP && SC_MAP[i.id];
+    return m && REVENUE_TAB_CATEGORIES.has(m.category);
+  });
+  const CAT_LABEL = { "china-internet": "China Internet", "compute": "Compute",
+    "hyperscaler-cloud": "Tech Platforms", "platform": "Tech Platforms" };
+  const byCat = new Map();
+  for (const inst of insts) {
+    const cat = CAT_LABEL[SC_MAP[inst.id].category] || SC_MAP[inst.id].category;
+    if (!byCat.has(cat)) byCat.set(cat, []);
+    byCat.get(cat).push(inst);
+  }
+  let html = "";
+  for (const [cat, list] of byCat) {
+    html += `<div class="section" style="grid-column:1/-1">${esc(cat)}</div>`;
+    for (const inst of list.sort((a, b) => a.label.localeCompare(b.label))) {
+      const rev = REV_MIX && REV_MIX[inst.id];
+      html += `<div class="rev-card">
+        <div class="rev-top"><span class="name">${esc(inst.label)}</span><span class="id">${esc(inst.id)}</span></div>`;
+      if (!rev || !rev.segments || !rev.segments.length) {
+        html += `<div class="rev-none">No segment breakdown available${rev && rev.fiscal_period === null && rev.source === null ? " (too newly listed / not yet filed)" : " yet"}</div>`;
+      } else {
+        html += `<div class="rev-period">${esc(rev.fiscal_period || "")}</div>`;
+        const segs = [...rev.segments].sort((a, b) => (b.pct || 0) - (a.pct || 0));
+        for (const s of segs) {
+          const pct = typeof s.pct === "number" ? s.pct : 0;
+          html += `<div class="rev-seg">
+            <div class="rev-seg-label"><span class="rev-seg-name">${esc(s.name)}</span><span class="rev-seg-pct">${pct.toFixed(1)}%</span></div>
+            <div class="rev-bar-track"><div class="rev-bar-fill" style="width:${Math.min(100, Math.max(0, pct))}%"></div></div>
+          </div>`;
+        }
+        if (rev.source) html += `<div class="rev-src">Source: ${esc(rev.source)}</div>`;
+      }
+      html += `</div>`;
+    }
+  }
+  wrap.innerHTML = html || `<div class="rev-none" style="padding:16px">No data</div>`;
+}
+
 window.showTab = function (tabKey) {
   document.getElementById("tab-summary").classList.toggle("active", tabKey === "summary");
+  document.getElementById("tab-revenue").classList.toggle("active", tabKey === "revenue");
+  document.getElementById("revenue-wrap").style.display = tabKey === "revenue" ? "" : "none";
   for (const c of CATEGORIES) {
     document.getElementById("tab-" + c.key).classList.toggle("active", tabKey === c.key);
     const show = tabKey === c.key;
     document.getElementById("grid-" + c.key).style.display = show ? "" : "none";
     document.getElementById("hist-" + c.key).style.display = show ? "" : "none";
+  }
+  if (tabKey === "revenue") {
+    if (DATA) renderRevenueMix();
+    return;
   }
   const category = tabKey === "summary" ? null : tabKey;
   if (DATA) {
@@ -717,6 +782,10 @@ function buildShell() {
     hist.id = "hist-" + c.key; hist.className = "hist-wrap"; hist.style.display = "none";
     grids.appendChild(hist);
   }
+  mk("revenue", "Revenue Mix");
+  const revWrap = document.createElement("div");
+  revWrap.id = "revenue-wrap"; revWrap.className = "rev-wrap"; revWrap.style.display = "none";
+  grids.appendChild(revWrap);
 }
 
 function load() {
@@ -727,8 +796,9 @@ function load() {
     fetch("./moves.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./supply-chain-map.json?t=" + Date.now(), { cache: "no-store" }).then(r => { if (!r.ok) throw new Error(`map HTTP ${r.status}`); return r.json(); }),
     fetch("./earnings-dates.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
-  ]).then(([data, moves, scmap, earnDates]) => {
-    DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates;
+    fetch("./revenue-breakdown.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
+  ]).then(([data, moves, scmap, earnDates, revMix]) => {
+    DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates; REV_MIX = revMix;
     STALE = checkStale(DATA);
     const ideas = DATA.instruments.filter(i => i.idea && i.idea.kind === "enter").length;
     document.getElementById("meta").textContent =
