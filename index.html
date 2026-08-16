@@ -722,8 +722,22 @@ function renderSectorHistory(catKey) {
 }
 
 function renderRevenueMix() {
+  // Defense in depth: an unhandled exception anywhere in the render body
+  // aborts before the final wrap.innerHTML assignment, leaving the tab
+  // silently blank with zero diagnostics - confirmed live on the Compare
+  // tab (one malformed research item crashed the whole render). This
+  // guarantees a visible error instead of an empty page if it ever recurs.
   const wrap = document.getElementById("revenue-wrap");
   if (wrap.dataset.rendered) return;
+  try {
+    _renderRevenueMixImpl(wrap);
+  } catch (e) {
+    wrap.dataset.rendered = "";
+    wrap.innerHTML = `<div class="rev-none" style="padding:16px;color:var(--down)">Render error: ${esc(e.message)} - data may have a malformed entry. Check console for details.</div>`;
+    console.error("renderRevenueMix failed:", e);
+  }
+}
+function _renderRevenueMixImpl(wrap) {
   wrap.dataset.rendered = "1";
   const insts = DATA.instruments.filter(i => {
     const m = SC_MAP && SC_MAP[i.id];
@@ -827,8 +841,19 @@ function fmtPctPlain(n, digits = 1) {
 }
 
 function renderCompareTable() {
+  // See renderRevenueMix's comment - same defense-in-depth against a
+  // silent blank tab from an unhandled exception mid-render.
   const wrap = document.getElementById("compare-wrap");
   if (wrap.dataset.rendered) return;
+  try {
+    _renderCompareTableImpl(wrap);
+  } catch (e) {
+    wrap.dataset.rendered = "";
+    wrap.innerHTML = `<div class="rev-none" style="padding:16px;color:var(--down)">Render error: ${esc(e.message)} - data may have a malformed entry. Check console for details.</div>`;
+    console.error("renderCompareTable failed:", e);
+  }
+}
+function _renderCompareTableImpl(wrap) {
   wrap.dataset.rendered = "1";
   const insts = DATA.instruments.filter(i => {
     const m = SC_MAP && SC_MAP[i.id];
@@ -869,8 +894,16 @@ function renderCompareTable() {
       }
       const offBs = OFF_BS && OFF_BS[inst.id];
       let offBsCell = na;
-      if (offBs && offBs.items && offBs.items.length) {
-        offBsCell = `<div class="cmp-seg-list">` + offBs.items.map(it =>
+      // Defensive filter: a single malformed research item (missing name or
+      // amount) must never crash the whole table render again - confirmed
+      // live on MSFT, where one bad item ({items_placeholder: null}) threw
+      // on .toLocaleString() and silently emptied the entire Compare tab,
+      // since the exception aborted execution before the final innerHTML
+      // assignment ever ran.
+      const validOffBsItems = (offBs && offBs.items || [])
+        .filter(it => it && it.name && typeof it.amount_usd_m === "number");
+      if (validOffBsItems.length) {
+        offBsCell = `<div class="cmp-seg-list">` + validOffBsItems.map(it =>
           `<b>${esc(it.name)}</b>: $${it.amount_usd_m.toLocaleString(undefined,{maximumFractionDigits:0})}M`
         ).join("<br>") + `</div>`;
       } else if (offBs && offBs.source === null) {
