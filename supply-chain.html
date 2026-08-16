@@ -595,9 +595,11 @@ function render() {
     const grid = document.getElementById("grid-" + cat.key);
     grid.innerHTML = "";
     // Group by subcategory (gold section headers), sort within each group.
+    // China Internet stays flat - the tab is small enough that subsector
+    // labels (E-commerce/Gaming/Search/etc) added noise without helping.
     const bySub = new Map();
     for (const inst of byCat[cat.key]) {
-      const sub = getSubcategory(inst);
+      const sub = cat.key === "china-internet" ? "Other" : getSubcategory(inst);
       if (!bySub.has(sub)) bySub.set(sub, []);
       bySub.get(sub).push(inst);
     }
