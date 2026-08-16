@@ -164,7 +164,7 @@
 <script>
 "use strict";
 const TREND_ORDER = { up: 0, flat: 1, down: 2 };
-let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, DEEP_FUND = null, GEO_MIX = null, STALE = false, OBSERVER = null;
+let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, DEEP_FUND = null, GEO_MIX = null, FX_RATES = null, OFF_BS = null, STALE = false, OBSERVER = null;
 const REVENUE_TAB_CATEGORIES = new Set(["china-internet", "compute", "hyperscaler-cloud", "platform"]);
 // Individual tickers pulled in from a category that isn't otherwise in
 // scope (e.g. ASML from Equipment) - added one at a time on request rather
@@ -800,13 +800,27 @@ function renderRevenueMix() {
   wrap.innerHTML = html || `<div class="rev-none" style="padding:16px">No data</div>`;
 }
 
-function fmtUsd(n) {
+const CCY_SYMBOL = { USD: "$", HKD: "HK$", CNY: "¥", KRW: "₩", SGD: "S$" };
+function fmtMoney(n, symbol) {
   if (n === null || n === undefined) return null;
   const abs = Math.abs(n);
-  if (abs >= 1e12) return "$" + (n / 1e12).toFixed(2) + "T";
-  if (abs >= 1e9) return "$" + (n / 1e9).toFixed(2) + "B";
-  if (abs >= 1e6) return "$" + (n / 1e6).toFixed(1) + "M";
-  return "$" + n.toFixed(0);
+  if (abs >= 1e12) return symbol + (n / 1e12).toFixed(2) + "T";
+  if (abs >= 1e9) return symbol + (n / 1e9).toFixed(2) + "B";
+  if (abs >= 1e6) return symbol + (n / 1e6).toFixed(1) + "M";
+  return symbol + n.toFixed(0);
+}
+// Yahoo's market_cap comes back in each stock's LOCAL trading currency, not
+// USD - confirmed live on Cambricon (raw value was actually CNY 686.7B, not
+// USD) and Tencent (raw value was HKD 3.97T). Shows the real native-currency
+// figure plus a USD-equivalent (via FX_RATES) for cross-stock comparability.
+function fmtMarketCap(n, currency) {
+  if (n === null || n === undefined) return null;
+  const ccy = currency || "USD";
+  const symbol = CCY_SYMBOL[ccy] || (ccy + " ");
+  const native = fmtMoney(n, symbol);
+  if (ccy === "USD" || !FX_RATES || !FX_RATES[ccy]) return native;
+  const usdEquiv = fmtMoney(n / FX_RATES[ccy], "$");
+  return `${native} <span class="cmp-src-note">(~${usdEquiv})</span>`;
 }
 function fmtPctPlain(n, digits = 1) {
   return (n === null || n === undefined) ? null : (n * 100).toFixed(digits) + "%";
@@ -831,14 +845,37 @@ function renderCompareTable() {
   const na = `<span class="cmp-na">—</span>`;
   let rows = "";
   for (const [cat, list] of byCat) {
-    rows += `<tr class="cmp-cat-row"><td colspan="7">${esc(cat)}</td></tr>`;
+    rows += `<tr class="cmp-cat-row"><td colspan="9">${esc(cat)}</td></tr>`;
     for (const inst of list.sort((a, b) => a.label.localeCompare(b.label))) {
       const f = inst.fund || {};
       const df = DEEP_FUND && DEEP_FUND[inst.id];
-      const mktCap = fmtUsd(f.market_cap) || na;
+      const mktCap = fmtMarketCap(f.market_cap, inst.currency) || na;
       const fwdPe = (f.fwd_pe != null) ? f.fwd_pe.toFixed(1) + "x" : na;
       const gm = fmtPctPlain(f.gross_margin) || na;
       const npm = fmtPctPlain(f.net_margin) || na;
+
+      let debtCell = na;
+      if (f.total_debt != null || f.total_cash != null) {
+        const parts = [];
+        if (f.total_debt != null) parts.push(`Debt: ${fmtMarketCap(f.total_debt, inst.currency)}`);
+        if (f.total_cash != null) parts.push(`Cash: ${fmtMarketCap(f.total_cash, inst.currency)}`);
+        if (f.total_debt != null && f.total_cash != null) {
+          const net = f.total_cash - f.total_debt;
+          const netLabel = net >= 0 ? "Net cash" : "Net debt";
+          parts.push(`<b>${netLabel}: ${fmtMarketCap(Math.abs(net), inst.currency)}</b>`);
+        }
+        if (f.debt_to_equity != null) parts.push(`D/E: ${f.debt_to_equity.toFixed(0)}%`);
+        debtCell = `<div class="cmp-seg-list">${parts.join("<br>")}</div>`;
+      }
+      const offBs = OFF_BS && OFF_BS[inst.id];
+      let offBsCell = na;
+      if (offBs && offBs.items && offBs.items.length) {
+        offBsCell = `<div class="cmp-seg-list">` + offBs.items.map(it =>
+          `<b>${esc(it.name)}</b>: $${it.amount_usd_m.toLocaleString(undefined,{maximumFractionDigits:0})}M`
+        ).join("<br>") + `</div>`;
+      } else if (offBs && offBs.source === null) {
+        offBsCell = `<span class="cmp-src-note">Nothing material disclosed</span>`;
+      }
 
       let guidanceCell = na;
       if (df && df.capex_guidance && df.capex_guidance.text) {
@@ -868,6 +905,8 @@ function renderCompareTable() {
         <td>${fwdPe}</td>
         <td>${gm}</td>
         <td>${npm}</td>
+        <td>${debtCell}</td>
+        <td>${offBsCell}</td>
         <td>${guidanceCell}</td>
         <td>${segCell}</td>
       </tr>`;
@@ -875,9 +914,9 @@ function renderCompareTable() {
   }
   wrap.innerHTML = `<table class="cmp-table"><thead><tr>
       <th>Company</th><th>Mkt Cap</th><th>Fwd P/E</th><th>GM%</th><th>NP%</th>
-      <th>Capex Guidance</th><th>Segment Margins</th>
+      <th>Debt/Cash</th><th>Off-BS Liabilities</th><th>Capex Guidance</th><th>Segment Margins</th>
     </tr></thead><tbody>${rows}</tbody></table>
-    <div class="rev-src" style="margin-top:8px">Capex, capex guidance and segment margins are research-derived from company filings/earnings calls, refreshed periodically (not daily) — see each cell's source period for freshness.</div>`;
+    <div class="rev-src" style="margin-top:8px">Mkt cap/debt/cash shown in each stock's native trading currency with a USD-equivalent in parentheses (via current FX rate). Capex guidance, off-BS liabilities and segment margins are research-derived from company filings/earnings calls, refreshed periodically (not daily) — see each cell's source period for freshness.</div>`;
 }
 
 window.showTab = function (tabKey) {
@@ -958,8 +997,10 @@ function load() {
     fetch("./revenue-breakdown.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./deep-fundamentals.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./geo-mix.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
-  ]).then(([data, moves, scmap, earnDates, revMix, deepFund, geoMix]) => {
-    DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates; REV_MIX = revMix; DEEP_FUND = deepFund; GEO_MIX = geoMix;
+    fetch("./fx-rates.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
+    fetch("./off-bs-liabilities.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
+  ]).then(([data, moves, scmap, earnDates, revMix, deepFund, geoMix, fxRates, offBs]) => {
+    DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates; REV_MIX = revMix; DEEP_FUND = deepFund; GEO_MIX = geoMix; FX_RATES = fxRates; OFF_BS = offBs;
     STALE = checkStale(DATA);
     const ideas = DATA.instruments.filter(i => i.idea && i.idea.kind === "enter").length;
     document.getElementById("meta").textContent =
