@@ -878,13 +878,14 @@ function _renderCompareTableImpl(wrap) {
   const na = `<span class="cmp-na">—</span>`;
   let rows = "";
   for (const [cat, list] of byCat) {
-    rows += `<tr class="cmp-cat-row"><td colspan="9">${esc(cat)}</td></tr>`;
+    rows += `<tr class="cmp-cat-row"><td colspan="10">${esc(cat)}</td></tr>`;
     for (const inst of list.sort((a, b) => a.label.localeCompare(b.label))) {
       const f = inst.fund || {};
       const df = DEEP_FUND && DEEP_FUND[inst.id];
       const mktCap = fmtMarketCap(f.market_cap, inst.currency) || na;
       const fwdPe = (f.fwd_pe != null) ? f.fwd_pe.toFixed(1) + "x" : na;
       const gm = fmtPctPlain(f.gross_margin) || na;
+      const om = fmtPctPlain(f.operating_margin) || na;
       const npm = fmtPctPlain(f.net_margin) || na;
 
       let debtCell = na;
@@ -934,6 +935,20 @@ function _renderCompareTableImpl(wrap) {
           }
           return `<b>${esc(s.name)}</b>: ${esc(s.note || "qualitative only, no number disclosed")}`;
         }).join("<br>") + `</div>`;
+      } else if (df && df.company_margin_estimates) {
+        // No real segments (e.g. a pre-IPO-scale AI lab) - company-wide
+        // SELL-SIDE ESTIMATE, not a company-disclosed figure. Labeled
+        // distinctly so it's never confused with real segment margins.
+        const ce = df.company_margin_estimates;
+        const pairs = Object.entries(ce).filter(([k]) => k.includes("margin_pct"));
+        segCell = `<div class="cmp-seg-list"><span class="rev-qual" title="${esc(ce.source || "")}">Sell-side estimate, ${esc(ce.period || "")}</span><br>` +
+          pairs.map(([k, v]) => {
+            // e.g. "gross_margin_pct_2025a" -> metric "gross margin", period "2025A"
+            const m = k.match(/^(.*?)_pct(?:_(\w+))?$/);
+            const metric = (m ? m[1] : k).replace(/_/g, " ");
+            const period = m && m[2] ? ` (${m[2].toUpperCase()})` : "";
+            return `${esc(metric)}${period}: ${v}%`;
+          }).join("<br>") + `</div>`;
       } else if (df && df.filing_check_note) {
         // Confirmed directly against the primary filing - genuinely not
         // disclosed (single-segment reporter), not a research gap.
@@ -945,6 +960,7 @@ function _renderCompareTableImpl(wrap) {
         <td>${mktCap}</td>
         <td>${fwdPe}</td>
         <td>${gm}</td>
+        <td>${om}</td>
         <td>${npm}</td>
         <td>${debtCell}</td>
         <td>${offBsCell}</td>
@@ -954,10 +970,10 @@ function _renderCompareTableImpl(wrap) {
     }
   }
   wrap.innerHTML = `<table class="cmp-table"><thead><tr>
-      <th>Company</th><th>Mkt Cap</th><th>Fwd P/E</th><th>GM%</th><th>NP%</th>
+      <th>Company</th><th>Mkt Cap</th><th>Fwd P/E</th><th>GM%</th><th>OM%</th><th>NP%</th>
       <th>Debt/Cash</th><th>Off-BS Liabilities</th><th>Capex Guidance</th><th>Segment Margins</th>
     </tr></thead><tbody>${rows}</tbody></table>
-    <div class="rev-src" style="margin-top:8px">Mkt cap/debt/cash shown in each stock's native trading currency with a USD-equivalent in parentheses (via current FX rate). Capex guidance, off-BS liabilities and segment margins are research-derived from company filings/earnings calls, refreshed periodically (not daily) — see each cell's source period for freshness.</div>`;
+    <div class="rev-src" style="margin-top:8px">Mkt cap/debt/cash shown in each stock's native trading currency with a USD-equivalent in parentheses (via current FX rate). GM/OM/NP are company-wide (Yahoo financial data). Capex guidance, off-BS liabilities and segment margins are research-derived from company filings/earnings calls, refreshed periodically (not daily) — see each cell's source period for freshness. Segment Margins column shows a labeled sell-side estimate instead when a company has no real reportable segments (e.g. pre-scale private-turned-public AI labs).</div>`;
 }
 
 window.showTab = function (tabKey) {
