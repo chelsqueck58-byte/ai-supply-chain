@@ -339,12 +339,21 @@ function renderCatalystsTable(category) {
 }
 
 // Earnings detection for researched moves: explicit tag, or a quarter ref /
-// "earnings" within the reason's first 3 words (same heuristic as build.py).
+// "earnings" within the reason's first 3 words (same heuristic as build.py) -
+// EXCEPT delivery reports ("Q2 2026 deliveries ~62,682 units missed..."),
+// which open with the same Q[1-4] pattern but are a different event
+// (confirmed live on TSLA/XPeng/NIO/Li Auto, wrongly badged EARNINGS before
+// this exclusion). A 6-word window still allows "Q2 earnings: deliveries beat"
+// to correctly count, since "earnings" would appear in that wider window too.
 function isEarningsMove(mv) {
   if (mv.catalyst_type === "earnings") return true;
   const words = (mv.reason || "").match(/[a-zA-Z0-9]+/g) || [];
-  const head = words.slice(0, 3).join(" ").toLowerCase();
-  return /\bq[1-4]\b/.test(head) || head.includes("earnings");
+  const head3 = words.slice(0, 3).join(" ").toLowerCase();
+  const head6 = words.slice(0, 6).join(" ").toLowerCase();
+  const hasRef = /\bq[1-4]\b/.test(head3) || head3.includes("earnings");
+  if (!hasRef) return false;
+  if (head6.includes("deliver") && !head6.includes("earnings")) return false;
+  return true;
 }
 
 function pastCatalystRows(category, lookbackDays = 30) {
