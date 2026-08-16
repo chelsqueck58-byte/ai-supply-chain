@@ -811,6 +811,10 @@ function renderCompareTable() {
       if (df && df.segment_margins && df.segment_margins.length) {
         segCell = `<div class="cmp-seg-list">` + df.segment_margins
           .map(s => `<b>${esc(s.name)}</b>: ${s.margin_pct}% ${esc(s.margin_type || "")}`).join("<br>") + `</div>`;
+      } else if (df && df.filing_check_note) {
+        // Confirmed directly against the primary filing - genuinely not
+        // disclosed (single-segment reporter), not a research gap.
+        segCell = `<span class="cmp-src-note">${esc(df.filing_check_note)}</span>`;
       }
 
       rows += `<tr>
@@ -844,6 +848,14 @@ window.showTab = function (tabKey) {
     document.getElementById("grid-" + c.key).style.display = show ? "" : "none";
     document.getElementById("hist-" + c.key).style.display = show ? "" : "none";
   }
+  // Revenue Mix / Compare are pure reference tables - no ideas/catalysts
+  // sections. Those divs are fixed top-level elements shared across every
+  // tab, so without this they'd keep showing stale content from whichever
+  // tab was active before switching here.
+  const showIdeas = tabKey !== "revenue" && tabKey !== "compare";
+  document.getElementById("ideas").style.display = showIdeas ? "" : "none";
+  document.getElementById("catalysts30").style.display = showIdeas ? "" : "none";
+  document.getElementById("pastCatalysts").style.display = showIdeas ? "" : "none";
   if (tabKey === "revenue") {
     if (DATA) renderRevenueMix();
     return;
