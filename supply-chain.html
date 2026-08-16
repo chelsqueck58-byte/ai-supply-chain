@@ -132,6 +132,7 @@
   .cmp-seg-list b { color:var(--text); }
   .cmp-na { color:var(--muted); }
   .cmp-src-note { color:var(--muted); font-size:9px; font-style:italic; white-space:normal; max-width:200px; }
+  .cmp-capex-headline { color:#f5c518; font-weight:700; font-size:13px; margin-bottom:3px; white-space:nowrap; }
   .hist-head { font-size:12px; font-weight:700; letter-spacing:.5px; text-transform:uppercase;
     color:#9fd0ff; padding:14px 2px 8px; border-top:2px solid var(--border); margin-top:6px; }
   .hist-grid { display:grid; gap:12px; grid-template-columns:repeat(auto-fill,minmax(470px,1fr)); }
@@ -830,7 +831,7 @@ function renderCompareTable() {
   const na = `<span class="cmp-na">—</span>`;
   let rows = "";
   for (const [cat, list] of byCat) {
-    rows += `<tr class="cmp-cat-row"><td colspan="8">${esc(cat)}</td></tr>`;
+    rows += `<tr class="cmp-cat-row"><td colspan="7">${esc(cat)}</td></tr>`;
     for (const inst of list.sort((a, b) => a.label.localeCompare(b.label))) {
       const f = inst.fund || {};
       const df = DEEP_FUND && DEEP_FUND[inst.id];
@@ -839,16 +840,13 @@ function renderCompareTable() {
       const gm = fmtPctPlain(f.gross_margin) || na;
       const npm = fmtPctPlain(f.net_margin) || na;
 
-      let capexCell = na;
-      if (df && df.trailing_capex && df.trailing_capex.amount_usd_m != null) {
-        const tc = df.trailing_capex;
-        const ocfM = f.operating_cashflow != null ? f.operating_cashflow / 1e6 : null;
-        const ratio = ocfM ? ` (${(tc.amount_usd_m / ocfM * 100).toFixed(0)}% of OCF)` : "";
-        capexCell = `$${tc.amount_usd_m.toLocaleString(undefined,{maximumFractionDigits:0})}M${ratio}<br><span class="cmp-src-note">${esc(tc.period || "")}</span>`;
-      }
       let guidanceCell = na;
       if (df && df.capex_guidance && df.capex_guidance.text) {
-        guidanceCell = `<span class="cmp-seg-list">${esc(df.capex_guidance.text)}</span>`;
+        const cg = df.capex_guidance;
+        const headline = cg.headline
+          ? `<div class="cmp-capex-headline">${esc(cg.headline)}</div>`
+          : `<div class="cmp-src-note">No explicit figure guided</div>`;
+        guidanceCell = headline + `<span class="cmp-seg-list">${esc(cg.text)}</span>`;
       }
       let segCell = na;
       if (df && df.segment_margins && df.segment_margins.length) {
@@ -870,7 +868,6 @@ function renderCompareTable() {
         <td>${fwdPe}</td>
         <td>${gm}</td>
         <td>${npm}</td>
-        <td>${capexCell}</td>
         <td>${guidanceCell}</td>
         <td>${segCell}</td>
       </tr>`;
@@ -878,7 +875,7 @@ function renderCompareTable() {
   }
   wrap.innerHTML = `<table class="cmp-table"><thead><tr>
       <th>Company</th><th>Mkt Cap</th><th>Fwd P/E</th><th>GM%</th><th>NP%</th>
-      <th>Trailing Capex</th><th>Capex Guidance</th><th>Segment Margins</th>
+      <th>Capex Guidance</th><th>Segment Margins</th>
     </tr></thead><tbody>${rows}</tbody></table>
     <div class="rev-src" style="margin-top:8px">Capex, capex guidance and segment margins are research-derived from company filings/earnings calls, refreshed periodically (not daily) — see each cell's source period for freshness.</div>`;
 }
