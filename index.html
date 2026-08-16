@@ -784,7 +784,7 @@ function _renderRevenueMixImpl(wrap) {
           const margin = findMargin(df && df.segment_margins, s.name);
           let marginCell = `<span class="cmp-na">—</span>`;
           if (margin && typeof margin.margin_pct === "number") {
-            marginCell = `${margin.margin_pct}% ${esc((margin.margin_type || "").slice(0, 1).toUpperCase())}`;
+            marginCell = `${margin.margin_pct}% ${esc(fmtMarginType(margin.margin_type))}`;
           } else if (margin && margin.note) {
             marginCell = `<span class="rev-qual" title="${esc(margin.note)}">qual.</span>`;
           }
@@ -836,6 +836,16 @@ function fmtMarketCap(n, currency) {
 }
 function fmtPctPlain(n, digits = 1) {
   return (n === null || n === undefined) ? null : (n * 100).toFixed(digits) + "%";
+}
+// Research only ever asks for "gross" or "operating" margin (see
+// deep_fundamentals.py) - never fabricate an "EBITDA" label since that
+// wasn't what was actually researched. Spells the type out clearly instead
+// of the single-letter "G"/"O" abbreviation that was ambiguous.
+function fmtMarginType(type) {
+  const t = (type || "").toLowerCase();
+  if (t.startsWith("gross")) return "GM";
+  if (t.startsWith("operating")) return "Op. Margin";
+  return type || "";
 }
 
 function renderCompareTable() {
@@ -920,7 +930,7 @@ function _renderCompareTableImpl(wrap) {
       if (df && df.segment_margins && df.segment_margins.length) {
         segCell = `<div class="cmp-seg-list">` + df.segment_margins.map(s => {
           if (typeof s.margin_pct === "number") {
-            return `<b>${esc(s.name)}</b>: ${s.margin_pct}% ${esc(s.margin_type || "")}`;
+            return `<b>${esc(s.name)}</b>: ${s.margin_pct}% ${esc(fmtMarginType(s.margin_type))}`;
           }
           return `<b>${esc(s.name)}</b>: ${esc(s.note || "qualitative only, no number disclosed")}`;
         }).join("<br>") + `</div>`;
