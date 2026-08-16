@@ -116,6 +116,22 @@
   .rev-bar-fill { height:100%; background:linear-gradient(90deg,#58a6ff,#9fd0ff); border-radius:3px; }
   .rev-src { color:var(--muted); font-size:9px; margin-top:6px; }
   .rev-none { color:var(--muted); font-size:11px; font-style:italic; }
+  /* Compare tab */
+  .cmp-wrap { padding:12px; overflow-x:auto; }
+  .cmp-table { width:100%; border-collapse:collapse; font-size:11px; min-width:900px; }
+  .cmp-table th { text-align:left; color:var(--muted); font-weight:600; font-size:9px;
+    text-transform:uppercase; letter-spacing:.4px; padding:5px 8px; border-bottom:1px solid var(--border);
+    position:sticky; top:0; background:var(--bg); }
+  .cmp-table td { padding:6px 8px; border-bottom:1px solid #1b2027; vertical-align:top; white-space:nowrap; }
+  .cmp-table tr:hover td { background:rgba(88,166,255,.06); }
+  .cmp-cat-row td { padding-top:14px; font-weight:700; color:#9fd0ff; text-transform:uppercase;
+    font-size:10px; letter-spacing:.4px; border-bottom:1px solid var(--border); white-space:normal; }
+  .cmp-name { font-weight:600; color:var(--text); }
+  .cmp-id { color:var(--muted); font-size:10px; margin-left:4px; }
+  .cmp-seg-list { white-space:normal; max-width:260px; font-size:10px; color:var(--muted); line-height:1.5; }
+  .cmp-seg-list b { color:var(--text); }
+  .cmp-na { color:var(--muted); }
+  .cmp-src-note { color:var(--muted); font-size:9px; font-style:italic; white-space:normal; max-width:200px; }
   .hist-head { font-size:12px; font-weight:700; letter-spacing:.5px; text-transform:uppercase;
     color:#9fd0ff; padding:14px 2px 8px; border-top:2px solid var(--border); margin-top:6px; }
   .hist-grid { display:grid; gap:12px; grid-template-columns:repeat(auto-fill,minmax(470px,1fr)); }
@@ -147,7 +163,7 @@
 <script>
 "use strict";
 const TREND_ORDER = { up: 0, flat: 1, down: 2 };
-let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, STALE = false, OBSERVER = null;
+let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, DEEP_FUND = null, STALE = false, OBSERVER = null;
 const REVENUE_TAB_CATEGORIES = new Set(["china-internet", "compute", "hyperscaler-cloud", "platform"]);
 
 // Supply-chain category tabs. Keys must match getCategory() output.
@@ -740,10 +756,88 @@ function renderRevenueMix() {
   wrap.innerHTML = html || `<div class="rev-none" style="padding:16px">No data</div>`;
 }
 
+function fmtUsd(n) {
+  if (n === null || n === undefined) return null;
+  const abs = Math.abs(n);
+  if (abs >= 1e12) return "$" + (n / 1e12).toFixed(2) + "T";
+  if (abs >= 1e9) return "$" + (n / 1e9).toFixed(2) + "B";
+  if (abs >= 1e6) return "$" + (n / 1e6).toFixed(1) + "M";
+  return "$" + n.toFixed(0);
+}
+function fmtPctPlain(n, digits = 1) {
+  return (n === null || n === undefined) ? null : (n * 100).toFixed(digits) + "%";
+}
+
+function renderCompareTable() {
+  const wrap = document.getElementById("compare-wrap");
+  if (wrap.dataset.rendered) return;
+  wrap.dataset.rendered = "1";
+  const insts = DATA.instruments.filter(i => {
+    const m = SC_MAP && SC_MAP[i.id];
+    return m && REVENUE_TAB_CATEGORIES.has(m.category);
+  });
+  const CAT_LABEL = { "china-internet": "China Internet", "compute": "Compute",
+    "hyperscaler-cloud": "Tech Platforms", "platform": "Tech Platforms" };
+  const byCat = new Map();
+  for (const inst of insts) {
+    const cat = CAT_LABEL[SC_MAP[inst.id].category] || SC_MAP[inst.id].category;
+    if (!byCat.has(cat)) byCat.set(cat, []);
+    byCat.get(cat).push(inst);
+  }
+  const na = `<span class="cmp-na">—</span>`;
+  let rows = "";
+  for (const [cat, list] of byCat) {
+    rows += `<tr class="cmp-cat-row"><td colspan="8">${esc(cat)}</td></tr>`;
+    for (const inst of list.sort((a, b) => a.label.localeCompare(b.label))) {
+      const f = inst.fund || {};
+      const df = DEEP_FUND && DEEP_FUND[inst.id];
+      const mktCap = fmtUsd(f.market_cap) || na;
+      const fwdPe = (f.fwd_pe != null) ? f.fwd_pe.toFixed(1) + "x" : na;
+      const gm = fmtPctPlain(f.gross_margin) || na;
+      const npm = fmtPctPlain(f.net_margin) || na;
+
+      let capexCell = na;
+      if (df && df.trailing_capex && df.trailing_capex.amount_usd_m != null) {
+        const tc = df.trailing_capex;
+        const ocfM = f.operating_cashflow != null ? f.operating_cashflow / 1e6 : null;
+        const ratio = ocfM ? ` (${(tc.amount_usd_m / ocfM * 100).toFixed(0)}% of OCF)` : "";
+        capexCell = `$${tc.amount_usd_m.toLocaleString(undefined,{maximumFractionDigits:0})}M${ratio}<br><span class="cmp-src-note">${esc(tc.period || "")}</span>`;
+      }
+      let guidanceCell = na;
+      if (df && df.capex_guidance && df.capex_guidance.text) {
+        guidanceCell = `<span class="cmp-seg-list">${esc(df.capex_guidance.text)}</span>`;
+      }
+      let segCell = na;
+      if (df && df.segment_margins && df.segment_margins.length) {
+        segCell = `<div class="cmp-seg-list">` + df.segment_margins
+          .map(s => `<b>${esc(s.name)}</b>: ${s.margin_pct}% ${esc(s.margin_type || "")}`).join("<br>") + `</div>`;
+      }
+
+      rows += `<tr>
+        <td><span class="cmp-name">${esc(inst.label)}</span><span class="cmp-id">${esc(inst.id)}</span></td>
+        <td>${mktCap}</td>
+        <td>${fwdPe}</td>
+        <td>${gm}</td>
+        <td>${npm}</td>
+        <td>${capexCell}</td>
+        <td>${guidanceCell}</td>
+        <td>${segCell}</td>
+      </tr>`;
+    }
+  }
+  wrap.innerHTML = `<table class="cmp-table"><thead><tr>
+      <th>Company</th><th>Mkt Cap</th><th>Fwd P/E</th><th>GM%</th><th>NP%</th>
+      <th>Trailing Capex</th><th>Capex Guidance</th><th>Segment Margins</th>
+    </tr></thead><tbody>${rows}</tbody></table>
+    <div class="rev-src" style="margin-top:8px">Capex, capex guidance and segment margins are research-derived from company filings/earnings calls, refreshed periodically (not daily) — see each cell's source period for freshness.</div>`;
+}
+
 window.showTab = function (tabKey) {
   document.getElementById("tab-summary").classList.toggle("active", tabKey === "summary");
   document.getElementById("tab-revenue").classList.toggle("active", tabKey === "revenue");
   document.getElementById("revenue-wrap").style.display = tabKey === "revenue" ? "" : "none";
+  document.getElementById("tab-compare").classList.toggle("active", tabKey === "compare");
+  document.getElementById("compare-wrap").style.display = tabKey === "compare" ? "" : "none";
   for (const c of CATEGORIES) {
     document.getElementById("tab-" + c.key).classList.toggle("active", tabKey === c.key);
     const show = tabKey === c.key;
@@ -752,6 +846,10 @@ window.showTab = function (tabKey) {
   }
   if (tabKey === "revenue") {
     if (DATA) renderRevenueMix();
+    return;
+  }
+  if (tabKey === "compare") {
+    if (DATA) renderCompareTable();
     return;
   }
   const category = tabKey === "summary" ? null : tabKey;
@@ -786,6 +884,11 @@ function buildShell() {
   const revWrap = document.createElement("div");
   revWrap.id = "revenue-wrap"; revWrap.className = "rev-wrap"; revWrap.style.display = "none";
   grids.appendChild(revWrap);
+
+  mk("compare", "Compare");
+  const cmpWrap = document.createElement("div");
+  cmpWrap.id = "compare-wrap"; cmpWrap.className = "cmp-wrap"; cmpWrap.style.display = "none";
+  grids.appendChild(cmpWrap);
 }
 
 function load() {
@@ -797,8 +900,9 @@ function load() {
     fetch("./supply-chain-map.json?t=" + Date.now(), { cache: "no-store" }).then(r => { if (!r.ok) throw new Error(`map HTTP ${r.status}`); return r.json(); }),
     fetch("./earnings-dates.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./revenue-breakdown.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
-  ]).then(([data, moves, scmap, earnDates, revMix]) => {
-    DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates; REV_MIX = revMix;
+    fetch("./deep-fundamentals.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
+  ]).then(([data, moves, scmap, earnDates, revMix, deepFund]) => {
+    DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates; REV_MIX = revMix; DEEP_FUND = deepFund;
     STALE = checkStale(DATA);
     const ideas = DATA.instruments.filter(i => i.idea && i.idea.kind === "enter").length;
     document.getElementById("meta").textContent =
