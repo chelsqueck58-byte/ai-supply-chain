@@ -133,6 +133,16 @@
   .cmp-na { color:var(--muted); }
   .cmp-src-note { color:var(--muted); font-size:9px; font-style:italic; white-space:normal; max-width:200px; }
   .cmp-capex-headline { color:#f5c518; font-weight:700; font-size:13px; margin-bottom:3px; white-space:nowrap; }
+  /* P/E History tab */
+  .pe-current { font-weight:600; color:var(--text); }
+  .pe-nm { color:var(--muted); font-style:italic; font-size:10px; }
+  .pe-range-wrap { display:flex; flex-direction:column; gap:3px; min-width:130px; }
+  .pe-range-lbl { font-size:9px; color:var(--muted); display:flex; justify-content:space-between; white-space:nowrap; }
+  .pe-range-track { position:relative; width:100%; height:6px; background:#1b2027; border-radius:3px; }
+  .pe-range-fill { position:absolute; top:0; bottom:0; background:rgba(88,166,255,.25); border-radius:3px; }
+  .pe-range-marker { position:absolute; top:-3px; width:2px; height:12px; background:#58a6ff; border-radius:1px; }
+  .pe-pctile { font-size:9px; color:var(--muted); }
+  .pe-pctile b { color:#9fd0ff; }
   .hist-head { font-size:12px; font-weight:700; letter-spacing:.5px; text-transform:uppercase;
     color:#9fd0ff; padding:14px 2px 8px; border-top:2px solid var(--border); margin-top:6px; }
   .hist-grid { display:grid; gap:12px; grid-template-columns:repeat(auto-fill,minmax(470px,1fr)); }
@@ -878,7 +888,7 @@ function _renderCompareTableImpl(wrap) {
   const na = `<span class="cmp-na">—</span>`;
   let rows = "";
   for (const [cat, list] of byCat) {
-    rows += `<tr class="cmp-cat-row"><td colspan="10">${esc(cat)}</td></tr>`;
+    rows += `<tr class="cmp-cat-row"><td colspan="9">${esc(cat)}</td></tr>`;
     for (const inst of list.sort((a, b) => a.label.localeCompare(b.label))) {
       const f = inst.fund || {};
       const df = DEEP_FUND && DEEP_FUND[inst.id];
@@ -927,34 +937,6 @@ function _renderCompareTableImpl(wrap) {
           : `<div class="cmp-src-note">No explicit figure guided</div>`;
         guidanceCell = headline + `<span class="cmp-seg-list">${esc(cg.text)}</span>`;
       }
-      let segCell = na;
-      if (df && df.segment_margins && df.segment_margins.length) {
-        segCell = `<div class="cmp-seg-list">` + df.segment_margins.map(s => {
-          if (typeof s.margin_pct === "number") {
-            return `<b>${esc(s.name)}</b>: ${s.margin_pct}% ${esc(fmtMarginType(s.margin_type))}`;
-          }
-          return `<b>${esc(s.name)}</b>: ${esc(s.note || "qualitative only, no number disclosed")}`;
-        }).join("<br>") + `</div>`;
-      } else if (df && df.company_margin_estimates) {
-        // No real segments (e.g. a pre-IPO-scale AI lab) - company-wide
-        // SELL-SIDE ESTIMATE, not a company-disclosed figure. Labeled
-        // distinctly so it's never confused with real segment margins.
-        const ce = df.company_margin_estimates;
-        const pairs = Object.entries(ce).filter(([k]) => k.includes("margin_pct"));
-        segCell = `<div class="cmp-seg-list"><span class="rev-qual" title="${esc(ce.source || "")}">Sell-side estimate, ${esc(ce.period || "")}</span><br>` +
-          pairs.map(([k, v]) => {
-            // e.g. "gross_margin_pct_2025a" -> metric "gross margin", period "2025A"
-            const m = k.match(/^(.*?)_pct(?:_(\w+))?$/);
-            const metric = (m ? m[1] : k).replace(/_/g, " ");
-            const period = m && m[2] ? ` (${m[2].toUpperCase()})` : "";
-            return `${esc(metric)}${period}: ${v}%`;
-          }).join("<br>") + `</div>`;
-      } else if (df && df.filing_check_note) {
-        // Confirmed directly against the primary filing - genuinely not
-        // disclosed (single-segment reporter), not a research gap.
-        segCell = `<span class="cmp-src-note">${esc(df.filing_check_note)}</span>`;
-      }
-
       rows += `<tr>
         <td><span class="cmp-name">${esc(inst.label)}</span><span class="cmp-id">${esc(inst.id)}</span></td>
         <td>${mktCap}</td>
@@ -965,15 +947,108 @@ function _renderCompareTableImpl(wrap) {
         <td>${debtCell}</td>
         <td>${offBsCell}</td>
         <td>${guidanceCell}</td>
-        <td>${segCell}</td>
       </tr>`;
     }
   }
   wrap.innerHTML = `<table class="cmp-table"><thead><tr>
       <th>Company</th><th>Mkt Cap</th><th>Fwd P/E</th><th>GM%</th><th>OM%</th><th>NP%</th>
-      <th>Debt/Cash</th><th>Off-BS Liabilities</th><th>Capex Guidance</th><th>Segment Margins</th>
+      <th>Debt/Cash</th><th>Off-BS Liabilities</th><th>Capex Guidance</th>
     </tr></thead><tbody>${rows}</tbody></table>
-    <div class="rev-src" style="margin-top:8px">Mkt cap/debt/cash shown in each stock's native trading currency with a USD-equivalent in parentheses (via current FX rate). GM/OM/NP are company-wide (Yahoo financial data). Capex guidance, off-BS liabilities and segment margins are research-derived from company filings/earnings calls, refreshed periodically (not daily) — see each cell's source period for freshness. Segment Margins column shows a labeled sell-side estimate instead when a company has no real reportable segments (e.g. pre-scale private-turned-public AI labs).</div>`;
+    <div class="rev-src" style="margin-top:8px">Mkt cap/debt/cash shown in each stock's native trading currency with a USD-equivalent in parentheses (via current FX rate). GM/OM/NP are company-wide (Yahoo financial data). Capex guidance and off-BS liabilities are research-derived from company filings/earnings calls, refreshed periodically (not daily) — see each cell's source period for freshness.</div>`;
+}
+
+// TTM EPS = sum of the last 4 REPORTED (actual, not estimated) quarterly EPS.
+// Only 4 quarters are tracked (see fundamentals.py), so this is the one point
+// in time we can compute a real trailing EPS for - not enough history to walk
+// a true multi-year P/E series without fabricating EPS for periods we never
+// captured. Returns null (not a wrong number) if a quarter hasn't reported yet.
+function ordinal(n) {
+  const rem10 = n % 10, rem100 = n % 100;
+  if (rem10 === 1 && rem100 !== 11) return n + "st";
+  if (rem10 === 2 && rem100 !== 12) return n + "nd";
+  if (rem10 === 3 && rem100 !== 13) return n + "rd";
+  return n + "th";
+}
+function computeTtmEps(hist) {
+  if (!hist || hist.length < 4) return null;
+  const last4 = hist.slice(-4);
+  if (last4.some(q => typeof q.actual !== "number")) return null;
+  return last4.reduce((s, q) => s + q.actual, 0);
+}
+
+function renderPeHistory() {
+  const wrap = document.getElementById("pe-wrap");
+  if (wrap.dataset.rendered) return;
+  try {
+    _renderPeHistoryImpl(wrap);
+  } catch (e) {
+    wrap.dataset.rendered = "";
+    wrap.innerHTML = `<div class="rev-none" style="padding:16px;color:var(--down)">Render error: ${esc(e.message)} - data may have a malformed entry. Check console for details.</div>`;
+    console.error("renderPeHistory failed:", e);
+  }
+}
+function _renderPeHistoryImpl(wrap) {
+  wrap.dataset.rendered = "1";
+  const insts = DATA.instruments.filter(i => getCategory(i) && i.bars && i.bars.length);
+  const byCat = new Map();
+  for (const inst of insts) {
+    const catKey = getCategory(inst);
+    const catLabel = CATEGORIES.find(c => c.key === catKey).label;
+    if (!byCat.has(catLabel)) byCat.set(catLabel, []);
+    byCat.get(catLabel).push(inst);
+  }
+  const na = `<span class="cmp-na">—</span>`;
+  let rows = "";
+  for (const [cat, list] of byCat) {
+    rows += `<tr class="cmp-cat-row"><td colspan="7">${esc(cat)}</td></tr>`;
+    for (const inst of list.sort((a, b) => a.label.localeCompare(b.label))) {
+      const f = inst.fund || {};
+      const bars = inst.bars;
+      const price = bars[bars.length - 1].c;
+      const ttmEps = computeTtmEps(f.earnings_history);
+      const win = bars.slice(-252);
+      const hi52 = Math.max(...win.map(b => b.h));
+      const lo52 = Math.min(...win.map(b => b.l));
+
+      let ttmPeCell = na;
+      if (ttmEps != null) {
+        ttmPeCell = ttmEps > 0
+          ? `<span class="pe-current">${(price / ttmEps).toFixed(1)}x</span>`
+          : `<span class="pe-nm">N/M (loss)</span>`;
+      }
+      const fwdPe = (f.fwd_pe != null) ? f.fwd_pe.toFixed(1) + "x" : na;
+      const peg = (f.peg != null) ? f.peg.toFixed(2) : na;
+      const rangeCell = (hi52 > 0 && lo52 > 0) ? `$${lo52.toFixed(2)} – $${hi52.toFixed(2)}` : na;
+
+      let impliedCell = na;
+      if (ttmEps != null && ttmEps > 0 && hi52 > lo52) {
+        const peLo = (lo52 / ttmEps).toFixed(1);
+        const peHi = (hi52 / ttmEps).toFixed(1);
+        const pct = Math.max(0, Math.min(100, ((price - lo52) / (hi52 - lo52)) * 100));
+        impliedCell = `<div class="pe-range-wrap">
+          <div class="pe-range-lbl"><span>${peLo}x</span><span>${peHi}x</span></div>
+          <div class="pe-range-track"><div class="pe-range-marker" style="left:${pct.toFixed(0)}%" title="Currently at the ${ordinal(Math.round(pct))} percentile of its 52-wk range"></div></div>
+        </div>`;
+      } else if (ttmEps != null && ttmEps <= 0) {
+        impliedCell = `<span class="pe-nm">N/M — trailing EPS negative</span>`;
+      }
+
+      rows += `<tr>
+        <td><span class="cmp-name">${esc(inst.label)}</span><span class="cmp-id">${esc(inst.id)}</span></td>
+        <td>$${price.toFixed(2)}</td>
+        <td>${ttmPeCell}</td>
+        <td>${fwdPe}</td>
+        <td>${peg}</td>
+        <td>${rangeCell}</td>
+        <td>${impliedCell}</td>
+      </tr>`;
+    }
+  }
+  wrap.innerHTML = `<table class="cmp-table"><thead><tr>
+      <th>Company</th><th>Price</th><th>TTM P/E</th><th>Fwd P/E</th><th>PEG</th>
+      <th>52-wk Price Range</th><th>Implied P/E Range (52-wk)</th>
+    </tr></thead><tbody>${rows}</tbody></table>
+    <div class="rev-src" style="margin-top:8px">TTM P/E uses actual trailing EPS from the last 4 reported quarters (Yahoo). Implied P/E range applies TODAY's TTM EPS to the 52-week price high/low, so it shows where the stock has traded at its CURRENT earnings power — not a true multi-year re-rating history (only 4 quarters of EPS are tracked, not enough to reconstruct EPS at each point in the past). Marker shows where the current price sits in that range; hover for the exact percentile. Fwd P/E and PEG are Yahoo consensus estimates. N/M = not meaningful (trailing EPS negative).</div>`;
 }
 
 window.showTab = function (tabKey) {
@@ -982,6 +1057,8 @@ window.showTab = function (tabKey) {
   document.getElementById("revenue-wrap").style.display = tabKey === "revenue" ? "" : "none";
   document.getElementById("tab-compare").classList.toggle("active", tabKey === "compare");
   document.getElementById("compare-wrap").style.display = tabKey === "compare" ? "" : "none";
+  document.getElementById("tab-pe").classList.toggle("active", tabKey === "pe");
+  document.getElementById("pe-wrap").style.display = tabKey === "pe" ? "" : "none";
   for (const c of CATEGORIES) {
     document.getElementById("tab-" + c.key).classList.toggle("active", tabKey === c.key);
     const show = tabKey === c.key;
@@ -992,7 +1069,7 @@ window.showTab = function (tabKey) {
   // sections. Those divs are fixed top-level elements shared across every
   // tab, so without this they'd keep showing stale content from whichever
   // tab was active before switching here.
-  const showIdeas = tabKey !== "revenue" && tabKey !== "compare";
+  const showIdeas = tabKey !== "revenue" && tabKey !== "compare" && tabKey !== "pe";
   document.getElementById("ideas").style.display = showIdeas ? "" : "none";
   document.getElementById("catalysts30").style.display = showIdeas ? "" : "none";
   document.getElementById("pastCatalysts").style.display = showIdeas ? "" : "none";
@@ -1002,6 +1079,10 @@ window.showTab = function (tabKey) {
   }
   if (tabKey === "compare") {
     if (DATA) renderCompareTable();
+    return;
+  }
+  if (tabKey === "pe") {
+    if (DATA) renderPeHistory();
     return;
   }
   const category = tabKey === "summary" ? null : tabKey;
@@ -1041,6 +1122,11 @@ function buildShell() {
   const cmpWrap = document.createElement("div");
   cmpWrap.id = "compare-wrap"; cmpWrap.className = "cmp-wrap"; cmpWrap.style.display = "none";
   grids.appendChild(cmpWrap);
+
+  mk("pe", "P/E History");
+  const peWrap = document.createElement("div");
+  peWrap.id = "pe-wrap"; peWrap.className = "cmp-wrap"; peWrap.style.display = "none";
+  grids.appendChild(peWrap);
 }
 
 function load() {
