@@ -174,7 +174,7 @@
 <script>
 "use strict";
 const TREND_ORDER = { up: 0, flat: 1, down: 2 };
-let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, DEEP_FUND = null, GEO_MIX = null, FX_RATES = null, OFF_BS = null, STALE = false, OBSERVER = null;
+let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, DEEP_FUND = null, GEO_MIX = null, FX_RATES = null, OFF_BS = null, HIST_PE = null, STALE = false, OBSERVER = null;
 const REVENUE_TAB_CATEGORIES = new Set(["china-internet", "compute", "hyperscaler-cloud", "platform"]);
 // Individual tickers pulled in from a category that isn't otherwise in
 // scope (e.g. ASML from Equipment) - added one at a time on request rather
@@ -1048,7 +1048,67 @@ function _renderPeHistoryImpl(wrap) {
       <th>Company</th><th>Price</th><th>TTM P/E</th><th>Fwd P/E</th><th>PEG</th>
       <th>52-wk Price Range</th><th>Implied P/E Range (52-wk)</th>
     </tr></thead><tbody>${rows}</tbody></table>
-    <div class="rev-src" style="margin-top:8px">TTM P/E uses actual trailing EPS from the last 4 reported quarters (Yahoo). Implied P/E range applies TODAY's TTM EPS to the 52-week price high/low, so it shows where the stock has traded at its CURRENT earnings power — not a true multi-year re-rating history (only 4 quarters of EPS are tracked, not enough to reconstruct EPS at each point in the past). Marker shows where the current price sits in that range; hover for the exact percentile. Fwd P/E and PEG are Yahoo consensus estimates. N/M = not meaningful (trailing EPS negative).</div>`;
+    <div class="rev-src" style="margin-top:8px">TTM P/E uses actual trailing EPS from the last 4 reported quarters (Yahoo). Implied P/E range applies TODAY's TTM EPS to the 52-week price high/low, so it shows where the stock has traded at its CURRENT earnings power — not a true multi-year re-rating history (only 4 quarters of EPS are tracked, not enough to reconstruct EPS at each point in the past). Marker shows where the current price sits in that range; hover for the exact percentile. Fwd P/E and PEG are Yahoo consensus estimates. N/M = not meaningful (trailing EPS negative).</div>`
+    + buildHistPeSection();
+}
+
+// 5-year annual P/E, scoped to the same AI/tech cohort as Compare/Revenue Mix
+// (real diluted EPS per fiscal year isn't available for the full 76-name
+// universe without a much larger research pass - see historical_pe.py).
+function buildHistPeSection() {
+  if (!HIST_PE) return "";
+  const insts = DATA.instruments.filter(i => {
+    const m = SC_MAP && SC_MAP[i.id];
+    return m && inRevenueTabScope(i.id, m.category) && HIST_PE[i.id];
+  });
+  if (!insts.length) return "";
+  const CAT_LABEL = { "china-internet": "China Internet", "compute": "Compute",
+    "hyperscaler-cloud": "Tech Platforms", "platform": "Tech Platforms", "equipment": "Equipment" };
+  const byCat = new Map();
+  for (const inst of insts) {
+    const cat = CAT_LABEL[SC_MAP[inst.id].category] || SC_MAP[inst.id].category;
+    if (!byCat.has(cat)) byCat.set(cat, []);
+    byCat.get(cat).push(inst);
+  }
+  const na = `<span class="cmp-na">—</span>`;
+  let rows = "";
+  for (const [cat, list] of byCat) {
+    rows += `<tr class="cmp-cat-row"><td colspan="4">${esc(cat)}</td></tr>`;
+    for (const inst of list.sort((a, b) => a.label.localeCompare(b.label))) {
+      const hp = HIST_PE[inst.id];
+      // Sort by actual date rather than trust research-response order - some
+      // responses came back oldest-first, others newest-first, inconsistently.
+      const years = (hp.years || []).slice()
+        .sort((a, b) => (a.period_end || "").localeCompare(b.period_end || ""));
+      let yearsCell = na;
+      if (years.length) {
+        yearsCell = `<div class="cmp-seg-list">` + years.map(y => {
+          const label = esc(y.fy_label || y.period_end || "?");
+          if (y.pe != null) {
+            const warn = y.flag ? ` <span class="rev-qual" title="${esc(y.flag)}">⚠</span>` : "";
+            const conv = y.converted ? ` <span class="rev-qual" title="${esc(y.note || "currency-converted")}">(conv.)</span>` : "";
+            return `<b>${label}</b>: ${y.pe}x${warn}${conv}`;
+          }
+          return `<b>${label}</b>: <span class="rev-qual" title="${esc(y.note || "")}">${esc(y.flag || "n/a")}</span>`;
+        }).join("<br>") + `</div>`;
+      }
+      const avg3y = hp.avg_3y != null
+        ? `${hp.avg_3y}x <span class="pe-nm">(${hp.avg_3y_count}yr)</span>` : na;
+      const avg5y = hp.avg_5y != null
+        ? `${hp.avg_5y}x <span class="pe-nm">(${hp.avg_5y_count}yr)</span>` : na;
+      rows += `<tr>
+        <td><span class="cmp-name">${esc(inst.label)}</span><span class="cmp-id">${esc(inst.id)}</span></td>
+        <td>${yearsCell}</td>
+        <td>${avg3y}</td>
+        <td>${avg5y}</td>
+      </tr>`;
+    }
+  }
+  return `<div class="hist-head" style="margin-top:22px">5-Year Annual P/E — AI/Tech Cohort</div>
+    <table class="cmp-table"><thead><tr>
+      <th>Company</th><th>Annual P/E by Fiscal Year</th><th>3-Yr Avg</th><th>5-Yr Avg</th>
+    </tr></thead><tbody>${rows}</tbody></table>
+    <div class="rev-src" style="margin-top:8px">Annual P/E = fiscal year-end closing price ÷ that fiscal year's actual GAAP diluted EPS (research-derived from filings, not Yahoo's free API — which only exposes 4 years of net income and no historical share count). Companies reporting in a different currency than their traded shares (e.g. RMB-reporting, HKD-traded names) are converted using that year's historical average FX rate, marked "(conv.)" — hover for the conversion detail. ⚠ flags a computed P/E outside a plausible range, worth a manual check. Names public for under 5 years show fewer fiscal years, not fabricated ones. Averages are of however many valid years are available (count shown in parentheses).</div>`;
 }
 
 window.showTab = function (tabKey) {
@@ -1142,8 +1202,9 @@ function load() {
     fetch("./geo-mix.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./fx-rates.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./off-bs-liabilities.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
-  ]).then(([data, moves, scmap, earnDates, revMix, deepFund, geoMix, fxRates, offBs]) => {
-    DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates; REV_MIX = revMix; DEEP_FUND = deepFund; GEO_MIX = geoMix; FX_RATES = fxRates; OFF_BS = offBs;
+    fetch("./historical-pe.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
+  ]).then(([data, moves, scmap, earnDates, revMix, deepFund, geoMix, fxRates, offBs, histPe]) => {
+    DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates; REV_MIX = revMix; DEEP_FUND = deepFund; GEO_MIX = geoMix; FX_RATES = fxRates; OFF_BS = offBs; HIST_PE = histPe;
     STALE = checkStale(DATA);
     const ideas = DATA.instruments.filter(i => i.idea && i.idea.kind === "enter").length;
     document.getElementById("meta").textContent =
