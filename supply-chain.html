@@ -116,26 +116,28 @@
   .rev-qual { color:var(--muted); font-weight:400; font-style:italic; cursor:help; text-decoration:underline dotted; }
   .rev-src { color:var(--muted); font-size:9px; margin-top:6px; }
   .rev-none { color:var(--muted); font-size:11px; font-style:italic; }
-  /* Compare tab */
+  /* Compare tab - kept dense on purpose: these tables are read as a list of
+     20+ stocks, not a handful of cards, so vertical space per row directly
+     trades off against how many names fit on screen without scrolling. */
   .cmp-wrap { padding:12px; overflow-x:auto; }
-  .cmp-table { width:100%; border-collapse:collapse; font-size:11px; min-width:900px; }
-  .cmp-table th { text-align:left; color:var(--muted); font-weight:600; font-size:9px;
-    text-transform:uppercase; letter-spacing:.4px; padding:5px 8px; border-bottom:1px solid var(--border);
+  .cmp-table { width:100%; border-collapse:collapse; font-size:10px; min-width:900px; }
+  .cmp-table th { text-align:left; color:var(--muted); font-weight:600; font-size:8px;
+    text-transform:uppercase; letter-spacing:.3px; padding:3px 6px; border-bottom:1px solid var(--border);
     position:sticky; top:0; background:var(--bg); }
-  .cmp-table td { padding:6px 8px; border-bottom:1px solid #1b2027; vertical-align:top; white-space:nowrap; }
+  .cmp-table td { padding:2px 6px; border-bottom:1px solid #1b2027; vertical-align:top; white-space:nowrap; }
   .cmp-table tr:hover td { background:rgba(88,166,255,.06); }
-  .cmp-cat-row td { padding-top:14px; font-weight:700; color:#9fd0ff; text-transform:uppercase;
-    font-size:10px; letter-spacing:.4px; border-bottom:1px solid var(--border); white-space:normal; }
+  .cmp-cat-row td { padding-top:8px; padding-bottom:2px; font-weight:700; color:#9fd0ff; text-transform:uppercase;
+    font-size:9px; letter-spacing:.3px; border-bottom:1px solid var(--border); white-space:normal; }
   .cmp-name { font-weight:600; color:var(--text); }
-  .cmp-id { color:var(--muted); font-size:10px; margin-left:4px; }
-  .cmp-seg-list { white-space:normal; max-width:260px; font-size:10px; color:var(--muted); line-height:1.5; }
+  .cmp-id { color:var(--muted); font-size:9px; margin-left:4px; }
+  .cmp-seg-list { white-space:normal; max-width:260px; font-size:9px; color:var(--muted); line-height:1.25; }
   .cmp-seg-list b { color:var(--text); }
   .cmp-na { color:var(--muted); }
-  .cmp-src-note { color:var(--muted); font-size:9px; font-style:italic; white-space:normal; max-width:200px; }
-  .cmp-capex-headline { color:#f5c518; font-weight:700; font-size:13px; margin-bottom:3px; white-space:nowrap; }
+  .cmp-src-note { color:var(--muted); font-size:8px; font-style:italic; white-space:normal; max-width:200px; }
+  .cmp-capex-headline { color:#f5c518; font-weight:700; font-size:12px; margin-bottom:2px; white-space:nowrap; }
   /* P/E History tab */
   .pe-current { font-weight:600; color:var(--text); }
-  .pe-nm { color:var(--muted); font-style:italic; font-size:10px; }
+  .pe-nm { color:var(--muted); font-style:italic; font-size:9px; }
   .pe-range-wrap { display:flex; flex-direction:column; gap:3px; min-width:130px; }
   .pe-range-lbl { font-size:9px; color:var(--muted); display:flex; justify-content:space-between; white-space:nowrap; }
   .pe-range-track { position:relative; width:100%; height:6px; background:#1b2027; border-radius:3px; }
@@ -174,7 +176,7 @@
 <script>
 "use strict";
 const TREND_ORDER = { up: 0, flat: 1, down: 2 };
-let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, DEEP_FUND = null, GEO_MIX = null, FX_RATES = null, OFF_BS = null, HIST_PE = null, FWD_PE = null, STALE = false, OBSERVER = null;
+let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, DEEP_FUND = null, GEO_MIX = null, FX_RATES = null, OFF_BS = null, HIST_PE = null, FWD_PE = null, ROIC = null, STALE = false, OBSERVER = null;
 const REVENUE_TAB_CATEGORIES = new Set(["china-internet", "compute", "hyperscaler-cloud", "platform"]);
 // Individual tickers pulled in from a category that isn't otherwise in
 // scope (e.g. ASML from Equipment) - added one at a time on request rather
@@ -220,6 +222,27 @@ function esc(s) {
   const div = document.createElement("div");
   div.textContent = String(s);
   return div.innerHTML;
+}
+
+// Several names in the Compare/P-E-History cohort are dual-listed, and the
+// site only tracks ONE ticker per company for pricing/fundamentals (whatever
+// Yahoo symbol universe.json points at) - showing just that one id reads as
+// wrong to anyone expecting the more commonly-cited symbol (e.g. Baidu shows
+// as "9888", its secondary HK listing, when BIDU - the Nasdaq ADR - is the
+// one most US-side coverage actually references). This doesn't change what
+// data is fetched or displayed anywhere else, purely a label so the company
+// is unambiguously identifiable regardless of which ticker the reader knows
+// it by. Order is [primary/most-recognized, ...secondary listings].
+const ALT_LISTINGS = {
+  "9988": ["BABA"],        // Alibaba - NYSE ADR, tracked ticker is the 9988 HK listing
+  "9888": ["BIDU"],        // Baidu - Nasdaq ADR, tracked ticker is the 9888 HK listing
+  "9618": ["JD"],          // JD.com - Nasdaq ADR, tracked ticker is the 9618 HK listing
+  "0700": ["TCEHY (OTC, unsponsored)"],  // Tencent - no major-exchange US listing
+};
+function companyIdCell(inst) {
+  const alts = ALT_LISTINGS[inst.id];
+  const idText = alts ? `${esc(inst.id)} / ${alts.map(esc).join(" / ")}` : esc(inst.id);
+  return `<span class="cmp-name">${esc(inst.label)}</span><span class="cmp-id">${idText}</span>`;
 }
 
 function smaSeries(closes, period) {
@@ -895,7 +918,7 @@ function _renderCompareTableImpl(wrap) {
   const na = `<span class="cmp-na">—</span>`;
   let rows = "";
   for (const [cat, list] of byCat) {
-    rows += `<tr class="cmp-cat-row"><td colspan="10">${esc(cat)}</td></tr>`;
+    rows += `<tr class="cmp-cat-row"><td colspan="11">${esc(cat)}</td></tr>`;
     for (const inst of list.sort((a, b) => a.label.localeCompare(b.label))) {
       const f = inst.fund || {};
       const df = DEEP_FUND && DEEP_FUND[inst.id];
@@ -905,6 +928,19 @@ function _renderCompareTableImpl(wrap) {
       const om = fmtPctPlain(f.operating_margin) || na;
       const npm = fmtPctPlain(f.net_margin) || na;
       const ocf = fmtMarketCap(f.operating_cashflow, inst.currency) || na;
+
+      // The published figure the market actually cites (GuruFocus,
+      // StockAnalysis, etc.), not computed here - Yahoo's free API doesn't
+      // expose balance sheet detail, and ROIC has enough competing formula
+      // variants that a homegrown version risks not matching what anyone
+      // else means by "ROIC" for this name. See roic.py.
+      const roicEntry = ROIC && ROIC[inst.id];
+      let roicCell = na;
+      if (roicEntry && roicEntry.roic_pct != null) {
+        const warn = roicEntry.flag ? ` <span class="rev-qual" title="${esc(roicEntry.flag)}">⚠</span>` : "";
+        roicCell = `<span class="pe-current">${roicEntry.roic_pct}%</span>${warn}<br>`
+          + `<span class="pe-nm" title="${esc(roicEntry.source || "")}">${esc(roicEntry.period || "")}</span>`;
+      }
 
       let debtCell = na;
       if (f.total_debt != null || f.total_cash != null) {
@@ -946,12 +982,13 @@ function _renderCompareTableImpl(wrap) {
         guidanceCell = headline + `<span class="cmp-seg-list">${esc(cg.text)}</span>`;
       }
       rows += `<tr>
-        <td><span class="cmp-name">${esc(inst.label)}</span><span class="cmp-id">${esc(inst.id)}</span></td>
+        <td>${companyIdCell(inst)}</td>
         <td>${mktCap}</td>
         <td>${fwdPe}</td>
         <td>${gm}</td>
         <td>${om}</td>
         <td>${npm}</td>
+        <td>${roicCell}</td>
         <td>${ocf}</td>
         <td>${debtCell}</td>
         <td>${offBsCell}</td>
@@ -961,9 +998,9 @@ function _renderCompareTableImpl(wrap) {
   }
   wrap.innerHTML = `<table class="cmp-table"><thead><tr>
       <th>Company</th><th>Mkt Cap</th><th>Fwd P/E</th><th>GM%</th><th>OM%</th><th>NP%</th>
-      <th>OCF</th><th>Debt/Cash</th><th>Off-BS Liabilities</th><th>Capex Guidance</th>
+      <th>ROIC</th><th>OCF</th><th>Debt/Cash</th><th>Off-BS Liabilities</th><th>Capex Guidance</th>
     </tr></thead><tbody>${rows}</tbody></table>
-    <div class="rev-src" style="margin-top:8px">Mkt cap/debt/cash/OCF shown in each stock's native trading currency with a USD-equivalent in parentheses (via current FX rate). GM/OM/NP are company-wide (Yahoo financial data). OCF is trailing twelve-month operating cash flow (Yahoo financial data). Capex guidance and off-BS liabilities are research-derived from company filings/earnings calls, refreshed periodically (not daily) — see each cell's source period for freshness.</div>`;
+    <div class="rev-src" style="margin-top:8px">Mkt cap/debt/cash/OCF shown in each stock's native trading currency with a USD-equivalent in parentheses (via current FX rate). GM/OM/NP are company-wide (Yahoo financial data). ROIC is the published TTM figure from a named data provider (GuruFocus, StockAnalysis.com, etc.) — the commonly-cited figure, not computed here, since Yahoo's free API lacks the balance-sheet detail and ROIC has too many competing formula variants for a homegrown version to reliably match what "ROIC" means elsewhere for a given name; hover for source/period. OCF is trailing twelve-month operating cash flow (Yahoo financial data). Capex guidance and off-BS liabilities are research-derived from company filings/earnings calls, refreshed periodically (not daily) — see each cell's source period for freshness.</div>`;
 }
 
 // TTM EPS = sum of the last 4 REPORTED (actual, not estimated) quarterly EPS.
@@ -1043,7 +1080,7 @@ function _renderPeHistoryImpl(wrap) {
       }
 
       rows += `<tr>
-        <td><span class="cmp-name">${esc(inst.label)}</span><span class="cmp-id">${esc(inst.id)}</span></td>
+        <td>${companyIdCell(inst)}</td>
         <td>$${price.toFixed(2)}</td>
         <td>${ttmPeCell}</td>
         <td>${fwdPe}</td>
@@ -1136,7 +1173,7 @@ function buildHistPeSection() {
       }).join("");
 
       rows += `<tr>
-        <td><span class="cmp-name">${esc(inst.label)}</span><span class="cmp-id">${esc(inst.id)}</span></td>
+        <td>${companyIdCell(inst)}</td>
         ${yearCells}
         ${fwdCells}
         <td>${avg3y}</td>
@@ -1245,8 +1282,9 @@ function load() {
     fetch("./off-bs-liabilities.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./historical-pe.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./forward-pe.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
-  ]).then(([data, moves, scmap, earnDates, revMix, deepFund, geoMix, fxRates, offBs, histPe, fwdPe]) => {
-    DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates; REV_MIX = revMix; DEEP_FUND = deepFund; GEO_MIX = geoMix; FX_RATES = fxRates; OFF_BS = offBs; HIST_PE = histPe; FWD_PE = fwdPe;
+    fetch("./roic.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
+  ]).then(([data, moves, scmap, earnDates, revMix, deepFund, geoMix, fxRates, offBs, histPe, fwdPe, roic]) => {
+    DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates; REV_MIX = revMix; DEEP_FUND = deepFund; GEO_MIX = geoMix; FX_RATES = fxRates; OFF_BS = offBs; HIST_PE = histPe; FWD_PE = fwdPe; ROIC = roic;
     STALE = checkStale(DATA);
     const ideas = DATA.instruments.filter(i => i.idea && i.idea.kind === "enter").length;
     document.getElementById("meta").textContent =
