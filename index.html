@@ -811,8 +811,10 @@ function _renderRevenueMixImpl(wrap) {
       const rev = REV_MIX && REV_MIX[inst.id];
       const df = DEEP_FUND && DEEP_FUND[inst.id];
       const geo = GEO_MIX && GEO_MIX[inst.id];
+      const altIds = ALT_LISTINGS[inst.id];
+      const revIdText = altIds ? `${esc(inst.id)} / ${altIds.map(esc).join(" / ")}` : esc(inst.id);
       html += `<div class="rev-card">
-        <div class="rev-top"><span class="name">${esc(inst.label)}</span><span class="id">${esc(inst.id)}</span></div>`;
+        <div class="rev-top"><span class="name">${esc(inst.label)}</span><span class="id">${revIdText}</span></div>`;
       if (!rev || !rev.segments || !rev.segments.length) {
         html += `<div class="rev-none">No segment breakdown available${rev && rev.fiscal_period === null && rev.source === null ? " (too newly listed / not yet filed)" : " yet"}</div>`;
       } else {
