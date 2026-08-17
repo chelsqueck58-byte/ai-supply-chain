@@ -174,7 +174,7 @@
 <script>
 "use strict";
 const TREND_ORDER = { up: 0, flat: 1, down: 2 };
-let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, DEEP_FUND = null, GEO_MIX = null, FX_RATES = null, OFF_BS = null, HIST_PE = null, STALE = false, OBSERVER = null;
+let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, DEEP_FUND = null, GEO_MIX = null, FX_RATES = null, OFF_BS = null, HIST_PE = null, FWD_PE = null, STALE = false, OBSERVER = null;
 const REVENUE_TAB_CATEGORIES = new Set(["china-internet", "compute", "hyperscaler-cloud", "platform"]);
 // Individual tickers pulled in from a category that isn't otherwise in
 // scope (e.g. ASML from Equipment) - added one at a time on request rather
@@ -1073,7 +1073,7 @@ function buildHistPeSection() {
   const na = `<span class="cmp-na">—</span>`;
   let rows = "";
   for (const [cat, list] of byCat) {
-    rows += `<tr class="cmp-cat-row"><td colspan="8">${esc(cat)}</td></tr>`;
+    rows += `<tr class="cmp-cat-row"><td colspan="11">${esc(cat)}</td></tr>`;
     for (const inst of list.sort((a, b) => a.label.localeCompare(b.label))) {
       const hp = HIST_PE[inst.id];
       // Sort by actual date rather than trust research-response order - some
@@ -1101,19 +1101,46 @@ function buildHistPeSection() {
         ? `${hp.avg_3y}x <span class="pe-nm">(${hp.avg_3y_count}yr)</span>` : na;
       const avg5y = hp.avg_5y != null
         ? `${hp.avg_5y}x <span class="pe-nm">(${hp.avg_5y_count}yr)</span>` : na;
+
+      // Forward: left-align to 3 slots (nearest year first) - the opposite
+      // direction from the historical right-align, since forward coverage
+      // runs out going FURTHER from today, not closer to it. Most names
+      // only have T+1 (a real Yahoo consensus); T+2/T+3 are genuinely
+      // uncovered by any named consensus aggregator for most of this
+      // cohort, not a research gap - see forward_pe.py.
+      const fp = FWD_PE && FWD_PE[inst.id];
+      const fpYears = fp ? (fp.years || []).slice()
+        .sort((a, b) => (a.period_end || "").localeCompare(b.period_end || "")) : [];
+      const fpSlots = new Array(3).fill(null);
+      for (let i = 0; i < Math.min(3, fpYears.length); i++) fpSlots[i] = fpYears[i];
+      const fwdCells = fpSlots.map(y => {
+        if (!y) return `<td>${na}</td>`;
+        const label = esc(y.fy_label || y.period_end || "?");
+        const nAnalysts = y.num_analysts != null
+          ? ` <span class="pe-nm" title="${y.num_analysts} analysts in consensus">(${y.num_analysts})</span>` : "";
+        if (y.pe != null) {
+          const warn = y.flag ? ` <span class="rev-qual" title="${esc(y.flag)}">⚠</span>` : "";
+          const conv = y.converted ? `<span class="rev-qual" title="${esc(y.source || "currency-converted")}">*</span>` : "";
+          return `<td><span class="pe-current">${y.pe}x</span>${conv}${warn}<br><span class="pe-nm">${label}${nAnalysts}</span></td>`;
+        }
+        return `<td><span class="pe-nm" title="${esc(y.flag || y.source || "")}">${y.flag ? "⚠ n/a" : "n/a"}</span><br><span class="pe-nm">${label}</span></td>`;
+      }).join("");
+
       rows += `<tr>
         <td><span class="cmp-name">${esc(inst.label)}</span><span class="cmp-id">${esc(inst.id)}</span></td>
         ${yearCells}
+        ${fwdCells}
         <td>${avg3y}</td>
         <td>${avg5y}</td>
       </tr>`;
     }
   }
-  return `<div class="hist-head" style="margin-top:22px">5-Year Annual P/E — AI/Tech Cohort</div>
+  return `<div class="hist-head" style="margin-top:22px">Historical &amp; Forward P/E — AI/Tech Cohort</div>
     <table class="cmp-table"><thead><tr>
-      <th>Company</th><th>T-4</th><th>T-3</th><th>T-2</th><th>T-1</th><th>T (Latest)</th><th>3-Yr Avg</th><th>5-Yr Avg</th>
+      <th>Company</th><th>T-4</th><th>T-3</th><th>T-2</th><th>T-1</th><th>T (Latest)</th>
+      <th>T+1</th><th>T+2</th><th>T+3</th><th>3-Yr Avg</th><th>5-Yr Avg</th>
     </tr></thead><tbody>${rows}</tbody></table>
-    <div class="rev-src" style="margin-top:8px">Annual P/E = fiscal year-end closing price ÷ that fiscal year's actual GAAP diluted EPS (research-derived from filings, not Yahoo's free API — which only exposes 4 years of net income and no historical share count). Columns are relative to each company's own most recent completed fiscal year (T), not calendar year, since fiscal year-ends differ (e.g. Apple's FY ends September, ARM's in March) — the actual FY label is shown under each value. Names with under 5 years of public history (recent IPOs) leave earlier columns blank rather than fabricate them. Companies reporting in a different currency than their traded shares (e.g. RMB-reporting, HKD-traded names) are converted using that year's historical average FX rate, marked *  — hover for the conversion detail. ⚠ flags a computed P/E outside a plausible range, worth a manual check. This data is LLM-researched from filings, not a Bloomberg/FactSet-grade feed — treat as a first pass, not verified truth.</div>`;
+    <div class="rev-src" style="margin-top:8px">Historical (T-4..T) = fiscal year-end closing price ÷ that fiscal year's actual GAAP diluted EPS, research-derived from filings. Forward (T+1..T+3) = TODAY's price ÷ analyst consensus EPS estimate. T+1 is a real sourced Yahoo Finance consensus (analyst count shown in parentheses); T+2/T+3 require a named multi-analyst consensus aggregator (Zacks, TipRanks, MarketScreener, etc.) — most names genuinely have no such coverage that far out, shown as n/a rather than a guess, not a research gap. Columns are relative to each company's own fiscal calendar (T = most recent completed fiscal year), not calendar year — the actual FY label and analyst count are shown under each value. Companies reporting in a different currency than their traded shares are converted using the relevant historical or spot FX rate, marked * — hover for detail. ⚠ flags a P/E outside a plausible range (a real failure mode: Yahoo's own consensus data has been wrong for at least one name in this cohort — PDD's trailing AND forward EPS were both ~8-10x inflated on Yahoo's feed, caught by this check and excluded). This data is LLM/API-researched, not a Bloomberg/FactSet-grade feed — treat as a first pass, not verified truth.</div>`;
 }
 
 window.showTab = function (tabKey) {
@@ -1208,8 +1235,9 @@ function load() {
     fetch("./fx-rates.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./off-bs-liabilities.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./historical-pe.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
-  ]).then(([data, moves, scmap, earnDates, revMix, deepFund, geoMix, fxRates, offBs, histPe]) => {
-    DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates; REV_MIX = revMix; DEEP_FUND = deepFund; GEO_MIX = geoMix; FX_RATES = fxRates; OFF_BS = offBs; HIST_PE = histPe;
+    fetch("./forward-pe.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
+  ]).then(([data, moves, scmap, earnDates, revMix, deepFund, geoMix, fxRates, offBs, histPe, fwdPe]) => {
+    DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates; REV_MIX = revMix; DEEP_FUND = deepFund; GEO_MIX = geoMix; FX_RATES = fxRates; OFF_BS = offBs; HIST_PE = histPe; FWD_PE = fwdPe;
     STALE = checkStale(DATA);
     const ideas = DATA.instruments.filter(i => i.idea && i.idea.kind === "enter").length;
     document.getElementById("meta").textContent =
