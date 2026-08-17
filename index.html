@@ -895,7 +895,7 @@ function _renderCompareTableImpl(wrap) {
   const na = `<span class="cmp-na">—</span>`;
   let rows = "";
   for (const [cat, list] of byCat) {
-    rows += `<tr class="cmp-cat-row"><td colspan="9">${esc(cat)}</td></tr>`;
+    rows += `<tr class="cmp-cat-row"><td colspan="10">${esc(cat)}</td></tr>`;
     for (const inst of list.sort((a, b) => a.label.localeCompare(b.label))) {
       const f = inst.fund || {};
       const df = DEEP_FUND && DEEP_FUND[inst.id];
@@ -904,6 +904,7 @@ function _renderCompareTableImpl(wrap) {
       const gm = fmtPctPlain(f.gross_margin) || na;
       const om = fmtPctPlain(f.operating_margin) || na;
       const npm = fmtPctPlain(f.net_margin) || na;
+      const ocf = fmtMarketCap(f.operating_cashflow, inst.currency) || na;
 
       let debtCell = na;
       if (f.total_debt != null || f.total_cash != null) {
@@ -951,6 +952,7 @@ function _renderCompareTableImpl(wrap) {
         <td>${gm}</td>
         <td>${om}</td>
         <td>${npm}</td>
+        <td>${ocf}</td>
         <td>${debtCell}</td>
         <td>${offBsCell}</td>
         <td>${guidanceCell}</td>
@@ -959,9 +961,9 @@ function _renderCompareTableImpl(wrap) {
   }
   wrap.innerHTML = `<table class="cmp-table"><thead><tr>
       <th>Company</th><th>Mkt Cap</th><th>Fwd P/E</th><th>GM%</th><th>OM%</th><th>NP%</th>
-      <th>Debt/Cash</th><th>Off-BS Liabilities</th><th>Capex Guidance</th>
+      <th>OCF</th><th>Debt/Cash</th><th>Off-BS Liabilities</th><th>Capex Guidance</th>
     </tr></thead><tbody>${rows}</tbody></table>
-    <div class="rev-src" style="margin-top:8px">Mkt cap/debt/cash shown in each stock's native trading currency with a USD-equivalent in parentheses (via current FX rate). GM/OM/NP are company-wide (Yahoo financial data). Capex guidance and off-BS liabilities are research-derived from company filings/earnings calls, refreshed periodically (not daily) — see each cell's source period for freshness.</div>`;
+    <div class="rev-src" style="margin-top:8px">Mkt cap/debt/cash/OCF shown in each stock's native trading currency with a USD-equivalent in parentheses (via current FX rate). GM/OM/NP are company-wide (Yahoo financial data). OCF is trailing twelve-month operating cash flow (Yahoo financial data). Capex guidance and off-BS liabilities are research-derived from company filings/earnings calls, refreshed periodically (not daily) — see each cell's source period for freshness.</div>`;
 }
 
 // TTM EPS = sum of the last 4 REPORTED (actual, not estimated) quarterly EPS.
