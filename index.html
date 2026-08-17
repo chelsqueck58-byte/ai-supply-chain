@@ -428,10 +428,15 @@ function pastCatalystRows(category, lookbackDays = 30) {
     // Quarters that reported but moved the stock <5% never make it into
     // moves.json (movements.py's detection floor), so they'd otherwise
     // vanish from every catalyst view. earnings_dates.json fills that gap
-    // with a real researched report date. Skip entries covered_by_move (a
+    // with real researched report dates. Skip entries covered_by_move (a
     // >=5% move already logged the same report - the block above has it).
-    const ed = EARN_DATES && EARN_DATES[inst.id];
-    if (ed && ed.report_date && !ed.covered_by_move) {
+    // EARN_DATES[id] is a LIST of quarters, not a single object - it used
+    // to overwrite the prior quarter every time a newer one was researched,
+    // silently losing anything older than "most recent" (confirmed missing:
+    // Tencent's May/Aug/Nov 2025 quarters, all wiped by later overwrites).
+    const edEntries = (EARN_DATES && EARN_DATES[inst.id]) || [];
+    for (const ed of edEntries) {
+      if (!ed.report_date || ed.covered_by_move) continue;
       const d = new Date(ed.report_date);
       if (d >= cutoff && d < today) {
         const pctPart = typeof ed.reaction_pct === "number"
@@ -697,13 +702,15 @@ function renderSectorHistory(catKey) {
 
     // Same gap earnings-dates.json fills in Past Key Events: a quarter that
     // reported but moved the stock <5% never lands in moves.json at all, so
-    // without this it's invisible here too (confirmed missing: Tencent's
-    // 2026-08-12 report, -3.7%, was absent from Stock History pre-fix).
-    const ed = EARN_DATES && EARN_DATES[inst.id];
-    const edMove = (ed && ed.report_date && !ed.covered_by_move)
-      ? [{ d: ed.report_date, pct: ed.reaction_pct, reason: ed.reason || "reported results",
-           source: ed.source, isEarnings: true }]
-      : [];
+    // without this it's invisible here too. EARN_DATES[id] is a LIST of
+    // quarters (see the comment in pastCatalystRows) - a single-object
+    // schema previously overwrote each ticker's older gap-filled quarters
+    // every time a newer one was researched, silently losing them.
+    const edEntries = (EARN_DATES && EARN_DATES[inst.id]) || [];
+    const edMove = edEntries
+      .filter(ed => ed.report_date && !ed.covered_by_move)
+      .map(ed => ({ d: ed.report_date, pct: ed.reaction_pct, reason: ed.reason || "reported results",
+                     source: ed.source, isEarnings: true }));
 
     const combined = [...researched, ...edMove].sort((a, b) => b.d.localeCompare(a.d));
     if (!combined.length) continue;
