@@ -130,7 +130,10 @@
     font-size:9px; letter-spacing:.3px; border-bottom:1px solid var(--border); white-space:normal; }
   .cmp-name { font-weight:600; color:var(--text); }
   .cmp-id { color:var(--muted); font-size:9px; margin-left:4px; }
-  .cmp-seg-list { white-space:normal; max-width:260px; font-size:9px; color:var(--muted); line-height:1.25; }
+  /* Debt/Cash and Off-BS Liabilities share this class - widened so their
+     multi-line lists (Debt/Cash/Net/D-E, or several commitment line items)
+     wrap less, which is what actually drives row height. */
+  .cmp-seg-list { white-space:normal; max-width:340px; font-size:9px; color:var(--muted); line-height:1.25; }
   .cmp-seg-list b { color:var(--text); }
   .cmp-na { color:var(--muted); }
   .cmp-src-note { color:var(--muted); font-size:8px; font-style:italic; white-space:normal; max-width:200px; }
@@ -139,7 +142,15 @@
      longest cell in the row, so it wraps into the most lines. A wider column
      here means fewer wrapped lines, which shortens every row's height and
      lets more stocks fit on screen without scrolling. */
-  .cmp-capex-text { white-space:normal; max-width:440px; font-size:9px; color:var(--muted); line-height:1.25; }
+  .cmp-capex-text { white-space:normal; max-width:500px; font-size:9px; color:var(--muted); line-height:1.25; }
+  /* Compare tab only (scoped via #compare-wrap - .cmp-table is shared with
+     the P/E History tab, which wasn't part of this request). Company and
+     Mkt Cap are the shortest-content columns; narrowing them frees up
+     horizontal room for Debt/Cash/Off-BS/Capex above, and lets the row
+     count on screen go up without needing more horizontal scroll. */
+  #compare-wrap .cmp-table td:first-child { white-space:normal; max-width:100px; }
+  #compare-wrap .cmp-table td:nth-child(2) { white-space:normal; max-width:90px; }
+  .cmp-mktcap-usd { display:block; color:var(--muted); font-size:8px; }
   /* P/E History tab */
   .pe-current { font-weight:600; color:var(--text); }
   .pe-nm { color:var(--muted); font-style:italic; font-size:9px; }
@@ -868,14 +879,21 @@ function fmtMoney(n, symbol) {
 // USD - confirmed live on Cambricon (raw value was actually CNY 686.7B, not
 // USD) and Tencent (raw value was HKD 3.97T). Shows the real native-currency
 // figure plus a USD-equivalent (via FX_RATES) for cross-stock comparability.
-function fmtMarketCap(n, currency) {
+// stacked=true puts the USD-equivalent on its own line below the native
+// figure instead of an inline parenthetical - used for the Compare tab's
+// Mkt Cap column specifically, so that column can be narrower (the other
+// callers - OCF, Debt/Cash - stay single-line since their column got wider
+// instead of narrower).
+function fmtMarketCap(n, currency, stacked) {
   if (n === null || n === undefined) return null;
   const ccy = currency || "USD";
   const symbol = CCY_SYMBOL[ccy] || (ccy + " ");
   const native = fmtMoney(n, symbol);
   if (ccy === "USD" || !FX_RATES || !FX_RATES[ccy]) return native;
   const usdEquiv = fmtMoney(n / FX_RATES[ccy], "$");
-  return `${native} <span class="cmp-src-note">(~${usdEquiv})</span>`;
+  return stacked
+    ? `${native}<span class="cmp-mktcap-usd">${usdEquiv}</span>`
+    : `${native} <span class="cmp-src-note">(~${usdEquiv})</span>`;
 }
 function fmtPctPlain(n, digits = 1) {
   return (n === null || n === undefined) ? null : (n * 100).toFixed(digits) + "%";
@@ -925,7 +943,7 @@ function _renderCompareTableImpl(wrap) {
     for (const inst of list.sort((a, b) => a.label.localeCompare(b.label))) {
       const f = inst.fund || {};
       const df = DEEP_FUND && DEEP_FUND[inst.id];
-      const mktCap = fmtMarketCap(f.market_cap, inst.currency) || na;
+      const mktCap = fmtMarketCap(f.market_cap, inst.currency, true) || na;
       const fwdPe = (f.fwd_pe != null) ? f.fwd_pe.toFixed(1) + "x" : na;
       const gm = fmtPctPlain(f.gross_margin) || na;
       const om = fmtPctPlain(f.operating_margin) || na;
@@ -941,8 +959,15 @@ function _renderCompareTableImpl(wrap) {
       let roicCell = na;
       if (roicEntry && roicEntry.roic_pct != null) {
         const warn = roicEntry.flag ? ` <span class="rev-qual" title="${esc(roicEntry.flag)}">⚠</span>` : "";
+        // Period sometimes comes back as "TTM (as of 2026-06-25)" or "TTM
+        // (Jun 2026)" - the parenthetical detail is real but not worth a
+        // line of clutter in every row; keep it in the tooltip instead,
+        // alongside the source (which the tooltip already showed).
+        const periodFull = roicEntry.period || "";
+        const periodShort = periodFull.replace(/\s*\([^)]*\)\s*$/, "");
+        const tip = [roicEntry.source, periodFull !== periodShort ? periodFull : null].filter(Boolean).join(" — ");
         roicCell = `<span class="pe-current">${roicEntry.roic_pct}%</span>${warn}<br>`
-          + `<span class="pe-nm" title="${esc(roicEntry.source || "")}">${esc(roicEntry.period || "")}</span>`;
+          + `<span class="pe-nm" title="${esc(tip)}">${esc(periodShort)}</span>`;
       }
 
       let debtCell = na;
