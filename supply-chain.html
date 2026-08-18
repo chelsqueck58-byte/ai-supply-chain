@@ -233,6 +233,31 @@ function getSubcategory(inst) {
   return m && m.subcategory ? m.subcategory : "Other";
 }
 
+// Explicit per-category row order for tabs that group stocks by category
+// (Revenue Mix, Compare, P/E History) - everything else stays alphabetical.
+// Keyed by the display label (all four tabs' byCat maps converge on the
+// same label string, e.g. "China Internet", even though they build it via
+// slightly different lookups). Only China Internet has an order defined
+// right now; add more labels here if the same request comes up for
+// Compute/Tech Platforms/etc.
+const CATEGORY_ORDER = {
+  "China Internet": ["9988", "0700", "9888", "1810", "2513", "0100", "3690", "9618", "PDD"],
+};
+function sortForCategoryTab(list, categoryLabel) {
+  const order = CATEGORY_ORDER[categoryLabel];
+  if (!order) return list.sort((a, b) => a.label.localeCompare(b.label));
+  return list.sort((a, b) => {
+    const ia = order.indexOf(a.id), ib = order.indexOf(b.id);
+    // Unlisted tickers (a future addition to the category not yet in the
+    // fixed order) fall to the end, alphabetically among themselves, rather
+    // than disappearing or throwing off the intended order.
+    if (ia === -1 && ib === -1) return a.label.localeCompare(b.label);
+    if (ia === -1) return 1;
+    if (ib === -1) return -1;
+    return ia - ib;
+  });
+}
+
 function esc(s) {
   if (s == null) return "";
   const div = document.createElement("div");
@@ -819,7 +844,7 @@ function _renderRevenueMixImpl(wrap) {
   let html = "";
   for (const [cat, list] of byCat) {
     html += `<div class="section" style="grid-column:1/-1">${esc(cat)}</div>`;
-    for (const inst of list.sort((a, b) => a.label.localeCompare(b.label))) {
+    for (const inst of sortForCategoryTab(list, cat)) {
       const rev = REV_MIX && REV_MIX[inst.id];
       const df = DEEP_FUND && DEEP_FUND[inst.id];
       const geo = GEO_MIX && GEO_MIX[inst.id];
@@ -940,7 +965,7 @@ function _renderCompareTableImpl(wrap) {
   let rows = "";
   for (const [cat, list] of byCat) {
     rows += `<tr class="cmp-cat-row"><td colspan="11">${esc(cat)}</td></tr>`;
-    for (const inst of list.sort((a, b) => a.label.localeCompare(b.label))) {
+    for (const inst of sortForCategoryTab(list, cat)) {
       const f = inst.fund || {};
       const df = DEEP_FUND && DEEP_FUND[inst.id];
       const mktCap = fmtMarketCap(f.market_cap, inst.currency, true) || na;
@@ -1075,7 +1100,7 @@ function _renderPeHistoryImpl(wrap) {
   let rows = "";
   for (const [cat, list] of byCat) {
     rows += `<tr class="cmp-cat-row"><td colspan="7">${esc(cat)}</td></tr>`;
-    for (const inst of list.sort((a, b) => a.label.localeCompare(b.label))) {
+    for (const inst of sortForCategoryTab(list, cat)) {
       const f = inst.fund || {};
       const bars = inst.bars;
       const price = bars[bars.length - 1].c;
@@ -1148,7 +1173,7 @@ function buildHistPeSection() {
   let rows = "";
   for (const [cat, list] of byCat) {
     rows += `<tr class="cmp-cat-row"><td colspan="11">${esc(cat)}</td></tr>`;
-    for (const inst of list.sort((a, b) => a.label.localeCompare(b.label))) {
+    for (const inst of sortForCategoryTab(list, cat)) {
       const hp = HIST_PE[inst.id];
       // Sort by actual date rather than trust research-response order - some
       // responses came back oldest-first, others newest-first, inconsistently.
