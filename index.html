@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Supply Chain Intelligence</title>
+<title>stock-monitor</title><!-- Updated: 1786645109 -->
 <style>
   :root {
     --bg:#0d1117; --panel:#161b22; --border:#21262d; --text:#e6edf3;
@@ -17,16 +17,21 @@
     background:var(--bg); z-index:5; }
   header h1 { margin:0 0 3px; font-size:15px; font-weight:600; letter-spacing:.3px; display:inline; }
   header .meta { color:var(--muted); font-size:12px; margin-left:10px; }
+  header .legend { color:var(--muted); font-size:11px; display:flex; flex-direction:column;
+    gap:3px; margin-top:6px; }
+  header .legend .lg-row { display:flex; flex-wrap:wrap; gap:4px 0; }
+  header .legend .lg-cat { color:var(--text); font-weight:600; margin-right:6px; white-space:nowrap; }
+  header .legend .lg-hint { font-style:italic; opacity:.8; margin-top:2px; }
+  header .legend b.ema { color:var(--ema); } header .legend b.sma { color:var(--sma); }
+  header .legend b.vwap { color:var(--vwap); }
   #stale { display:none; background:var(--down); color:#fff; padding:10px 16px; font-weight:600; text-align:center; }
   #stale.show { display:block; }
-  .monitor-grid { padding:12px; display:grid; gap:10px; grid-template-columns:repeat(4,1fr); }
-  @media (max-width:1700px) { .monitor-grid { grid-template-columns:repeat(3,1fr); } }
-  @media (max-width:1200px) { .monitor-grid { grid-template-columns:repeat(2,1fr); } }
-  @media (max-width:760px)  { .monitor-grid { grid-template-columns:1fr; } }
+  main { padding:12px; display:grid; gap:10px; grid-template-columns:repeat(auto-fill,minmax(460px,1fr)); }
+  .monitor-grid { padding:12px; display:grid; gap:10px; grid-template-columns:repeat(auto-fill,minmax(460px,1fr)); }
   .section { grid-column:1/-1; font-size:12px; font-weight:600; color:var(--muted);
     text-transform:uppercase; letter-spacing:.5px; padding:8px 2px 2px; border-bottom:1px solid var(--border); }
-  .section.subcat { color:#d4a85f; }
   .card { background:var(--panel); border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+  .card.setup { border-color:var(--ema); box-shadow:inset 0 0 0 1px var(--ema); }
   .card .top { display:flex; align-items:center; gap:6px; padding:8px 10px; flex-wrap:wrap; }
   .card .name { font-weight:600; }
   .card .id { color:var(--muted); font-size:11px; }
@@ -37,6 +42,7 @@
   .badge.up { color:var(--up); background:rgba(38,166,65,.14); }
   .badge.down { color:var(--down); background:rgba(248,81,73,.14); }
   .badge.flat { color:var(--muted); background:rgba(125,133,144,.14); }
+  .badge.entry { color:var(--ema); background:rgba(227,179,65,.16); }
   .badge.cta-long { color:var(--up); background:rgba(38,166,65,.10); }
   .badge.cta-short { color:var(--down); background:rgba(248,81,73,.10); }
   .remark { padding:5px 10px; font-size:11px; border-bottom:1px solid var(--border);
@@ -61,7 +67,9 @@
   .ct-prev { color:#c9a5f0; margin-top:3px; }
   .ct-event { font-weight:600; }
   .ct-focus { color:#9fd0ff; margin-top:2px; }
+  .ideabox .nw { color:#9fd0ff; font-size:11px; margin-top:3px; }
   .chart { height:300px; }
+  /* Top ideas section */
   #ideas { padding:10px 12px; border-bottom:1px solid var(--border); background:#12161c; }
   #catalysts30 { padding:10px 12px; border-bottom:1px solid var(--border); background:#12161c; }
   #pastCatalysts { padding:10px 12px; border-bottom:1px solid var(--border); background:#12161c; }
@@ -85,7 +93,7 @@
   .ideabox .ih { font-weight:600; margin-bottom:2px; }
   .ideabox .ih .id { color:var(--muted); font-size:10px; font-weight:400; }
   .ideabox .ir { color:var(--muted); font-size:11px; margin-bottom:3px; }
-  .ideabox .nw { color:#9fd0ff; font-size:11px; margin-top:3px; }
+  .ideabox .il { font-variant-numeric:tabular-nums; }
   .tpchip { border:1px solid var(--down); border-radius:6px; padding:4px 8px; font-size:11px;
     color:var(--down); background:rgba(248,81,73,.06); }
   .tpchip .id { color:var(--muted); font-size:10px; font-weight:400; }
@@ -99,71 +107,8 @@
   .tabs button { background:transparent; border:1px solid var(--border); border-bottom:none;
     color:var(--muted); padding:5px 14px; border-radius:6px 6px 0 0; cursor:pointer; font-size:13px; font-family:inherit; }
   .tabs button.active { background:var(--panel); color:var(--text); }
-  /* Per-sector stock history (below the cards) */
-  .hist-wrap { padding:0 12px 12px; }
-  /* Revenue Mix tab */
-  .rev-wrap { padding:12px; display:grid; gap:12px; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); }
-  .rev-card { background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:10px 12px; }
-  .rev-top { display:flex; align-items:baseline; gap:6px; margin-bottom:2px; }
-  .rev-top .name { font-weight:600; }
-  .rev-top .id { color:var(--muted); font-size:11px; }
-  .rev-period { color:var(--muted); font-size:10px; margin-bottom:6px; }
-  .rev-mini-table { width:100%; border-collapse:collapse; font-size:11px; }
-  .rev-mini-table td { padding:3px 4px; border-bottom:1px solid #1b2027; }
-  .rev-mini-table tr:last-child td { border-bottom:none; }
-  .rev-mini-name { color:var(--text); }
-  .rev-mini-num { color:#9fd0ff; font-weight:600; font-variant-numeric:tabular-nums; text-align:right; white-space:nowrap; width:1%; }
-  .rev-qual { color:var(--muted); font-weight:400; font-style:italic; cursor:help; text-decoration:underline dotted; }
-  .rev-src { color:var(--muted); font-size:9px; margin-top:6px; }
-  .rev-none { color:var(--muted); font-size:11px; font-style:italic; }
-  /* Compare tab - kept dense on purpose: these tables are read as a list of
-     20+ stocks, not a handful of cards, so vertical space per row directly
-     trades off against how many names fit on screen without scrolling. */
-  .cmp-wrap { padding:12px; overflow-x:auto; }
-  .cmp-table { width:100%; border-collapse:collapse; font-size:10px; min-width:900px; }
-  .cmp-table th { text-align:left; color:var(--muted); font-weight:600; font-size:8px;
-    text-transform:uppercase; letter-spacing:.3px; padding:3px 6px; border-bottom:1px solid var(--border);
-    position:sticky; top:0; background:var(--bg); }
-  .cmp-table td { padding:2px 6px; border-bottom:1px solid #1b2027; vertical-align:top; white-space:nowrap; }
-  .cmp-table tr:hover td { background:rgba(88,166,255,.06); }
-  .cmp-cat-row td { padding-top:8px; padding-bottom:2px; font-weight:700; color:#9fd0ff; text-transform:uppercase;
-    font-size:9px; letter-spacing:.3px; border-bottom:1px solid var(--border); white-space:normal; }
-  .cmp-name { font-weight:600; color:var(--text); }
-  .cmp-id { color:var(--muted); font-size:9px; margin-left:4px; }
-  /* Debt/Cash and Off-BS Liabilities share this class - widened so their
-     multi-line lists (Debt/Cash/Net/D-E, or several commitment line items)
-     wrap less, which is what actually drives row height. */
-  .cmp-seg-list { white-space:normal; max-width:400px; font-size:9px; color:var(--muted); line-height:1.25; }
-  .cmp-seg-list b { color:var(--text); }
-  .cmp-na { color:var(--muted); }
-  .cmp-src-note { color:var(--muted); font-size:8px; font-style:italic; white-space:normal; max-width:200px; }
-  .cmp-capex-headline { color:#f5c518; font-weight:700; font-size:12px; margin-bottom:2px; white-space:nowrap; }
-  /* Wider than .cmp-seg-list on purpose - capex guidance text is usually the
-     longest cell in the row, so it wraps into the most lines. A wider column
-     here means fewer wrapped lines, which shortens every row's height and
-     lets more stocks fit on screen without scrolling. */
-  .cmp-capex-text { white-space:normal; max-width:500px; font-size:9px; color:var(--muted); line-height:1.25; }
-  /* Compare tab only (scoped via #compare-wrap - .cmp-table is shared with
-     the P/E History tab, which wasn't part of this request). Company and
-     Mkt Cap are the shortest-content columns; narrowing them frees up
-     horizontal room for Debt/Cash/Off-BS/Capex above, and lets the row
-     count on screen go up without needing more horizontal scroll. */
-  #compare-wrap .cmp-table td:first-child { white-space:normal; max-width:100px; }
-  #compare-wrap .cmp-table td:nth-child(2) { white-space:normal; max-width:90px; }
-  .cmp-mktcap-usd { display:block; color:var(--muted); font-size:8px; }
-  /* P/E History tab */
-  .pe-current { font-weight:600; color:var(--text); }
-  .pe-nm { color:var(--muted); font-style:italic; font-size:9px; }
-  .pe-range-wrap { display:flex; flex-direction:column; gap:3px; min-width:130px; }
-  .pe-range-lbl { font-size:9px; color:var(--muted); display:flex; justify-content:space-between; white-space:nowrap; }
-  .pe-range-track { position:relative; width:100%; height:6px; background:#1b2027; border-radius:3px; }
-  .pe-range-fill { position:absolute; top:0; bottom:0; background:rgba(88,166,255,.25); border-radius:3px; }
-  .pe-range-marker { position:absolute; top:-3px; width:2px; height:12px; background:#58a6ff; border-radius:1px; }
-  .pe-pctile { font-size:9px; color:var(--muted); }
-  .pe-pctile b { color:#9fd0ff; }
-  .hist-head { font-size:12px; font-weight:700; letter-spacing:.5px; text-transform:uppercase;
-    color:#9fd0ff; padding:14px 2px 8px; border-top:2px solid var(--border); margin-top:6px; }
-  .hist-grid { display:grid; gap:12px; grid-template-columns:repeat(auto-fill,minmax(470px,1fr)); }
+  #monitor-tabs { display:flex !important; visibility:visible !important; opacity:1 !important; }
+  #history { padding:12px; display:grid; gap:12px; grid-template-columns:repeat(auto-fill,minmax(470px,1fr)); }
   .hcard { background:var(--panel); border:1px solid var(--border); border-radius:8px; overflow:hidden; }
   .hcard .htop { padding:8px 10px; font-weight:600; border-bottom:1px solid var(--border); }
   .hcard .htop .id { color:var(--muted); font-size:11px; font-weight:400; }
@@ -180,110 +125,65 @@
 <body>
 <div id="stale"></div>
 <header>
-  <h1>Supply Chain Intelligence</h1><span class="meta" id="meta">loading…</span>
-  <nav class="tabs" id="tabs"></nav>
+  <h1>stock-monitor</h1><span class="meta" id="meta">loading…</span> · <a href="./supply-chain.html" style="color:#58a6ff;text-decoration:none;font-size:12px;margin-left:10px;">📊 Supply Chain</a>
+  <nav class="tabs">
+    <button id="tab-summary" class="active" onclick="showTab('summary')">Summary</button>
+    <button id="tab-china-internet" onclick="showTab('china-internet')">China Internet</button>
+    <button id="tab-ai-tech" onclick="showTab('ai-tech')">AI & Big Tech</button>
+    <button id="tab-semis" onclick="showTab('semis')">Semis</button>
+    <button id="tab-china-ev" onclick="showTab('china-ev')">China EV</button>
+    <button id="tab-singapore" onclick="showTab('singapore')">Singapore</button>
+    <button id="tab-sea-tech" onclick="showTab('sea-tech')">SE Asia Tech</button>
+    <button id="tab-consumer" onclick="showTab('consumer')">Consumer</button>
+    <button id="tab-history" onclick="showTab('history')">History (Past Month)</button>
+    <button id="tab-stock-history" onclick="showTab('stock-history')">Stock History</button>
+  </nav>
 </header>
 <div id="ideas"></div>
 <div id="catalysts30"></div>
 <div id="pastCatalysts"></div>
-<div id="grids"></div>
+<main id="grid-china-internet" class="monitor-grid" style="display:none"></main>
+<main id="grid-ai-tech" class="monitor-grid" style="display:none"></main>
+<main id="grid-semis" class="monitor-grid" style="display:none"></main>
+<main id="grid-china-ev" class="monitor-grid" style="display:none"></main>
+<main id="grid-singapore" class="monitor-grid" style="display:none"></main>
+<main id="grid-sea-tech" class="monitor-grid" style="display:none"></main>
+<main id="grid-consumer" class="monitor-grid" style="display:none"></main>
+<div id="history" style="display:none;padding:12px"></div>
+<div id="stock-history" style="display:none;padding:12px;display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(470px,1fr))"></div>
 
 <script src="./vendor/lightweight-charts.standalone.production.js"></script>
 <script>
+console.log("=== SCRIPT STARTED ===");
 "use strict";
 const TREND_ORDER = { up: 0, flat: 1, down: 2 };
-let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, DEEP_FUND = null, GEO_MIX = null, FX_RATES = null, OFF_BS = null, HIST_PE = null, FWD_PE = null, ROIC = null, STALE = false, OBSERVER = null;
-const REVENUE_TAB_CATEGORIES = new Set(["china-internet", "compute", "hyperscaler-cloud", "platform"]);
-// Individual tickers pulled in from a category that isn't otherwise in
-// scope (e.g. ASML from Equipment) - added one at a time on request rather
-// than including that whole category's other names.
-const REVENUE_TAB_EXTRA_TICKERS = new Set(["ASML"]);
-function inRevenueTabScope(instId, category) {
-  return REVENUE_TAB_CATEGORIES.has(category) || REVENUE_TAB_EXTRA_TICKERS.has(instId);
-}
+console.log("TREND_ORDER defined");
+let DATA = null, STALE = false, OBSERVER = null;
+console.log("DATA, STALE, OBSERVER declared");
 
-// Supply-chain category tabs. Keys must match getCategory() output.
-const CATEGORIES = [
-  { key: "hyperscaler-cloud", label: "Tech Platforms" },
-  { key: "compute",           label: "Compute" },
-  { key: "foundry",           label: "Foundry" },
-  { key: "memory",            label: "Memory" },
-  { key: "equipment",         label: "Equipment" },
-  { key: "power-analog",      label: "Power/Analog" },
-  { key: "china-internet",    label: "China Internet" },
-  { key: "china-ev",          label: "China EV" },
-  { key: "singapore",         label: "Singapore/SE Asia" },
-  { key: "consumer",          label: "Consumer" },
-];
-const CAT_KEYS = new Set(CATEGORIES.map(c => c.key));
-
-// Map a raw supply-chain-map category to a tab key (consolidates small buckets).
-function getCategory(inst) {
-  const m = SC_MAP && SC_MAP[inst.id];
-  if (!m) return null;
-  let c = m.category;
-  if (c === "platform") c = "hyperscaler-cloud";
-  if (c.startsWith("singapore") || c === "se-asia-tech") c = "singapore";
-  if (c === "china-hardware") c = "china-ev";
-  if (c === "global-consumer" || c === "consumer-electronics") c = "consumer";
-  return CAT_KEYS.has(c) ? c : null;   // benchmarks (SPY/QQQ) -> no tab, summary only
-}
-function getSubcategory(inst) {
-  const m = SC_MAP && SC_MAP[inst.id];
-  return m && m.subcategory ? m.subcategory : "Other";
-}
-
-// Explicit per-category row order for tabs that group stocks by category
-// (Revenue Mix, Compare, P/E History) - everything else stays alphabetical.
-// Keyed by the display label (all four tabs' byCat maps converge on the
-// same label string, e.g. "China Internet", even though they build it via
-// slightly different lookups). Only China Internet has an order defined
-// right now; add more labels here if the same request comes up for
-// Compute/Tech Platforms/etc.
-const CATEGORY_ORDER = {
-  "China Internet": ["9988", "0700", "9888", "1810", "2513", "0100", "3690", "9618", "PDD"],
+const GROUP_TO_CATEGORY = {
+  "China internet":      { key: "china-internet", label: "China Internet" },
+  "AI & big tech":       { key: "ai-tech",         label: "AI & Big Tech" },
+  "Semis":               { key: "semis",           label: "Semis" },
+  "China EV":            { key: "china-ev",        label: "China EV" },
+  "Singapore":           { key: "singapore",       label: "Singapore" },
+  "Southeast Asia tech": { key: "sea-tech",        label: "SE Asia Tech" },
+  "Consumer":            { key: "consumer",        label: "Consumer" },
 };
-function sortForCategoryTab(list, categoryLabel) {
-  const order = CATEGORY_ORDER[categoryLabel];
-  if (!order) return list.sort((a, b) => a.label.localeCompare(b.label));
-  return list.sort((a, b) => {
-    const ia = order.indexOf(a.id), ib = order.indexOf(b.id);
-    // Unlisted tickers (a future addition to the category not yet in the
-    // fixed order) fall to the end, alphabetically among themselves, rather
-    // than disappearing or throwing off the intended order.
-    if (ia === -1 && ib === -1) return a.label.localeCompare(b.label);
-    if (ia === -1) return 1;
-    if (ib === -1) return -1;
-    return ia - ib;
-  });
-}
+const CATEGORIES = Object.values(GROUP_TO_CATEGORY);
 
+// HTML-escape freeform text (LLM/web-search/Telegram-sourced) before it goes
+// into a template literal that gets assigned to innerHTML. None of it was
+// ever exploitable (no literal "<" ever showed up in a live scan), but raw
+// ">"/"&" in text like "revenue >50%" is still technically unescaped HTML -
+// this is the correct fix, not a per-string patch. Uses the browser's own
+// textContent -> innerHTML round-trip rather than a hand-rolled regex, so it
+// can't miss a character the way a manual replace(/</g,...) list could.
 function esc(s) {
   if (s == null) return "";
   const div = document.createElement("div");
   div.textContent = String(s);
   return div.innerHTML;
-}
-
-// Several names in the Compare/P-E-History cohort are dual-listed, and the
-// site only tracks ONE ticker per company for pricing/fundamentals (whatever
-// Yahoo symbol universe.json points at) - showing just that one id reads as
-// wrong to anyone expecting the more commonly-cited symbol (e.g. Baidu shows
-// as "9888", its secondary HK listing, when BIDU - the Nasdaq ADR - is the
-// one most US-side coverage actually references). This doesn't change what
-// data is fetched or displayed anywhere else, purely a label so the company
-// is unambiguously identifiable regardless of which ticker the reader knows
-// it by. Order is [primary/most-recognized, ...secondary listings].
-const ALT_LISTINGS = {
-  "9988": ["BABA"],        // Alibaba - NYSE ADR, tracked ticker is the 9988 HK listing
-  "9888": ["BIDU"],        // Baidu - Nasdaq ADR, tracked ticker is the 9888 HK listing
-  "9618": ["JD"],          // JD.com - Nasdaq ADR, tracked ticker is the 9618 HK listing
-  "0700": ["TCEHY (OTC, unsponsored)"],  // Tencent - no major-exchange US listing
-};
-function companyIdCell(inst) {
-  const alts = ALT_LISTINGS[inst.id];
-  const idText = alts ? `${esc(inst.id)} / ${alts.map(esc).join(" / ")}` : esc(inst.id);
-  return `<span class="cmp-name">${esc(inst.label)}</span><span class="cmp-id">${idText}</span>`;
 }
 
 function smaSeries(closes, period) {
@@ -308,20 +208,11 @@ function checkStale(p) {
   }
   return false;
 }
-function daysTo(ds) {
-  // Pure UTC calendar-day difference (see stock-monitor index.html for why).
-  if (!ds) return null;
-  const [y, m, d] = ds.split("-").map(Number);
-  const target = Date.UTC(y, m - 1, d);
-  const now = new Date();
-  const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-  return Math.round((target - today) / 8.64e7);
-}
 
 function earnTag(dateStr) {
   if (!dateStr) return "";
   const days = daysTo(dateStr);
-  if (days == null || days < 0) return "";
+  if (days == null || days < 0) return "";  // stale/past date from the data source — don't show
   if (days <= 30) return `<span class="er-soon">ER ${dateStr} (${days}d)</span>`;
   return `ER ${dateStr}`;
 }
@@ -336,16 +227,6 @@ function fundLine(inst) {
     p.push(`vol ${inst.rvol}% · ±${inst.rmove}%/mo`);
   }
   return p.join(" · ");
-}
-function teleResearch(inst) {
-  const t = inst.tele;
-  if (!t) return "";
-  const rows = [];
-  if (t.catalysts) rows.push(`<div class="tb">🗓 ${esc(t.catalysts.replace(/\*\*/g, ""))}</div>`);
-  if (t.fundamentals) rows.push(`<div class="tb">📊 ${esc(t.fundamentals.replace(/\*\*/g, ""))}</div>`);
-  if (t.historicals) rows.push(`<div class="tb">📈 ${esc(t.historicals.replace(/\*\*/g, ""))}</div>`);
-  if (!rows.length) return "";
-  return `<div class="teleblock"><div class="th">🔒 Your research (via Telegram)</div>${rows.join("")}</div>`;
 }
 function ideaBox(inst) {
   const i = inst.idea, f = inst.fund;
@@ -363,17 +244,15 @@ function ideaBox(inst) {
     ${teleResearch(inst)}
   </div>`;
 }
-// Summary page focuses on the supply-chain core — periphery sectors excluded.
-const SUMMARY_EXCLUDE = new Set(["china-ev", "singapore", "consumer"]);
 function filterByCategory(instruments, category) {
-  if (!category) return instruments.filter(i => !SUMMARY_EXCLUDE.has(getCategory(i)));
+  if (!category) return instruments;
   return instruments.filter(i => getCategory(i) === category);
 }
 
 function renderIdeas(category) {
   const el = document.getElementById("ideas");
   if (STALE) { el.innerHTML = ""; return; }
-  const insts = filterByCategory(DATA.instruments, category);
+  const insts = category ? filterByCategory(DATA.instruments, category) : DATA.instruments;
   const enters = insts.filter(i => i.idea && i.idea.kind === "enter");
   const tps = insts.filter(i => i.idea && i.idea.kind === "take_profit");
   let html = "";
@@ -388,19 +267,27 @@ function renderIdeas(category) {
   el.innerHTML = html || `<div class="ideas-head">No confirmed entries right now — cash is a position.</div>`;
 }
 
+// Consolidated ticker-by-ticker catalyst table for the next 30 days — reuses
+// fields already on each instrument (fund.next_earnings/ex_div, events, catalyst)
+// so this costs nothing extra to pull; it's purely a different view of data.json.
 function prevPerfBlock(prev, label) {
+  // prev = {date, pct, reason, source} OR a list of up to 4 of those, from
+  // build.py's moves.json lookup (zero-cost - reused from our own researched
+  // move history, not a fresh search). label distinguishes "Last earnings"
+  // (list, up to 4 quarters) vs "Last time" (events, single entry).
   const list = Array.isArray(prev) ? prev : (prev ? [prev] : []);
   if (!list.length) return "";
-  const line = (p) => {
+  const line = (p, prefix) => {
     const cls = p.pct >= 0 ? "u" : "d";
     const src = p.source ? ` <span class="msrc">[${esc(p.source)}]</span>` : "";
     return `<div class="ct-prev">↩ <span class="pct ${cls}">${p.pct >= 0 ? "+" : ""}${p.pct}%</span>: ${esc(p.reason)}${src}</div>`;
   };
-  return list.map(p => line(p)).join("");
+  if (list.length === 1) return line(list[0], label);
+  return list.map((p, i) => line(p, i === 0 ? label : `Earnings -${i + 1}`)).join("");
 }
 function catalystRows(category) {
   const rows = [];
-  const insts = filterByCategory(DATA.instruments, category);
+  const insts = category ? filterByCategory(DATA.instruments, category) : DATA.instruments;
   for (const inst of insts) {
     const f = inst.fund || {};
     if (f.next_earnings) {
@@ -411,6 +298,13 @@ function catalystRows(category) {
           event: "Earnings", focus, prev: inst.prev_earnings, prevLabel: "Last earnings", earn: true });
       }
     }
+    if (f.ex_div) {
+      const d = daysTo(f.ex_div);
+      if (d != null && d >= 0 && d <= 30) {
+        rows.push({ id: inst.id, label: inst.label, date: f.ex_div, days: d,
+          event: "Ex-dividend", focus: "", prev: null, prevLabel: "", earn: false });
+      }
+    }
     (inst.events || []).forEach(e => {
       const d = daysTo(e.date);
       if (d != null && d >= 0 && d <= 30) {
@@ -418,15 +312,12 @@ function catalystRows(category) {
           event: e.event, focus: "", prev: e.prev_reaction, prevLabel: "Last time", earn: false });
       }
     });
+    // inst.catalyst (from catalysts.json) is deliberately NOT included here —
+    // it's a freeform "most important theme over 1-3 months" line, not tied to
+    // a specific verified date (dates mentioned in its prose, e.g. "~Aug 24",
+    // are unreliable to parse and would show as blank/wrong in the Date column).
+    // It still shows on each ticker's card (🎯 line) elsewhere on the site.
   }
-  // Key macro events (Fed/FOMC, CPI, PPI, NFP, ISM...) — they move every name.
-  (DATA.macro_events || []).forEach(e => {
-    const d = daysTo(e.date);
-    if (d != null && d >= 0 && d <= 30) {
-      rows.push({ id: "MACRO", label: e.source || "", date: e.date, days: d,
-        event: e.event, focus: "", prev: null, prevLabel: "", earn: false, macro: true });
-    }
-  });
   rows.sort((a, b) => a.days - b.days || a.id.localeCompare(b.id));
   return rows;
 }
@@ -435,11 +326,11 @@ function renderCatalystsTable(category) {
   if (STALE) { el.innerHTML = ""; return; }
   const rows = catalystRows(category);
   if (!rows.length) { el.innerHTML = ""; return; }
-  const trs = rows.map(r => `<tr ${r.macro ? "" : `onclick="goTo('${r.id}')"`}>
-    <td class="ct-tk">${r.macro ? `🌐 <b style="color:#f5c518">MACRO</b>` : `<b>${r.id}</b>`} <span class="muted">${r.label}</span></td>
+  const trs = rows.map(r => `<tr onclick="goTo('${r.id}')">
+    <td class="ct-tk"><b>${r.id}</b> <span class="muted">${r.label}</span></td>
     <td class="ct-dt">${r.date ? `${r.date} <span class="muted">(${r.days}d)</span>` : '<span class="muted">—</span>'}</td>
     <td class="ct-tx">
-      <div class="ct-event">${r.earn ? `<b class="e">${esc(r.event)}</b>` : (r.macro ? `<b style="color:#f5c518">${esc(r.event)}</b>` : esc(r.event))}</div>
+      <div class="ct-event">${r.earn ? `<b class="e">${esc(r.event)}</b>` : esc(r.event)}</div>
       ${r.focus ? `<div class="ct-focus">🎯 ${esc(r.focus)}</div>` : ""}
       ${prevPerfBlock(r.prev, r.prevLabel)}
     </td>
@@ -448,71 +339,6 @@ function renderCatalystsTable(category) {
     <table class="ct-table"><thead><tr><th>Ticker</th><th>Date</th><th>Event / Focus / Prev Performance</th></tr></thead><tbody>${trs}</tbody></table>`;
 }
 
-// Earnings detection for researched moves: explicit tag, or a quarter ref /
-// "earnings" within the reason's first 3 words (same heuristic as build.py) -
-// EXCEPT delivery reports ("Q2 2026 deliveries ~62,682 units missed..."),
-// which open with the same Q[1-4] pattern but are a different event
-// (confirmed live on TSLA/XPeng/NIO/Li Auto, wrongly badged EARNINGS before
-// this exclusion). A 6-word window still allows "Q2 earnings: deliveries beat"
-// to correctly count, since "earnings" would appear in that wider window too.
-function isEarningsMove(mv) {
-  if (mv.catalyst_type === "earnings") return true;
-  const words = (mv.reason || "").match(/[a-zA-Z0-9]+/g) || [];
-  const head3 = words.slice(0, 3).join(" ").toLowerCase();
-  const head6 = words.slice(0, 6).join(" ").toLowerCase();
-  const hasRef = /\bq[1-4]\b/.test(head3) || head3.includes("earnings");
-  if (!hasRef) return false;
-  if (head6.includes("deliver") && !head6.includes("earnings")) return false;
-  return true;
-}
-
-function pastCatalystRows(category, lookbackDays = 30) {
-  const rows = [];
-  const today = new Date(), cutoff = new Date(today.getTime() - lookbackDays * 24 * 60 * 60 * 1000);
-  const insts = filterByCategory(DATA.instruments, category);
-  for (const inst of insts) {
-    const m = MOVES && MOVES[inst.id];
-    if (m) {
-      const researched = (m.moves || []).filter(mv => mv.reason);
-      for (const mv of researched) {
-        const d = new Date(mv.d);
-        if (d >= cutoff && d < today) {
-          const label = isEarningsMove(mv) ? "<b style=\"color:#58a6ff\">📊 EARNINGS</b>" : "";
-          rows.push({
-            id: inst.id, label: inst.label, date: mv.d,
-            event: (label ? `<div style="font-weight:600;margin-bottom:4px">${label}</div>` : "") + prevPerfBlock({ date: mv.d, pct: mv.pct, reason: mv.reason, source: mv.source }, "Move")
-          });
-        }
-      }
-    }
-    // Quarters that reported but moved the stock <5% never make it into
-    // moves.json (movements.py's detection floor), so they'd otherwise
-    // vanish from every catalyst view. earnings_dates.json fills that gap
-    // with real researched report dates. Skip entries covered_by_move (a
-    // >=5% move already logged the same report - the block above has it).
-    // EARN_DATES[id] is a LIST of quarters, not a single object - it used
-    // to overwrite the prior quarter every time a newer one was researched,
-    // silently losing anything older than "most recent" (confirmed missing:
-    // Tencent's May/Aug/Nov 2025 quarters, all wiped by later overwrites).
-    const edEntries = (EARN_DATES && EARN_DATES[inst.id]) || [];
-    for (const ed of edEntries) {
-      if (!ed.report_date || ed.covered_by_move) continue;
-      const d = new Date(ed.report_date);
-      if (d >= cutoff && d < today) {
-        const pctPart = typeof ed.reaction_pct === "number"
-          ? `<span class="pct ${ed.reaction_pct >= 0 ? "u" : "d"}">${ed.reaction_pct >= 0 ? "+" : ""}${ed.reaction_pct}%</span>: ` : "";
-        const src = ed.source ? ` <span class="msrc">[${esc(ed.source)}]</span>` : "";
-        rows.push({
-          id: inst.id, label: inst.label, date: ed.report_date,
-          event: `<div style="font-weight:600;margin-bottom:4px"><b style="color:#58a6ff">📊 EARNINGS</b></div>`
-            + `<div class="ct-prev">${pctPart}${esc(ed.reason || "reported results")}${src}</div>`
-        });
-      }
-    }
-  }
-  rows.sort((a, b) => new Date(b.date) - new Date(a.date));
-  return rows;
-}
 function renderPastCatalysts(category, lookbackDays = 30) {
   const el = document.getElementById("pastCatalysts");
   if (STALE) { el.innerHTML = ""; return; }
@@ -520,11 +346,65 @@ function renderPastCatalysts(category, lookbackDays = 30) {
   if (!rows.length) { el.innerHTML = ""; return; }
   const trs = rows.map(r => `<tr onclick="goTo('${r.id}')">
     <td class="ct-tk"><b>${r.id}</b> <span class="muted">${r.label}</span></td>
-    <td class="ct-dt">${r.date}</td>
-    <td class="ct-tx">${r.event}</td>
+    <td class="ct-dt">${r.date ? r.date : '<span class="muted">—</span>'}</td>
+    <td class="ct-tx">${r.event.startsWith("<") ? r.event : esc(r.event)}</td>
   </tr>`).join("");
   el.innerHTML = `<div class="ct-head">📅 Past Key Events — last ${lookbackDays} days</div>
     <table class="ct-table"><thead><tr><th>Ticker</th><th>Date</th><th>Event</th></tr></thead><tbody>${trs}</tbody></table>`;
+}
+
+function renderHistory() {
+  const h = document.getElementById("history");
+  if (!MOVES) { h.innerHTML = '<div style="padding:16px;color:var(--muted)">move history not available</div>'; return; }
+  h.innerHTML = "";
+  const pastRows = pastCatalystRows(null, 30);
+  if (pastRows.length) {
+    const trs = pastRows.map(r => `<tr onclick="goTo('${r.id}')">
+      <td class="ct-tk"><b>${r.id}</b> <span class="muted">${r.label}</span></td>
+      <td class="ct-dt">${r.date}</td>
+      <td class="ct-tx"><div>${r.event.startsWith("<") ? r.event : esc(r.event)}</div></td>
+    </tr>`).join("");
+    const pastEl = document.createElement("div");
+    pastEl.style.cssText = "padding:10px 12px; border-bottom:1px solid var(--border); background:#12161c);";
+    pastEl.innerHTML = `<div class="ct-head">📅 Past Month Events</div>
+      <table class="ct-table"><thead><tr><th>Ticker</th><th>Date</th><th>Event</th></tr></thead><tbody>${trs}</tbody></table>`;
+    h.appendChild(pastEl);
+  } else {
+    h.innerHTML = '<div style="padding:16px;color:var(--muted)">No events in the past month</div>';
+  }
+}
+
+function renderStockHistory() {
+  const h = document.getElementById("stock-history");
+  if (!MOVES) { h.innerHTML = '<div style="padding:16px;color:var(--muted)">move history not available</div>'; return; }
+  h.innerHTML = "";
+  for (const inst of DATA.instruments) {
+    const m = MOVES[inst.id];
+    if (!m) continue;
+    const researched = m.moves.filter(mv => mv.reason);
+    if (!researched.length) continue;
+    const rows = researched.map(mv => {
+      const cls = mv.pct >= 0 ? "u" : "d";
+      const reason = mv.market_wide ? `<span class="mw">${esc(mv.reason)} <i>(market-wide)</i></span>` : `<b>${esc(mv.reason)}</b>`;
+      const src = mv.source ? ` <span class="msrc">[${esc(mv.source)}]</span>` : "";
+      return `<div class="mv"><span class="md">${mv.d}</span><span class="mp ${cls}">${mv.pct >= 0 ? "+" : ""}${mv.pct}%</span><span class="mr">${reason}${src}</span></div>`;
+    }).join("");
+    const el = document.createElement("div");
+    el.className = "hcard";
+    el.innerHTML = `<div class="htop">${inst.label} <span class="id">${inst.id}</span></div><div class="hchart"></div><div class="moves">${rows}</div>`;
+    h.appendChild(el);
+    const chartEl = el.querySelector(".hchart");
+    requestAnimationFrame(() => {
+      const chart = LightweightCharts.createChart(chartEl, {
+        layout: { background: { color: "transparent" }, textColor: "#7d8590", fontSize: 9 },
+        grid: { vertLines: { color: "#1b2027" }, horzLines: { color: "#1b2027" } },
+        rightPriceScale: { borderColor: "#21262d" }, timeScale: { borderColor: "#21262d" }, height: 120,
+      });
+      const a = chart.addAreaSeries({ lineColor: "#f0648b", lineWidth: 2, topColor: "rgba(240,100,139,.25)", bottomColor: "rgba(240,100,139,.02)", priceLineVisible: false, lastValueVisible: true });
+      a.setData(inst.bars.map(b => ({ time: b.d, value: b.c })));
+      chart.timeScale().fitContent();
+    });
+  }
 }
 
 window.goTo = function (id) {
@@ -534,6 +414,7 @@ window.goTo = function (id) {
   el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash");
 };
 
+// Actionable remark: the enter/exit cue + which key line/level price sits on.
 function keyRemark(inst) {
   const last = inst.last_close, items = [];
   const add = (label, ref) => {
@@ -545,6 +426,7 @@ function keyRemark(inst) {
   add("50DMA", inst.sma50);
   (inst.flags || []).forEach(f => items.push(
     `${f.kind === "support" ? "Sup" : "Res"} ${f.price.toLocaleString(undefined, { maximumFractionDigits: 1 })} ${f.distance_pct >= 0 ? "+" : ""}${f.distance_pct.toFixed(1)}%`));
+
   const i = inst.idea;
   let tag = "", cls = "muted";
   if (i && i.kind === "enter") { tag = `⬤ ENTER — ${i.types.join(" + ")}`; cls = "enter"; }
@@ -554,13 +436,37 @@ function keyRemark(inst) {
   return { html: (tag ? `<b>${tag}</b>` : "") + (items.length ? " · " + items.join(" · ") : "") + rsiStr, cls };
 }
 
+function daysTo(ds) {
+  // Pure UTC calendar-day difference — NOT `new Date(ds + "T00:00:00") - Date.now()`.
+  // That form parses the date-only string as the VIEWER's local midnight (per the
+  // JS date-time-string spec, a "T..." suffix with no offset means local time),
+  // which in HKT (UTC+8) is 8 hours before true UTC midnight for that date. That
+  // shift, combined with how far into the day "now" already is, was enough to
+  // tip a same-day (or even tomorrow's) date to a negative day-count and drop it
+  // from every dated list on the site (confirmed: GOOGL/TSLA earnings dated
+  // "today" were vanishing entirely; INTC dated "tomorrow" mislabeled as "0d").
+  if (!ds) return null;
+  const [y, m, d] = ds.split("-").map(Number);
+  const target = Date.UTC(y, m - 1, d);
+  const now = new Date();
+  const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  return Math.round((target - today) / 8.64e7);
+}
+function teleResearch(inst) {
+  const t = inst.tele;
+  if (!t) return "";
+  const rows = [];
+  if (t.catalysts) rows.push(`<div class="tb">🗓 ${esc(t.catalysts.replace(/\*\*/g, ""))}</div>`);
+  if (t.fundamentals) rows.push(`<div class="tb">📊 ${esc(t.fundamentals.replace(/\*\*/g, ""))}</div>`);
+  if (t.historicals) rows.push(`<div class="tb">📈 ${esc(t.historicals.replace(/\*\*/g, ""))}</div>`);
+  if (!rows.length) return "";
+  return `<div class="teleblock"><div class="th">🔒 Your research (via Telegram)</div>${rows.join("")}</div>`;
+}
+
 function recentPastEvents(inst) {
   if (!MOVES || !MOVES[inst.id]) return "";
   const m = MOVES[inst.id];
-  // moves.json arrays are stored newest-first (see movements.py) - take the
-  // front, not the tail. slice(-2) was silently grabbing the OLDEST 2
-  // researched moves instead, showing 500-600+ day-old events on every card.
-  const researched = (m.moves || []).filter(mv => mv.reason).slice(0, 2);
+  const researched = (m.moves || []).filter(mv => mv.reason).slice(-2).reverse();
   if (!researched.length) return "";
   const today = new Date();
   const rows = researched.map(mv => {
@@ -572,7 +478,7 @@ function recentPastEvents(inst) {
     return `<div style="font-size:11px; margin:4px 0; padding:4px 0; border-top:1px solid var(--border);">
       ${label} <span class="pct ${cls}">${mv.pct >= 0 ? "+" : ""}${mv.pct.toFixed(2)}%</span>
       <span style="color:var(--muted); font-size:10px;">(${daysAgo}d ago)</span>
-      <div style="font-size:10px; color:var(--muted); margin-top:2px;">${esc(mv.reason)}</div>
+      <div style="font-size:10px; color:var(--muted); margin-top:2px;">${esc(mv.reason.substring(0, 90))}${mv.reason.length > 90 ? "..." : ""}</div>
     </div>`;
   }).join("");
   return rows ? `<div style="padding:6px 10px; border-top:1px solid var(--border); background:rgba(88,166,255,.03);">${rows}</div>` : "";
@@ -584,6 +490,8 @@ function catalystTimeline(inst) {
   if (f) {
     const ed = daysTo(f.next_earnings);
     if (ed != null && ed >= 0 && ed <= 45) items.push({ d: f.next_earnings, days: ed, label: "Earnings", earn: true });
+    const xd = daysTo(f.ex_div);
+    if (xd != null && xd >= 0 && xd <= 30) items.push({ d: f.ex_div, days: xd, label: "Ex-div", earn: false });
   }
   (inst.events || []).forEach(e => { const dd = daysTo(e.date); if (dd != null && dd >= 0 && dd <= 30) items.push({ d: e.date, days: dd, label: e.event, earn: false }); });
   if (!items.length) return "";
@@ -598,7 +506,7 @@ function earningsBox(inst) {
   const beats = (f.earnings_history || []).map(q => {
     const s = q.surprise;
     if (s == null) return "";
-    const num = Math.abs(s) >= 100 ? "(n/m)" : `${s >= 0 ? "+" : ""}${s}%`;
+    const num = Math.abs(s) >= 100 ? "(n/m)" : `${s >= 0 ? "+" : ""}${s}%`;  // near-zero EPS -> % not meaningful
     return `<span class="pct ${s >= 0 ? "u" : "d"}">${(q.q || "").slice(0, 7)} ${s >= 0 ? "beat" : "miss"} ${num}</span>`;
   }).filter(Boolean).join(" ");
   const focusText = inst.earn ? inst.earn.split(/\s*Sources?:/i)[0].replace(/\((https?:[^)]+)\)/g, "").trim() : "";
@@ -611,10 +519,14 @@ function badges(inst) {
   const t = inst.trend || "flat";
   const tl = t === "up" ? "▲" : t === "down" ? "▼" : "–";
   let cta = "";
-  if (inst.cta === "long") cta = `<span class="badge cta-long" title="trend-followers long">CTA↑</span>`;
-  else if (inst.cta === "short") cta = `<span class="badge cta-short" title="trend-followers flipping short">CTA↓</span>`;
+  if (inst.cta === "long") cta = `<span class="badge cta-long" title="trend-followers long — market believes in the uptrend">CTA↑</span>`;
+  else if (inst.cta === "short") cta = `<span class="badge cta-short" title="trend-followers flipping short — storm risk rising">CTA↓</span>`;
+  // Per-instrument stale flag: this one ticker's own fetch failed this build and
+  // it's showing the last successful fetch's bars, not necessarily today's close.
+  // (Separate from the page-wide "DATA STALE" banner, which only tracks the
+  // whole payload's age — a single failed ticker wouldn't trip that on its own.)
   const staleBadge = inst.stale
-    ? `<span class="badge down" title="this ticker's fetch failed on the latest build">⚠ STALE</span>` : "";
+    ? `<span class="badge down" title="this ticker's fetch failed on the latest build — showing the last successful fetch, may not be today's close">⚠ STALE</span>` : "";
   return `<span class="badge ${t}" title="trend: price vs 50/200DMA">${tl}</span>${cta}${staleBadge}`;
 }
 
@@ -626,41 +538,34 @@ function drawChart(el, inst) {
     timeScale: { borderColor: "#21262d", timeVisible: false },
     crosshair: { mode: 0 }, height: 300,
   });
+  // Clean filled-area price line (no candles, no in-plot number labels).
   const area = chart.addAreaSeries({
     lineColor: "#f0648b", lineWidth: 2,
     topColor: "rgba(240,100,139,.28)", bottomColor: "rgba(240,100,139,.02)",
     priceLineVisible: true, lastValueVisible: true,
   });
   area.setData(inst.bars.map(b => ({ time: b.d, value: b.c })));
+
   const closes = inst.bars.map(b => b.c);
   const overlays = [
-    ["#e3b341", smaSeries(closes, 20)],
-    ["#58a6ff", smaSeries(closes, 50)],
-    ["#f778ba", smaSeries(closes, 200)],
+    ["#e3b341", smaSeries(closes, 20)],    // 20 SMA
+    ["#58a6ff", smaSeries(closes, 50)],    // 50 SMA
+    ["#f778ba", smaSeries(closes, 200)],   // 200 SMA
   ];
   for (const [color, series] of overlays) {
     const line = chart.addLineSeries({ color, lineWidth: 1, priceLineVisible: false, lastValueVisible: false });
     line.setData(inst.bars.map((b, i) => ({ time: b.d, value: series[i] })).filter(x => x.value != null));
   }
+  // S/R as subtle lines, no axis numbers (keep the chart uncluttered).
   if (!STALE && inst.levels && inst.levels["3m"]) {
     const lv = inst.levels["3m"];
     (lv.support || []).forEach(s => area.createPriceLine({ price: s.price, color: "rgba(38,166,65,.5)", lineWidth: 1, lineStyle: 2, axisLabelVisible: false }));
     (lv.resistance || []).forEach(r => area.createPriceLine({ price: r.price, color: "rgba(248,81,73,.5)", lineWidth: 1, lineStyle: 2, axisLabelVisible: false }));
   }
+  // Default view: end-April of the latest bar's year -> today.
   const lastDate = inst.bars[inst.bars.length - 1].d;
   try { chart.timeScale().setVisibleRange({ from: `${lastDate.slice(0, 4)}-04-30`, to: lastDate }); }
   catch (e) { chart.timeScale().fitContent(); }
-}
-
-function drawHistChart(el, inst) {
-  const chart = LightweightCharts.createChart(el, {
-    layout: { background: { color: "transparent" }, textColor: "#7d8590", fontSize: 9 },
-    grid: { vertLines: { color: "#1b2027" }, horzLines: { color: "#1b2027" } },
-    rightPriceScale: { borderColor: "#21262d" }, timeScale: { borderColor: "#21262d" }, height: 120,
-  });
-  const a = chart.addAreaSeries({ lineColor: "#f0648b", lineWidth: 2, topColor: "rgba(240,100,139,.25)", bottomColor: "rgba(240,100,139,.02)", priceLineVisible: false, lastValueVisible: true });
-  a.setData(inst.bars.map(b => ({ time: b.d, value: b.c })));
-  chart.timeScale().fitContent();
 }
 
 function card(inst) {
@@ -698,48 +603,37 @@ function sortFn(a, b) {
   return (TREND_ORDER[a.trend] ?? 3) - (TREND_ORDER[b.trend] ?? 3);
 }
 
+function getCategory(inst) {
+  const c = GROUP_TO_CATEGORY[inst.group];
+  return c ? c.key : null;
+}
+
 function render() {
-  const byCat = {};
-  for (const cat of CATEGORIES) byCat[cat.key] = [];
+  const categories = {};
+  for (const cat of CATEGORIES) {
+    categories[cat.key] = [];
+  }
   for (const inst of DATA.instruments) {
     const cat = getCategory(inst);
-    if (cat && byCat[cat]) byCat[cat].push(inst);
+    if (cat) categories[cat].push(inst);
   }
 
   for (const cat of CATEGORIES) {
     const grid = document.getElementById("grid-" + cat.key);
+    if (!grid) {
+      console.error(`[render] missing grid element: grid-${cat.key}`);
+      continue;
+    }
     grid.innerHTML = "";
-    // Group by subcategory (gold section headers), sort within each group.
-    // China Internet stays flat - the tab is small enough that subsector
-    // labels (E-commerce/Gaming/Search/etc) added noise without helping.
-    const bySub = new Map();
-    for (const inst of byCat[cat.key]) {
-      const sub = cat.key === "china-internet" ? "Other" : getSubcategory(inst);
-      if (!bySub.has(sub)) bySub.set(sub, []);
-      bySub.get(sub).push(inst);
-    }
-    for (const [sub, insts] of bySub) {
-      if (bySub.size > 1) {
-        const head = document.createElement("div");
-        head.className = "section subcat";
-        head.textContent = sub;
-        grid.appendChild(head);
-      }
-      insts.sort(sortFn).forEach(i => grid.appendChild(card(i)));
-    }
+    categories[cat.key].sort(sortFn).forEach(i => grid.appendChild(card(i)));
   }
 
-  // Lazy-render charts as they scroll into view (75 cards + history = heavy).
+  // Lazy-render charts as cards scroll into view (59 charts at once is heavy).
   OBSERVER = new IntersectionObserver((entries) => {
     for (const e of entries) {
-      if (!e.isIntersecting) continue;
-      if (e.target.dataset.pending) {
+      if (e.isIntersecting && e.target.dataset.pending) {
         delete e.target.dataset.pending;
         drawChart(e.target, e.target._inst);
-        OBSERVER.unobserve(e.target);
-      } else if (e.target.dataset.pendingHist) {
-        delete e.target.dataset.pendingHist;
-        drawHistChart(e.target, e.target._inst);
         OBSERVER.unobserve(e.target);
       }
     }
@@ -747,609 +641,116 @@ function render() {
   document.querySelectorAll(".chart").forEach(c => OBSERVER.observe(c));
 }
 
-// Per-sector stock history: below the cards, every researched move for that
-// sector's names (the old Stock History tab, scoped to the current sector).
-const HIST_RENDERED = new Set();
-function renderSectorHistory(catKey) {
-  if (HIST_RENDERED.has(catKey)) return;
-  HIST_RENDERED.add(catKey);
-  const wrap = document.getElementById("hist-" + catKey);
-  const insts = filterByCategory(DATA.instruments, catKey);
-  const cards = [];
-  for (const inst of insts) {
-    const m = MOVES && MOVES[inst.id];
-    const researched = m ? (m.moves || []).filter(mv => mv.reason) : [];
-
-    // Same gap earnings-dates.json fills in Past Key Events: a quarter that
-    // reported but moved the stock <5% never lands in moves.json at all, so
-    // without this it's invisible here too. EARN_DATES[id] is a LIST of
-    // quarters (see the comment in pastCatalystRows) - a single-object
-    // schema previously overwrote each ticker's older gap-filled quarters
-    // every time a newer one was researched, silently losing them.
-    const edEntries = (EARN_DATES && EARN_DATES[inst.id]) || [];
-    const edMove = edEntries
-      .filter(ed => ed.report_date && !ed.covered_by_move)
-      .map(ed => ({ d: ed.report_date, pct: ed.reaction_pct, reason: ed.reason || "reported results",
-                     source: ed.source, isEarnings: true }));
-
-    const combined = [...researched, ...edMove].sort((a, b) => b.d.localeCompare(a.d));
-    if (!combined.length) continue;
-    const rows = combined.map(mv => {
-      const hasPct = typeof mv.pct === "number";
-      const cls = !hasPct ? "" : (mv.pct >= 0 ? "u" : "d");
-      const pctText = hasPct ? `${mv.pct >= 0 ? "+" : ""}${mv.pct}%` : "—";
-      const eTag = (mv.isEarnings || isEarningsMove(mv)) ? `<b style="color:#58a6ff">📊 EARNINGS</b> ` : "";
-      const reason = mv.market_wide ? `<span class="mw">${esc(mv.reason)} <i>(market-wide)</i></span>` : `<b>${esc(mv.reason)}</b>`;
-      const src = mv.source ? ` <span class="msrc">[${esc(mv.source)}]</span>` : "";
-      return `<div class="mv"><span class="md">${mv.d}</span><span class="mp ${cls}">${pctText}</span><span class="mr">${eTag}${reason}${src}</span></div>`;
-    }).join("");
-    const el = document.createElement("div");
-    el.className = "hcard";
-    el.innerHTML = `<div class="htop">${inst.label} <span class="id">${inst.id}</span></div><div class="hchart" data-pending-hist="1"></div><div class="moves">${rows}</div>`;
-    el.querySelector(".hchart")._inst = inst;
-    cards.push(el);
-  }
-  if (!cards.length) { wrap.innerHTML = ""; return; }
-  wrap.innerHTML = `<div class="hist-head">📜 Stock History — big moves & root causes</div>`;
-  const grid = document.createElement("div");
-  grid.className = "hist-grid";
-  cards.forEach(c => grid.appendChild(c));
-  wrap.appendChild(grid);
-  grid.querySelectorAll(".hchart").forEach(c => OBSERVER.observe(c));
-}
-
-function renderRevenueMix() {
-  // Defense in depth: an unhandled exception anywhere in the render body
-  // aborts before the final wrap.innerHTML assignment, leaving the tab
-  // silently blank with zero diagnostics - confirmed live on the Compare
-  // tab (one malformed research item crashed the whole render). This
-  // guarantees a visible error instead of an empty page if it ever recurs.
-  const wrap = document.getElementById("revenue-wrap");
-  if (wrap.dataset.rendered) return;
-  try {
-    _renderRevenueMixImpl(wrap);
-  } catch (e) {
-    wrap.dataset.rendered = "";
-    wrap.innerHTML = `<div class="rev-none" style="padding:16px;color:var(--down)">Render error: ${esc(e.message)} - data may have a malformed entry. Check console for details.</div>`;
-    console.error("renderRevenueMix failed:", e);
-  }
-}
-function _renderRevenueMixImpl(wrap) {
-  wrap.dataset.rendered = "1";
-  const insts = DATA.instruments.filter(i => {
-    const m = SC_MAP && SC_MAP[i.id];
-    return m && inRevenueTabScope(i.id, m.category);
-  });
-  const CAT_LABEL = { "china-internet": "China Internet", "compute": "Compute",
-    "hyperscaler-cloud": "Tech Platforms", "platform": "Tech Platforms", "equipment": "Equipment" };
-  const byCat = new Map();
-  for (const inst of insts) {
-    const cat = CAT_LABEL[SC_MAP[inst.id].category] || SC_MAP[inst.id].category;
-    if (!byCat.has(cat)) byCat.set(cat, []);
-    byCat.get(cat).push(inst);
-  }
-  // Fuzzy-match a revenue segment name to its margin, if researched
-  // separately (revenue_breakdown.py and deep_fundamentals.py name segments
-  // independently, so exact match isn't guaranteed - e.g. "VAS" vs
-  // "VAS (Value-Added Services)").
-  function findMargin(segMargins, name) {
-    if (!segMargins) return null;
-    const n = name.toLowerCase();
-    return segMargins.find(m => {
-      const mn = m.name.toLowerCase();
-      return mn === n || mn.includes(n) || n.includes(mn);
-    }) || null;
-  }
-
-  let html = "";
-  for (const [cat, list] of byCat) {
-    html += `<div class="section" style="grid-column:1/-1">${esc(cat)}</div>`;
-    for (const inst of sortForCategoryTab(list, cat)) {
-      const rev = REV_MIX && REV_MIX[inst.id];
-      const df = DEEP_FUND && DEEP_FUND[inst.id];
-      const geo = GEO_MIX && GEO_MIX[inst.id];
-      const altIds = ALT_LISTINGS[inst.id];
-      const revIdText = altIds ? `${esc(inst.id)} / ${altIds.map(esc).join(" / ")}` : esc(inst.id);
-      html += `<div class="rev-card">
-        <div class="rev-top"><span class="name">${esc(inst.label)}</span><span class="id">${revIdText}</span></div>`;
-      if (!rev || !rev.segments || !rev.segments.length) {
-        html += `<div class="rev-none">No segment breakdown available${rev && rev.fiscal_period === null && rev.source === null ? " (too newly listed / not yet filed)" : " yet"}</div>`;
-      } else {
-        html += `<div class="rev-period">${esc(rev.fiscal_period || "")}</div>`;
-        const segs = [...rev.segments].sort((a, b) => (b.pct || 0) - (a.pct || 0));
-        html += `<table class="rev-mini-table"><tbody>`;
-        for (const s of segs) {
-          const pct = typeof s.pct === "number" ? s.pct : 0;
-          const margin = findMargin(df && df.segment_margins, s.name);
-          let marginCell = `<span class="cmp-na">—</span>`;
-          if (margin && typeof margin.margin_pct === "number") {
-            marginCell = `${margin.margin_pct}% ${esc(fmtMarginType(margin.margin_type))}`;
-          } else if (margin && margin.note) {
-            marginCell = `<span class="rev-qual" title="${esc(margin.note)}">qual.</span>`;
-          }
-          html += `<tr><td class="rev-mini-name">${esc(s.name)}</td><td class="rev-mini-num">${pct.toFixed(1)}%</td><td class="rev-mini-num">${marginCell}</td></tr>`;
-        }
-        html += `</tbody></table>`;
-        if (df && df.filing_check_note && (!df.segment_margins || !df.segment_margins.length)) {
-          html += `<div class="rev-src">Margins: ${esc(df.filing_check_note)}</div>`;
-        }
-        if (rev.source) html += `<div class="rev-src">Revenue mix source: ${esc(rev.source)}</div>`;
-      }
-      if (geo && geo.regions && geo.regions.length) {
-        html += `<div class="rev-period" style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border)">By country/region &middot; ${esc(geo.fiscal_period || "")}</div>`;
-        const gsegs = [...geo.regions].sort((a, b) => (b.pct || 0) - (a.pct || 0));
-        html += `<table class="rev-mini-table"><tbody>`;
-        for (const g of gsegs) {
-          const pct = typeof g.pct === "number" ? g.pct : 0;
-          html += `<tr><td class="rev-mini-name">${esc(g.name)}</td><td class="rev-mini-num" colspan="2">${pct.toFixed(1)}%</td></tr>`;
-        }
-        html += `</tbody></table>`;
-      }
-      html += `</div>`;
-    }
-  }
-  wrap.innerHTML = html || `<div class="rev-none" style="padding:16px">No data</div>`;
-}
-
-const CCY_SYMBOL = { USD: "$", HKD: "HK$", CNY: "¥", KRW: "₩", SGD: "S$" };
-function fmtMoney(n, symbol) {
-  if (n === null || n === undefined) return null;
-  const abs = Math.abs(n);
-  if (abs >= 1e12) return symbol + (n / 1e12).toFixed(2) + "T";
-  if (abs >= 1e9) return symbol + (n / 1e9).toFixed(2) + "B";
-  if (abs >= 1e6) return symbol + (n / 1e6).toFixed(1) + "M";
-  return symbol + n.toFixed(0);
-}
-// Yahoo's market_cap comes back in each stock's LOCAL trading currency, not
-// USD - confirmed live on Cambricon (raw value was actually CNY 686.7B, not
-// USD) and Tencent (raw value was HKD 3.97T). Shows the real native-currency
-// figure plus a USD-equivalent (via FX_RATES) for cross-stock comparability.
-// stacked=true puts the USD-equivalent on its own line below the native
-// figure instead of an inline parenthetical - used for the Compare tab's
-// Mkt Cap column specifically, so that column can be narrower (the other
-// callers - OCF, Debt/Cash - stay single-line since their column got wider
-// instead of narrower).
-function fmtMarketCap(n, currency, stacked) {
-  if (n === null || n === undefined) return null;
-  const ccy = currency || "USD";
-  const symbol = CCY_SYMBOL[ccy] || (ccy + " ");
-  const native = fmtMoney(n, symbol);
-  if (ccy === "USD" || !FX_RATES || !FX_RATES[ccy]) return native;
-  const usdEquiv = fmtMoney(n / FX_RATES[ccy], "$");
-  return stacked
-    ? `${native}<span class="cmp-mktcap-usd">${usdEquiv}</span>`
-    : `${native} <span class="cmp-src-note">(~${usdEquiv})</span>`;
-}
-function fmtPctPlain(n, digits = 1) {
-  return (n === null || n === undefined) ? null : (n * 100).toFixed(digits) + "%";
-}
-// Research only ever asks for "gross" or "operating" margin (see
-// deep_fundamentals.py) - never fabricate an "EBITDA" label since that
-// wasn't what was actually researched. Spells the type out clearly instead
-// of the single-letter "G"/"O" abbreviation that was ambiguous.
-function fmtMarginType(type) {
-  const t = (type || "").toLowerCase();
-  if (t.startsWith("gross")) return "GM";
-  if (t.startsWith("operating")) return "Op. Margin";
-  return type || "";
-}
-
-function renderCompareTable() {
-  // See renderRevenueMix's comment - same defense-in-depth against a
-  // silent blank tab from an unhandled exception mid-render.
-  const wrap = document.getElementById("compare-wrap");
-  if (wrap.dataset.rendered) return;
-  try {
-    _renderCompareTableImpl(wrap);
-  } catch (e) {
-    wrap.dataset.rendered = "";
-    wrap.innerHTML = `<div class="rev-none" style="padding:16px;color:var(--down)">Render error: ${esc(e.message)} - data may have a malformed entry. Check console for details.</div>`;
-    console.error("renderCompareTable failed:", e);
-  }
-}
-function _renderCompareTableImpl(wrap) {
-  wrap.dataset.rendered = "1";
-  const insts = DATA.instruments.filter(i => {
-    const m = SC_MAP && SC_MAP[i.id];
-    return m && inRevenueTabScope(i.id, m.category);
-  });
-  const CAT_LABEL = { "china-internet": "China Internet", "compute": "Compute",
-    "hyperscaler-cloud": "Tech Platforms", "platform": "Tech Platforms", "equipment": "Equipment" };
-  const byCat = new Map();
-  for (const inst of insts) {
-    const cat = CAT_LABEL[SC_MAP[inst.id].category] || SC_MAP[inst.id].category;
-    if (!byCat.has(cat)) byCat.set(cat, []);
-    byCat.get(cat).push(inst);
-  }
-  const na = `<span class="cmp-na">—</span>`;
-  let rows = "";
-  for (const [cat, list] of byCat) {
-    rows += `<tr class="cmp-cat-row"><td colspan="11">${esc(cat)}</td></tr>`;
-    for (const inst of sortForCategoryTab(list, cat)) {
-      const f = inst.fund || {};
-      const df = DEEP_FUND && DEEP_FUND[inst.id];
-      const mktCap = fmtMarketCap(f.market_cap, inst.currency, true) || na;
-      const fwdPe = (f.fwd_pe != null) ? f.fwd_pe.toFixed(1) + "x" : na;
-      const gm = fmtPctPlain(f.gross_margin) || na;
-      const om = fmtPctPlain(f.operating_margin) || na;
-      const npm = fmtPctPlain(f.net_margin) || na;
-      const ocf = fmtMarketCap(f.operating_cashflow, inst.currency) || na;
-
-      // The published figure the market actually cites (GuruFocus,
-      // StockAnalysis, etc.), not computed here - Yahoo's free API doesn't
-      // expose balance sheet detail, and ROIC has enough competing formula
-      // variants that a homegrown version risks not matching what anyone
-      // else means by "ROIC" for this name. See roic.py.
-      const roicEntry = ROIC && ROIC[inst.id];
-      let roicCell = na;
-      if (roicEntry && roicEntry.roic_pct != null) {
-        const warn = roicEntry.flag ? ` <span class="rev-qual" title="${esc(roicEntry.flag)}">⚠</span>` : "";
-        // Period sometimes comes back as "TTM (as of 2026-06-25)" or "TTM
-        // (Jun 2026)" - the parenthetical detail is real but not worth a
-        // line of clutter in every row; keep it in the tooltip instead,
-        // alongside the source (which the tooltip already showed).
-        const periodFull = roicEntry.period || "";
-        const periodShort = periodFull.replace(/\s*\([^)]*\)\s*$/, "");
-        const tip = [roicEntry.source, periodFull !== periodShort ? periodFull : null].filter(Boolean).join(" — ");
-        roicCell = `<span class="pe-current">${roicEntry.roic_pct}%</span>${warn}<br>`
-          + `<span class="pe-nm" title="${esc(tip)}">${esc(periodShort)}</span>`;
-      }
-
-      let debtCell = na;
-      if (f.total_debt != null || f.total_cash != null) {
-        const parts = [];
-        if (f.total_debt != null) parts.push(`Debt: ${fmtMarketCap(f.total_debt, inst.currency)}`);
-        if (f.total_cash != null) parts.push(`Cash: ${fmtMarketCap(f.total_cash, inst.currency)}`);
-        if (f.total_debt != null && f.total_cash != null) {
-          const net = f.total_cash - f.total_debt;
-          const netLabel = net >= 0 ? "Net cash" : "Net debt";
-          parts.push(`<b>${netLabel}: ${fmtMarketCap(Math.abs(net), inst.currency)}</b>`);
-        }
-        if (f.debt_to_equity != null) parts.push(`D/E: ${f.debt_to_equity.toFixed(0)}%`);
-        debtCell = `<div class="cmp-seg-list">${parts.join("<br>")}</div>`;
-      }
-      const offBs = OFF_BS && OFF_BS[inst.id];
-      let offBsCell = na;
-      // Defensive filter: a single malformed research item (missing name or
-      // amount) must never crash the whole table render again - confirmed
-      // live on MSFT, where one bad item ({items_placeholder: null}) threw
-      // on .toLocaleString() and silently emptied the entire Compare tab,
-      // since the exception aborted execution before the final innerHTML
-      // assignment ever ran.
-      const validOffBsItems = (offBs && offBs.items || [])
-        .filter(it => it && it.name && typeof it.amount_usd_m === "number");
-      if (validOffBsItems.length) {
-        offBsCell = `<div class="cmp-seg-list">` + validOffBsItems.map(it =>
-          `<b>${esc(it.name)}</b>: $${it.amount_usd_m.toLocaleString(undefined,{maximumFractionDigits:0})}M`
-        ).join("<br>") + `</div>`;
-      } else if (offBs && offBs.source === null) {
-        offBsCell = `<span class="cmp-src-note">Nothing material disclosed</span>`;
-      }
-
-      let guidanceCell = na;
-      if (df && df.capex_guidance && df.capex_guidance.text) {
-        const cg = df.capex_guidance;
-        const headline = cg.headline
-          ? `<div class="cmp-capex-headline">${esc(cg.headline)}</div>`
-          : `<div class="cmp-src-note">No explicit figure guided</div>`;
-        guidanceCell = headline + `<span class="cmp-capex-text">${esc(cg.text)}</span>`;
-      }
-      rows += `<tr>
-        <td>${companyIdCell(inst)}</td>
-        <td>${mktCap}</td>
-        <td>${fwdPe}</td>
-        <td>${gm}</td>
-        <td>${om}</td>
-        <td>${npm}</td>
-        <td>${roicCell}</td>
-        <td>${ocf}</td>
-        <td>${debtCell}</td>
-        <td>${offBsCell}</td>
-        <td>${guidanceCell}</td>
-      </tr>`;
-    }
-  }
-  wrap.innerHTML = `<table class="cmp-table"><thead><tr>
-      <th>Company</th><th>Mkt Cap</th><th>Fwd P/E</th><th>GM%</th><th>OM%</th><th>NP%</th>
-      <th>ROIC</th><th>OCF</th><th>Debt/Cash</th><th>Off-BS Liabilities</th><th>Capex Guidance</th>
-    </tr></thead><tbody>${rows}</tbody></table>
-    <div class="rev-src" style="margin-top:8px">Mkt cap/debt/cash/OCF shown in each stock's native trading currency with a USD-equivalent in parentheses (via current FX rate). GM/OM/NP are company-wide (Yahoo financial data). ROIC is the published TTM figure from a named data provider (GuruFocus, StockAnalysis.com, etc.) — the commonly-cited figure, not computed here, since Yahoo's free API lacks the balance-sheet detail and ROIC has too many competing formula variants for a homegrown version to reliably match what "ROIC" means elsewhere for a given name; hover for source/period. OCF is trailing twelve-month operating cash flow (Yahoo financial data). Capex guidance and off-BS liabilities are research-derived from company filings/earnings calls, refreshed periodically (not daily) — see each cell's source period for freshness.</div>`;
-}
-
-// TTM EPS = sum of the last 4 REPORTED (actual, not estimated) quarterly EPS.
-// Only 4 quarters are tracked (see fundamentals.py), so this is the one point
-// in time we can compute a real trailing EPS for - not enough history to walk
-// a true multi-year P/E series without fabricating EPS for periods we never
-// captured. Returns null (not a wrong number) if a quarter hasn't reported yet.
-function ordinal(n) {
-  const rem10 = n % 10, rem100 = n % 100;
-  if (rem10 === 1 && rem100 !== 11) return n + "st";
-  if (rem10 === 2 && rem100 !== 12) return n + "nd";
-  if (rem10 === 3 && rem100 !== 13) return n + "rd";
-  return n + "th";
-}
-function computeTtmEps(hist) {
-  if (!hist || hist.length < 4) return null;
-  const last4 = hist.slice(-4);
-  if (last4.some(q => typeof q.actual !== "number")) return null;
-  return last4.reduce((s, q) => s + q.actual, 0);
-}
-
-function renderPeHistory() {
-  const wrap = document.getElementById("pe-wrap");
-  if (wrap.dataset.rendered) return;
-  try {
-    _renderPeHistoryImpl(wrap);
-  } catch (e) {
-    wrap.dataset.rendered = "";
-    wrap.innerHTML = `<div class="rev-none" style="padding:16px;color:var(--down)">Render error: ${esc(e.message)} - data may have a malformed entry. Check console for details.</div>`;
-    console.error("renderPeHistory failed:", e);
-  }
-}
-function _renderPeHistoryImpl(wrap) {
-  wrap.dataset.rendered = "1";
-  const insts = DATA.instruments.filter(i => getCategory(i) && i.bars && i.bars.length);
-  const byCat = new Map();
-  for (const inst of insts) {
-    const catKey = getCategory(inst);
-    const catLabel = CATEGORIES.find(c => c.key === catKey).label;
-    if (!byCat.has(catLabel)) byCat.set(catLabel, []);
-    byCat.get(catLabel).push(inst);
-  }
-  const na = `<span class="cmp-na">—</span>`;
-  let rows = "";
-  for (const [cat, list] of byCat) {
-    rows += `<tr class="cmp-cat-row"><td colspan="7">${esc(cat)}</td></tr>`;
-    for (const inst of sortForCategoryTab(list, cat)) {
-      const f = inst.fund || {};
-      const bars = inst.bars;
-      const price = bars[bars.length - 1].c;
-      const ttmEps = computeTtmEps(f.earnings_history);
-      const win = bars.slice(-252);
-      const hi52 = Math.max(...win.map(b => b.h));
-      const lo52 = Math.min(...win.map(b => b.l));
-
-      let ttmPeCell = na;
-      if (ttmEps != null) {
-        ttmPeCell = ttmEps > 0
-          ? `<span class="pe-current">${(price / ttmEps).toFixed(1)}x</span>`
-          : `<span class="pe-nm">N/M (loss)</span>`;
-      }
-      const fwdPe = (f.fwd_pe != null) ? f.fwd_pe.toFixed(1) + "x" : na;
-      const peg = (f.peg != null) ? f.peg.toFixed(2) : na;
-      const rangeCell = (hi52 > 0 && lo52 > 0) ? `$${lo52.toFixed(2)} – $${hi52.toFixed(2)}` : na;
-
-      let impliedCell = na;
-      if (ttmEps != null && ttmEps > 0 && hi52 > lo52) {
-        const peLo = (lo52 / ttmEps).toFixed(1);
-        const peHi = (hi52 / ttmEps).toFixed(1);
-        const pct = Math.max(0, Math.min(100, ((price - lo52) / (hi52 - lo52)) * 100));
-        impliedCell = `<div class="pe-range-wrap">
-          <div class="pe-range-lbl"><span>${peLo}x</span><span>${peHi}x</span></div>
-          <div class="pe-range-track"><div class="pe-range-marker" style="left:${pct.toFixed(0)}%" title="Currently at the ${ordinal(Math.round(pct))} percentile of its 52-wk range"></div></div>
-        </div>`;
-      } else if (ttmEps != null && ttmEps <= 0) {
-        impliedCell = `<span class="pe-nm">N/M — trailing EPS negative</span>`;
-      }
-
-      rows += `<tr>
-        <td>${companyIdCell(inst)}</td>
-        <td>$${price.toFixed(2)}</td>
-        <td>${ttmPeCell}</td>
-        <td>${fwdPe}</td>
-        <td>${peg}</td>
-        <td>${rangeCell}</td>
-        <td>${impliedCell}</td>
-      </tr>`;
-    }
-  }
-  wrap.innerHTML = `<table class="cmp-table"><thead><tr>
-      <th>Company</th><th>Price</th><th>TTM P/E</th><th>Fwd P/E</th><th>PEG</th>
-      <th>52-wk Price Range</th><th>Implied P/E Range (52-wk)</th>
-    </tr></thead><tbody>${rows}</tbody></table>
-    <div class="rev-src" style="margin-top:8px">TTM P/E uses actual trailing EPS from the last 4 reported quarters (Yahoo). Implied P/E range applies TODAY's TTM EPS to the 52-week price high/low, so it shows where the stock has traded at its CURRENT earnings power — not a true multi-year re-rating history (only 4 quarters of EPS are tracked, not enough to reconstruct EPS at each point in the past). Marker shows where the current price sits in that range; hover for the exact percentile. Fwd P/E and PEG are Yahoo consensus estimates. N/M = not meaningful (trailing EPS negative).</div>`
-    + buildHistPeSection();
-}
-
-// 5-year annual P/E, scoped to the same AI/tech cohort as Compare/Revenue Mix
-// (real diluted EPS per fiscal year isn't available for the full 76-name
-// universe without a much larger research pass - see historical_pe.py).
-function buildHistPeSection() {
-  if (!HIST_PE) return "";
-  const insts = DATA.instruments.filter(i => {
-    const m = SC_MAP && SC_MAP[i.id];
-    return m && inRevenueTabScope(i.id, m.category) && HIST_PE[i.id];
-  });
-  if (!insts.length) return "";
-  const CAT_LABEL = { "china-internet": "China Internet", "compute": "Compute",
-    "hyperscaler-cloud": "Tech Platforms", "platform": "Tech Platforms", "equipment": "Equipment" };
-  const byCat = new Map();
-  for (const inst of insts) {
-    const cat = CAT_LABEL[SC_MAP[inst.id].category] || SC_MAP[inst.id].category;
-    if (!byCat.has(cat)) byCat.set(cat, []);
-    byCat.get(cat).push(inst);
-  }
-  const na = `<span class="cmp-na">—</span>`;
-  let rows = "";
-  for (const [cat, list] of byCat) {
-    rows += `<tr class="cmp-cat-row"><td colspan="11">${esc(cat)}</td></tr>`;
-    for (const inst of sortForCategoryTab(list, cat)) {
-      const hp = HIST_PE[inst.id];
-      // Sort by actual date rather than trust research-response order - some
-      // responses came back oldest-first, others newest-first, inconsistently.
-      const years = (hp.years || []).slice()
-        .sort((a, b) => (a.period_end || "").localeCompare(b.period_end || ""));
-      // Right-align to 5 slots so the most recent fiscal year always lands in
-      // the same (last) column across companies - names with fewer than 5
-      // years (recent IPOs) leave their earliest slot(s) blank on the left
-      // rather than shifting everything over.
-      const recent = years.slice(-5);
-      const slots = new Array(5).fill(null);
-      for (let i = 0; i < recent.length; i++) slots[5 - recent.length + i] = recent[i];
-      const yearCells = slots.map(y => {
-        if (!y) return `<td>${na}</td>`;
-        const label = esc(y.fy_label || y.period_end || "?");
-        if (y.pe != null) {
-          const warn = y.flag ? ` <span class="rev-qual" title="${esc(y.flag)}">⚠</span>` : "";
-          const conv = y.converted ? `<span class="rev-qual" title="${esc(y.note || "currency-converted")}">*</span>` : "";
-          return `<td><span class="pe-current">${y.pe}x</span>${conv}${warn}<br><span class="pe-nm">${label}</span></td>`;
-        }
-        return `<td><span class="pe-nm" title="${esc(y.note || "")}">${esc(y.flag || "n/a")}</span><br><span class="pe-nm">${label}</span></td>`;
-      }).join("");
-      const avg3y = hp.avg_3y != null
-        ? `${hp.avg_3y}x <span class="pe-nm">(${hp.avg_3y_count}yr)</span>` : na;
-      const avg5y = hp.avg_5y != null
-        ? `${hp.avg_5y}x <span class="pe-nm">(${hp.avg_5y_count}yr)</span>` : na;
-
-      // Forward: left-align to 3 slots (nearest year first) - the opposite
-      // direction from the historical right-align, since forward coverage
-      // runs out going FURTHER from today, not closer to it. Most names
-      // only have T+1 (a real Yahoo consensus); T+2/T+3 are genuinely
-      // uncovered by any named consensus aggregator for most of this
-      // cohort, not a research gap - see forward_pe.py.
-      const fp = FWD_PE && FWD_PE[inst.id];
-      const fpYears = fp ? (fp.years || []).slice()
-        .sort((a, b) => (a.period_end || "").localeCompare(b.period_end || "")) : [];
-      const fpSlots = new Array(3).fill(null);
-      for (let i = 0; i < Math.min(3, fpYears.length); i++) fpSlots[i] = fpYears[i];
-      const fwdCells = fpSlots.map(y => {
-        if (!y) return `<td>${na}</td>`;
-        const label = esc(y.fy_label || y.period_end || "?");
-        const nAnalysts = y.num_analysts != null
-          ? ` <span class="pe-nm" title="${y.num_analysts} analysts in consensus">(${y.num_analysts})</span>` : "";
-        if (y.pe != null) {
-          const warn = y.flag ? ` <span class="rev-qual" title="${esc(y.flag)}">⚠</span>` : "";
-          const conv = y.converted ? `<span class="rev-qual" title="${esc(y.source || "currency-converted")}">*</span>` : "";
-          return `<td><span class="pe-current">${y.pe}x</span>${conv}${warn}<br><span class="pe-nm">${label}${nAnalysts}</span></td>`;
-        }
-        return `<td><span class="pe-nm" title="${esc(y.flag || y.source || "")}">${y.flag ? "⚠ n/a" : "n/a"}</span><br><span class="pe-nm">${label}</span></td>`;
-      }).join("");
-
-      rows += `<tr>
-        <td>${companyIdCell(inst)}</td>
-        ${yearCells}
-        ${fwdCells}
-        <td>${avg3y}</td>
-        <td>${avg5y}</td>
-      </tr>`;
-    }
-  }
-  return `<div class="hist-head" style="margin-top:22px">Historical &amp; Forward P/E — AI/Tech Cohort</div>
-    <table class="cmp-table"><thead><tr>
-      <th>Company</th><th>T-4</th><th>T-3</th><th>T-2</th><th>T-1</th><th>T (Latest)</th>
-      <th>T+1</th><th>T+2</th><th>T+3</th><th>3-Yr Avg</th><th>5-Yr Avg</th>
-    </tr></thead><tbody>${rows}</tbody></table>
-    <div class="rev-src" style="margin-top:8px">Historical (T-4..T) = fiscal year-end closing price ÷ that fiscal year's actual GAAP diluted EPS, research-derived from filings. Forward (T+1..T+3) = TODAY's price ÷ analyst consensus EPS estimate. T+1 is a real sourced Yahoo Finance consensus (analyst count shown in parentheses); T+2/T+3 require a named multi-analyst consensus aggregator (Zacks, TipRanks, MarketScreener, etc.) — most names genuinely have no such coverage that far out, shown as n/a rather than a guess, not a research gap. Columns are relative to each company's own fiscal calendar (T = most recent completed fiscal year), not calendar year — the actual FY label and analyst count are shown under each value. Companies reporting in a different currency than their traded shares are converted using the relevant historical or spot FX rate, marked * — hover for detail. ⚠ flags a P/E outside a plausible range (a real failure mode: Yahoo's own consensus data has been wrong for at least one name in this cohort — PDD's trailing AND forward EPS were both ~8-10x inflated on Yahoo's feed, caught by this check and excluded). This data is LLM/API-researched, not a Bloomberg/FactSet-grade feed — treat as a first pass, not verified truth.</div>`;
-}
-
+let MOVES = null;
 window.showTab = function (tabKey) {
   document.getElementById("tab-summary").classList.toggle("active", tabKey === "summary");
-  document.getElementById("tab-revenue").classList.toggle("active", tabKey === "revenue");
-  document.getElementById("revenue-wrap").style.display = tabKey === "revenue" ? "" : "none";
-  document.getElementById("tab-compare").classList.toggle("active", tabKey === "compare");
-  document.getElementById("compare-wrap").style.display = tabKey === "compare" ? "" : "none";
-  document.getElementById("tab-pe").classList.toggle("active", tabKey === "pe");
-  document.getElementById("pe-wrap").style.display = tabKey === "pe" ? "" : "none";
+  document.getElementById("tab-history").classList.toggle("active", tabKey === "history");
+  document.getElementById("tab-stock-history").classList.toggle("active", tabKey === "stock-history");
+  document.getElementById("history").style.display = tabKey === "history" ? "" : "none";
+  document.getElementById("stock-history").style.display = tabKey === "stock-history" ? "" : "none";
   for (const c of CATEGORIES) {
     document.getElementById("tab-" + c.key).classList.toggle("active", tabKey === c.key);
-    const show = tabKey === c.key;
-    document.getElementById("grid-" + c.key).style.display = show ? "" : "none";
-    document.getElementById("hist-" + c.key).style.display = show ? "" : "none";
+    document.getElementById("grid-" + c.key).style.display = tabKey === c.key ? "" : "none";
   }
-  // Revenue Mix / Compare are pure reference tables - no ideas/catalysts
-  // sections. Those divs are fixed top-level elements shared across every
-  // tab, so without this they'd keep showing stale content from whichever
-  // tab was active before switching here.
-  const showIdeas = tabKey !== "revenue" && tabKey !== "compare" && tabKey !== "pe";
-  document.getElementById("ideas").style.display = showIdeas ? "" : "none";
-  document.getElementById("catalysts30").style.display = showIdeas ? "" : "none";
-  document.getElementById("pastCatalysts").style.display = showIdeas ? "" : "none";
-  if (tabKey === "revenue") {
-    if (DATA) renderRevenueMix();
-    return;
-  }
-  if (tabKey === "compare") {
-    if (DATA) renderCompareTable();
-    return;
-  }
-  if (tabKey === "pe") {
-    if (DATA) renderPeHistory();
-    return;
-  }
-  const category = tabKey === "summary" ? null : tabKey;
-  if (DATA) {
+  const category = tabKey === "summary" ? null : (tabKey === "history" || tabKey === "stock-history" ? null : tabKey);
+  if (tabKey === "history") {
+    if (DATA) renderHistory();
+  } else if (tabKey === "stock-history") {
+    if (DATA) renderStockHistory();
+  } else if (DATA) {
     renderIdeas(category);
     renderCatalystsTable(category);
     renderPastCatalysts(category, 30);
-    if (category) renderSectorHistory(category);
   }
 };
+function pastCatalystRows(category, lookbackDays = 30) {
+  const rows = [];
+  const today = new Date(), cutoff = new Date(today.getTime() - lookbackDays * 24 * 60 * 60 * 1000);
+  const insts = category ? filterByCategory(DATA.instruments, category) : DATA.instruments;
 
-function buildShell() {
-  const tabs = document.getElementById("tabs");
-  const grids = document.getElementById("grids");
-  const mk = (key, label) => {
-    const b = document.createElement("button");
-    b.id = "tab-" + key; b.textContent = label;
-    b.onclick = () => showTab(key);
-    tabs.appendChild(b);
-  };
-  mk("summary", "Summary");
-  for (const c of CATEGORIES) {
-    mk(c.key, c.label);
-    const main = document.createElement("main");
-    main.id = "grid-" + c.key; main.className = "monitor-grid"; main.style.display = "none";
-    grids.appendChild(main);
-    const hist = document.createElement("div");
-    hist.id = "hist-" + c.key; hist.className = "hist-wrap"; hist.style.display = "none";
-    grids.appendChild(hist);
+  for (const inst of insts) {
+    const eventDates = new Set();
+
+    // Add researched moves with outcomes (from MOVES)
+    const m = MOVES && MOVES[inst.id];
+    if (m) {
+      const researched = (m.moves || []).filter(mv => mv.reason);
+      for (const mv of researched) {
+        const d = new Date(mv.d);
+        if (d >= cutoff && d < today) {
+          eventDates.add(mv.d);
+          const label = mv.catalyst_type === "earnings" ? "<b style=\"color:#58a6ff\">📊 EARNINGS</b>" : "";
+          rows.push({
+            id: inst.id,
+            label: inst.label,
+            date: mv.d,
+            event: (label ? `<div style="font-weight:600;margin-bottom:4px">${label}</div>` : "") + prevPerfBlock({ date: mv.d, pct: mv.pct, reason: mv.reason, source: mv.source }, "Move")
+          });
+        }
+      }
+    }
+
+    // Add bare events (ex-dividend, earnings, etc) if not already covered by a move within ±2 days
+    const f = inst.fund || {};
+    if (f.ex_div) {
+      const d = new Date(f.ex_div);
+      if (d >= cutoff && d < today && !eventDates.has(f.ex_div)) {
+        rows.push({ id: inst.id, label: inst.label, date: f.ex_div, event: "Ex-dividend" });
+      }
+    }
+    (inst.events || []).forEach(e => {
+      const d = new Date(e.date);
+      if (d >= cutoff && d < today && !eventDates.has(e.date)) {
+        rows.push({ id: inst.id, label: inst.label, date: e.date, event: e.event });
+      }
+    });
   }
-  mk("revenue", "Revenue Mix");
-  const revWrap = document.createElement("div");
-  revWrap.id = "revenue-wrap"; revWrap.className = "rev-wrap"; revWrap.style.display = "none";
-  grids.appendChild(revWrap);
 
-  mk("compare", "Compare");
-  const cmpWrap = document.createElement("div");
-  cmpWrap.id = "compare-wrap"; cmpWrap.className = "cmp-wrap"; cmpWrap.style.display = "none";
-  grids.appendChild(cmpWrap);
-
-  mk("pe", "P/E History");
-  const peWrap = document.createElement("div");
-  peWrap.id = "pe-wrap"; peWrap.className = "cmp-wrap"; peWrap.style.display = "none";
-  grids.appendChild(peWrap);
+  rows.sort((a, b) => new Date(b.date) - new Date(a.date));
+  return rows;
 }
+
+console.log("Before load function");
 
 function load() {
+  console.log("load() called");
   document.getElementById("meta").textContent = "fetching data...";
-  buildShell();
-  Promise.all([
-    fetch("./data.json?t=" + Date.now(), { cache: "no-store" }).then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
-    fetch("./moves.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
-    fetch("./supply-chain-map.json?t=" + Date.now(), { cache: "no-store" }).then(r => { if (!r.ok) throw new Error(`map HTTP ${r.status}`); return r.json(); }),
-    fetch("./earnings-dates.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
-    fetch("./revenue-breakdown.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
-    fetch("./deep-fundamentals.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
-    fetch("./geo-mix.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
-    fetch("./fx-rates.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
-    fetch("./off-bs-liabilities.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
-    fetch("./historical-pe.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
-    fetch("./forward-pe.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
-    fetch("./roic.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
-  ]).then(([data, moves, scmap, earnDates, revMix, deepFund, geoMix, fxRates, offBs, histPe, fwdPe, roic]) => {
-    DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates; REV_MIX = revMix; DEEP_FUND = deepFund; GEO_MIX = geoMix; FX_RATES = fxRates; OFF_BS = offBs; HIST_PE = histPe; FWD_PE = fwdPe; ROIC = roic;
-    STALE = checkStale(DATA);
-    const ideas = DATA.instruments.filter(i => i.idea && i.idea.kind === "enter").length;
-    document.getElementById("meta").textContent =
-      `${DATA.instruments.length} names · ${ideas} enter ideas · ${new Date(DATA.generated_at).toLocaleString()}`;
-    render();
-    showTab("summary");
-  }).catch(err => {
-    console.error("load error:", err);
-    document.getElementById("meta").textContent = `ERROR: ${err.message}`;
-  });
+
+  const dataPromise = fetch("./data.json?t=" + Date.now(), { cache: "no-store" })
+    .then(res => {
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    });
+
+  const movesPromise = fetch("./moves.json", { cache: "no-store" })
+    .then(res => res.json())
+    .catch(err => {
+      console.warn("moves.json unavailable:", err);
+      return {};
+    });
+
+  Promise.all([dataPromise, movesPromise])
+    .then(([data, moves]) => {
+      console.log("data loaded:", data.instruments.length);
+      DATA = data;
+      MOVES = moves;
+      document.getElementById("meta").textContent = "rendering...";
+      STALE = checkStale(DATA);
+      const ideas = DATA.instruments.filter(i => i.idea && i.idea.kind === "enter").length;
+      document.getElementById("meta").textContent =
+        `${DATA.instruments.length} names · ${ideas} enter ideas · ${DATA.source} · ${new Date(DATA.generated_at).toLocaleString()}`;
+      render();
+      showTab("summary");
+    })
+    .catch(err => {
+      console.error("load error:", err);
+      document.getElementById("meta").textContent = `ERROR: ${err.message}`;
+    });
 }
+
+console.log("About to call load()");
 load();
+console.log("load() called successfully");
 </script>
 </body>
 </html>
