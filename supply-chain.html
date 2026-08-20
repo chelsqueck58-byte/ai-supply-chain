@@ -243,6 +243,10 @@ function getSubcategory(inst) {
 const CATEGORY_ORDER = {
   "China Internet": ["9988", "0700", "9888", "1810", "2513", "0100", "3690", "9618", "PDD"],
 };
+function parseFyYear(label) {
+  const m = /^FY(\d{4})$/.exec(label || "");
+  return m ? parseInt(m[1], 10) : null;
+}
 function sortForCategoryTab(list, categoryLabel) {
   const order = CATEGORY_ORDER[categoryLabel];
   if (!order) return list.sort((a, b) => a.label.localeCompare(b.label));
@@ -1201,17 +1205,31 @@ function buildHistPeSection() {
       const avg5y = hp.avg_5y != null
         ? `${hp.avg_5y}x <span class="pe-nm">(${hp.avg_5y_count}yr)</span>` : na;
 
-      // Forward: left-align to 3 slots (nearest year first) - the opposite
-      // direction from the historical right-align, since forward coverage
-      // runs out going FURTHER from today, not closer to it. Most names
-      // only have T+1 (a real Yahoo consensus); T+2/T+3 are genuinely
-      // uncovered by any named consensus aggregator for most of this
-      // cohort, not a research gap - see forward_pe.py.
+      // Forward: align each estimate to its REAL offset from T (the latest
+      // completed fiscal year), not just left-packed in whatever order
+      // estimates came back. Yahoo's own "+1y" consensus is relative to
+      // ITS notion of the current fiscal year - for a company deep into an
+      // unreported fiscal year, that's often 2-3 years past T, not 1.
+      // Left-packing would silently mislabel a T+2 estimate as T+1 and
+      // leave the true T+1 slot (usually just missing/unreported) invisible
+      // instead of shown blank.
       const fp = FWD_PE && FWD_PE[inst.id];
       const fpYears = fp ? (fp.years || []).slice()
         .sort((a, b) => (a.period_end || "").localeCompare(b.period_end || "")) : [];
       const fpSlots = new Array(3).fill(null);
-      for (let i = 0; i < Math.min(3, fpYears.length); i++) fpSlots[i] = fpYears[i];
+      const tYear = years.length ? parseFyYear(years[years.length - 1].fy_label) : null;
+      if (tYear != null) {
+        for (const y of fpYears) {
+          const fy = parseFyYear(y.fy_label);
+          if (fy == null) continue;
+          const offset = fy - tYear;
+          if (offset >= 1 && offset <= 3) fpSlots[offset - 1] = y;
+        }
+      } else {
+        // No historical anchor (recent IPO, no reported fiscal year yet) -
+        // fall back to left-packing since there's nothing to align against.
+        for (let i = 0; i < Math.min(3, fpYears.length); i++) fpSlots[i] = fpYears[i];
+      }
       const fwdCells = fpSlots.map(y => {
         if (!y) return `<td>${na}</td>`;
         const label = esc(y.fy_label || y.period_end || "?");
