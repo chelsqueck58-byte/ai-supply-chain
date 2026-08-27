@@ -630,7 +630,7 @@ function badges(inst) {
 
 function buildGoldCompareWrap(chartEl, title, extraCaption) {
   const wrap = document.createElement("div");
-  wrap.style.cssText = "margin:0 0 16px; padding:12px; border:1px solid var(--border); border-radius:6px;";
+  wrap.style.cssText = "grid-column:1/-1; margin:0 0 16px; padding:12px; border:1px solid var(--border); border-radius:6px;";
   const titleEl = document.createElement("div");
   titleEl.style.cssText = "font-size:13px; font-weight:600; margin-bottom:8px;";
   titleEl.textContent = title;
