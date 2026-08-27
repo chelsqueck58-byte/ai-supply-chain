@@ -634,11 +634,11 @@ function buildGoldCompareWrap(chartEl, title, extraCaption) {
   const titleEl = document.createElement("div");
   titleEl.style.cssText = "font-size:13px; font-weight:600; margin-bottom:8px;";
   titleEl.textContent = title;
-  chartEl.style.height = "320px";
+  chartEl.style.height = "440px";
   const caption = document.createElement("div");
   caption.className = "rev-src";
   caption.style.marginTop = "6px";
-  caption.innerHTML = "Full price history since each stock's own listing date (not capped to the 2-year window used elsewhere on the site); log scale so a big long-run rally doesn't visually flatten the others. Each line indexed to 100 at ITS OWN first available date, not a shared start point - so lines begin at different times but each shows its own true since-inception return. "
+  caption.innerHTML = "Full price history since each stock's own listing date (not capped to the 2-year window used elsewhere on the site); log scale so a big long-run rally doesn't visually flatten the others. Uses split/dividend-adjusted price (Chow Tai Seng had two 1.5:1 splits in 2019/2021 that raw price doesn't account for) - so this reflects real total shareholder return, not just headline share price. Each line indexed to 100 at ITS OWN first available date, not a shared start point - so lines begin at different times but each shows its own true since-inception return. "
     + extraCaption
     + " China gold price is a proxy — international spot/futures gold (COMEX GC=F) converted to RMB/gram via the daily USD/CNY rate, since no direct Shanghai Gold Exchange benchmark is available via this pipeline's data source. SGE tracks international spot closely (arbitraged through FX); normalizing to % return cancels out most of the small, fairly stable premium/discount over spot.";
   wrap.appendChild(titleEl);
@@ -662,7 +662,11 @@ function drawGoldCompareChart(el, tickerIds) {
     grid: { vertLines: { color: "#1b2027" }, horzLines: { color: "#1b2027" } },
     rightPriceScale: { borderColor: "#21262d", mode: 1 }, // logarithmic
     timeScale: { borderColor: "#21262d", timeVisible: false },
-    crosshair: { mode: 0 }, height: 320,
+    crosshair: { mode: 0 }, height: 440,
+    // Static display, not an interactive pan/zoom widget - fitContent()
+    // below shows the whole multi-decade range at once already, so
+    // dragging/scrolling/pinching would just misalign it for no benefit.
+    handleScroll: false, handleScale: false,
   });
   const PALETTE = ["#58a6ff", "#3fb950", "#f778ba", "#a371f7", "#ff9800"];
   let colorIdx = 0;
