@@ -631,71 +631,26 @@ function badges(inst) {
   return `<span class="badge ${t}" title="trend: price vs 50/200DMA">${tl}</span>${cta}${staleBadge}`;
 }
 
-function buildGoldCompareWrap(chartEl, title, extraCaption, tableHtml) {
-  const wrap = document.createElement("div");
-  wrap.style.cssText = "grid-column:1/-1; margin:0 0 16px; padding:12px; border:1px solid var(--border); border-radius:6px;";
-  const titleEl = document.createElement("div");
-  titleEl.style.cssText = "font-size:13px; font-weight:600; margin-bottom:8px;";
-  titleEl.textContent = title;
-  chartEl.style.height = "440px";
-  const caption = document.createElement("div");
-  caption.className = "rev-src";
-  caption.style.marginTop = "6px";
-  caption.innerHTML = "Full price history since each stock's own listing date (not capped to the 2-year window used elsewhere on the site); log scale so a big long-run rally doesn't visually flatten the others. Uses split/dividend-adjusted price (Chow Tai Seng had two 1.5:1 splits in 2019/2021 that raw price doesn't account for) - so this reflects real total shareholder return, not just headline share price. Each line indexed to 100 at ITS OWN first available date, not a shared start point - so lines begin at different times but each shows its own true since-inception return. "
-    + extraCaption
-    + " China gold price is a proxy — international spot/futures gold (COMEX GC=F) converted to RMB/gram via the daily USD/CNY rate, since no direct Shanghai Gold Exchange benchmark is available via this pipeline's data source. SGE tracks international spot closely (arbitraged through FX); normalizing to % return cancels out most of the small, fairly stable premium/discount over spot.";
-  if (tableHtml) {
-    const tableWrap = document.createElement("div");
-    tableWrap.style.marginBottom = "14px";
-    tableWrap.innerHTML = tableHtml;
-    wrap.appendChild(tableWrap);
-  }
-  wrap.appendChild(titleEl);
-  wrap.appendChild(chartEl);
-  wrap.appendChild(caption);
-  return wrap;
-}
+// Named historical gold-market cycles rather than auto-detected swings -
+// matches how these are commonly discussed, not mechanical ZigZag pivots.
+// start/end null = genuinely no data available (gold price data starts
+// 2001-06-25 via COMEX GC=F; the stocks' own history starts 2000 at the
+// earliest) - shown as an explicit "no data" note, not silently skipped.
+const GOLD_CYCLE_PERIODS = [
+  { label: "1970s bull", range: "1971–1980", start: null, end: null },
+  { label: "Post-1980 bear", range: "1980–1999", start: null, end: null },
+  { label: "2001-2011 bull", range: "2001–2011", start: "2001-01-01", end: "2011-12-31" },
+  { label: "Post-2011 correction", range: "2011–2015", start: "2011-01-01", end: "2015-12-31" },
+  { label: "Consolidation", range: "2015–2018", start: "2015-01-01", end: "2018-12-31" },
+  { label: "2018-2020 bull", range: "2018–2020", start: "2018-01-01", end: "2020-12-31" },
+  { label: "Post-COVID pause", range: "2021–2022", start: "2021-01-01", end: "2022-12-31" },
+  { label: "Current bull", range: "2023–Jan 2026", start: "2023-01-01", end: "2026-01-31" },
+  { label: "2026 correction", range: "Jan 2026 onwards", start: "2026-02-01", end: "9999-12-31" },
+];
+// Anomaly = a stock's return in a period diverges from its peers' average
+// return that same period by this many percentage points.
+const REGIME_ANOMALY_THRESHOLD = 20;
 
-// ZigZag-style regime detection on the gold price series: a "rally" or
-// "decline" is a run of price moving one direction until it reverses by at
-// least thresholdPct from the extreme point reached, matching how a chartist
-// would eyeball distinct up/down legs rather than every daily wiggle.
-function detectGoldRegimes(series, thresholdPct) {
-  if (!series || series.length < 2) return [];
-  const regimes = [];
-  let pivotIdx = 0, pivotPrice = series[0].price, dir = null;
-  for (let i = 1; i < series.length; i++) {
-    const price = series[i].price;
-    if (dir === null) {
-      const change = (price / pivotPrice - 1) * 100;
-      if (Math.abs(change) >= thresholdPct) dir = change > 0 ? "up" : "down";
-      continue;
-    }
-    if (dir === "up") {
-      if (price > pivotPrice) { pivotPrice = price; pivotIdx = i; continue; }
-      if ((price / pivotPrice - 1) * 100 <= -thresholdPct) {
-        regimes.push({ startIdx: regimes.length ? regimes[regimes.length - 1].endIdx : 0, endIdx: pivotIdx, type: "rally" });
-        pivotPrice = price; pivotIdx = i; dir = "down";
-      }
-    } else {
-      if (price < pivotPrice) { pivotPrice = price; pivotIdx = i; continue; }
-      if ((price / pivotPrice - 1) * 100 >= thresholdPct) {
-        regimes.push({ startIdx: regimes.length ? regimes[regimes.length - 1].endIdx : 0, endIdx: pivotIdx, type: "decline" });
-        pivotPrice = price; pivotIdx = i; dir = "up";
-      }
-    }
-  }
-  const lastIdx = series.length - 1;
-  const prevEnd = regimes.length ? regimes[regimes.length - 1].endIdx : 0;
-  if (lastIdx > prevEnd) {
-    regimes.push({ startIdx: prevEnd, endIdx: lastIdx, type: series[lastIdx].price >= series[prevEnd].price ? "rally" : "decline" });
-  }
-  return regimes.map(r => ({
-    start: series[r.startIdx].d, end: series[r.endIdx].d,
-    pctChange: round1((series[r.endIdx].price / series[r.startIdx].price - 1) * 100),
-    type: r.type,
-  }));
-}
 function returnOverPeriod(bars, startDate, endDate) {
   let startBar = null, endBar = null;
   for (const b of bars) {
@@ -705,72 +660,85 @@ function returnOverPeriod(bars, startDate, endDate) {
   if (!startBar || !endBar || startBar.d > endBar.d) return null;
   return round1((endBar.c / startBar.c - 1) * 100);
 }
-// Anomaly = a stock's return in a given regime diverges from its peers'
-// average return that same period by this many percentage points - catches
-// both "fell during a gold rally" and "rallied far harder/softer than peers"
-// cases without needing separate rules for each.
-const REGIME_ANOMALY_THRESHOLD = 20;
-function buildGoldRegimeTable(insts, regimes) {
-  if (!regimes.length) return "";
-  const rows = regimes.map(r => {
-    const returns = {};
-    for (const inst of insts) {
-      returns[inst.id] = returnOverPeriod((GOLD_HISTORY && GOLD_HISTORY[inst.id]) || [], r.start, r.end);
-    }
-    const valid = insts.map(i => returns[i.id]).filter(v => v != null);
-    const peerAvg = valid.length ? round1(valid.reduce((a, b) => a + b, 0) / valid.length) : null;
-    return { ...r, returns, peerAvg };
-  });
-  const pctCell = (v, isAnomaly) => {
-    if (v == null) return `<td class="cmp-na">—</td>`;
-    const cls = v >= 0 ? "u" : "d";
-    const warn = isAnomaly ? ` <span title="Diverges from peer average by ${REGIME_ANOMALY_THRESHOLD}+ pts">⚠</span>` : "";
-    return `<td><span class="pct ${cls}"${isAnomaly ? ' style="font-weight:700"' : ""}>${v >= 0 ? "+" : ""}${v}%</span>${warn}</td>`;
-  };
-  let html = `<table class="cmp-table"><thead><tr><th>Period</th><th>Gold</th>${insts.map(i => `<th>${esc(i.label)}</th>`).join("")}<th>Peer avg</th></tr></thead><tbody>`;
-  for (const row of rows) {
-    const goldCls = row.type === "rally" ? "u" : "d";
-    html += `<tr><td>${row.start} → ${row.end} <span class="pe-nm">(${row.type})</span></td>`;
-    html += `<td><span class="pct ${goldCls}">${row.pctChange >= 0 ? "+" : ""}${row.pctChange}%</span></td>`;
-    for (const inst of insts) {
-      const v = row.returns[inst.id];
-      const isAnomaly = v != null && row.peerAvg != null && Math.abs(v - row.peerAvg) >= REGIME_ANOMALY_THRESHOLD;
-      html += pctCell(v, isAnomaly);
-    }
-    html += `<td>${row.peerAvg != null ? (row.peerAvg >= 0 ? "+" : "") + row.peerAvg + "%" : "—"}</td></tr>`;
-  }
-  html += "</tbody></table>";
-  return html;
+function round1(n) { return Math.round(n * 10) / 10; }
+
+function buildGoldCyclesWrap(outerEl) {
+  const wrap = document.createElement("div");
+  wrap.style.cssText = "grid-column:1/-1; margin:0 0 16px; padding:12px; border:1px solid var(--border); border-radius:6px;";
+  const titleEl = document.createElement("div");
+  titleEl.style.cssText = "font-size:13px; font-weight:600; margin-bottom:8px;";
+  titleEl.textContent = "Chow Tai Fook / Luk Fook / Chow Sang Sang / Chow Tai Seng vs China Gold Price, by Gold Cycle";
+  const caption = document.createElement("div");
+  caption.className = "rev-src";
+  caption.style.margin = "8px 0 0";
+  caption.innerHTML = "Each named gold-market cycle gets its own chart, indexed to 100 at THAT period's start (not since-inception) so a stock's movement within that specific cycle reads clearly rather than being compressed by decades of unrelated history. Linear scale, not log - within one cycle the magnitude differences are the point. Uses split/dividend-adjusted price (Chow Tai Seng had two 1.5:1 splits in 2019/2021 that raw price doesn't account for). ⚠ flags a stock diverging from the peer average that period by "
+    + REGIME_ANOMALY_THRESHOLD + "+ points. China gold price is a proxy (COMEX GC=F converted to RMB/gram via daily USD/CNY, since no direct Shanghai Gold Exchange benchmark is available here) - and its real data only starts 2001-06-25 (stocks start 2000 at the earliest), so the two pre-2000 cycles have no chartable data at all, shown as such rather than guessed.";
+  wrap.appendChild(titleEl);
+  wrap.appendChild(outerEl);
+  wrap.appendChild(caption);
+  return wrap;
 }
 
-function drawGoldCompareChart(el, tickerIds, regimes) {
-  const insts = filterByCategory(DATA.instruments, "gold-jewelry").filter(i => tickerIds.includes(i.id));
+function buildPeriodBlock(insts, period) {
+  const block = document.createElement("div");
+  block.style.cssText = "margin-bottom:18px; padding-top:12px; border-top:1px solid var(--border);";
+  const head = document.createElement("div");
+  head.style.cssText = "font-size:12px; font-weight:600; margin-bottom:6px;";
+  head.textContent = `${period.label} (${period.range})`;
+  block.appendChild(head);
+
+  if (!period.start) {
+    const note = document.createElement("div");
+    note.style.cssText = "font-size:11px; padding:8px 0; color:var(--muted);";
+    note.textContent = "No price data available for this period - gold price and all four stocks' history start no earlier than 2000-2001.";
+    block.appendChild(note);
+    return block;
+  }
+
+  const goldBars = (GOLD_PRICE || []).map(g => ({ d: g.d, c: g.price }));
+  const returns = {};
+  for (const inst of insts) returns[inst.id] = returnOverPeriod((GOLD_HISTORY && GOLD_HISTORY[inst.id]) || [], period.start, period.end);
+  const goldReturn = returnOverPeriod(goldBars, period.start, period.end);
+  const valid = insts.map(i => returns[i.id]).filter(v => v != null);
+  const peerAvg = valid.length ? round1(valid.reduce((a, b) => a + b, 0) / valid.length) : null;
+
+  const summary = document.createElement("div");
+  summary.style.cssText = "font-size:11px; margin-bottom:8px; display:flex; gap:16px; flex-wrap:wrap;";
+  const pieces = [];
+  if (goldReturn != null) pieces.push(`<span>Gold <span class="pct ${goldReturn >= 0 ? "u" : "d"}">${goldReturn >= 0 ? "+" : ""}${goldReturn}%</span></span>`);
+  for (const inst of insts) {
+    const v = returns[inst.id];
+    if (v == null) { pieces.push(`<span>${esc(inst.label)} <span class="cmp-na">n/a</span></span>`); continue; }
+    const isAnomaly = peerAvg != null && Math.abs(v - peerAvg) >= REGIME_ANOMALY_THRESHOLD;
+    pieces.push(`<span>${esc(inst.label)} <span class="pct ${v >= 0 ? "u" : "d"}"${isAnomaly ? ' style="font-weight:700"' : ""}>${v >= 0 ? "+" : ""}${v}%</span>${isAnomaly ? " ⚠" : ""}</span>`);
+  }
+  summary.innerHTML = pieces.join("");
+  block.appendChild(summary);
+
+  const chartDiv = document.createElement("div");
+  chartDiv.style.height = "220px";
+  block.appendChild(chartDiv);
+  block._chartDiv = chartDiv;
+  return block;
+}
+
+function drawPeriodChart(chartDiv, insts, period) {
   const series = insts.map(i => ({
     label: i.label,
-    bars: ((GOLD_HISTORY && GOLD_HISTORY[i.id]) || []).map(b => ({ time: b.d, close: b.c })),
+    bars: ((GOLD_HISTORY && GOLD_HISTORY[i.id]) || []).filter(b => b.d >= period.start && b.d <= period.end).map(b => ({ time: b.d, close: b.c })),
   })).filter(s => s.bars.length);
   if (GOLD_PRICE && GOLD_PRICE.length) {
-    series.push({ label: "China gold (proxy)", bars: GOLD_PRICE.map(g => ({ time: g.d, close: g.price })), isGold: true });
+    const bars = GOLD_PRICE.filter(g => g.d >= period.start && g.d <= period.end).map(g => ({ time: g.d, close: g.price }));
+    if (bars.length) series.push({ label: "China gold (proxy)", bars, isGold: true });
   }
-  if (!series.length) { el.textContent = "No data"; return; }
+  if (!series.length) { chartDiv.textContent = "No data in this window"; return; }
 
-  el.style.position = "relative";
-  // Regime shading sits BEHIND the chart's own (transparent-background)
-  // canvas so it reads as a background tint, not an overlay on top of the
-  // lines. Inserted before createChart() so it's earlier in paint order.
-  const shadeEl = document.createElement("div");
-  shadeEl.style.cssText = "position:absolute; inset:0; z-index:0; pointer-events:none; overflow:hidden;";
-  el.appendChild(shadeEl);
-
-  const chart = LightweightCharts.createChart(el, {
-    layout: { background: { color: "transparent" }, textColor: "#7d8590", fontSize: 10 },
+  const chart = LightweightCharts.createChart(chartDiv, {
+    layout: { background: { color: "transparent" }, textColor: "#7d8590", fontSize: 9 },
     grid: { vertLines: { color: "#1b2027" }, horzLines: { color: "#1b2027" } },
-    rightPriceScale: { borderColor: "#21262d", mode: 1 }, // logarithmic
+    rightPriceScale: { borderColor: "#21262d" },
     timeScale: { borderColor: "#21262d", timeVisible: false },
-    crosshair: { mode: 0 }, height: 440,
-    // Static display, not an interactive pan/zoom widget - fitContent()
-    // below shows the whole multi-decade range at once already, so
-    // dragging/scrolling/pinching would just misalign it for no benefit.
+    crosshair: { mode: 0 }, height: 220,
     handleScroll: false, handleScale: false,
   });
   const PALETTE = ["#58a6ff", "#3fb950", "#f778ba", "#a371f7", "#ff9800"];
@@ -786,28 +754,68 @@ function drawGoldCompareChart(el, tickerIds, regimes) {
     });
     line.setData(s.bars.map(b => ({ time: b.time, value: round1(100 * b.close / base) })));
   }
-  chart.priceScale("right").applyOptions({ mode: 1 });
   chart.timeScale().fitContent();
+}
 
-  if (regimes && regimes.length) {
-    const paintShading = () => {
-      shadeEl.innerHTML = "";
-      const ts = chart.timeScale();
-      for (const r of regimes) {
-        const x1 = ts.timeToCoordinate(r.start);
-        const x2 = ts.timeToCoordinate(r.end);
-        if (x1 == null || x2 == null) continue;
-        const band = document.createElement("div");
-        const left = Math.min(x1, x2), width = Math.max(1, Math.abs(x2 - x1));
-        band.style.cssText = `position:absolute; top:0; bottom:0; left:${left}px; width:${width}px; background:${r.type === "rally" ? "rgba(63,185,80,.10)" : "rgba(248,81,73,.10)"};`;
-        shadeEl.appendChild(band);
-      }
-    };
-    paintShading();
-    window.addEventListener("resize", paintShading);
+function drawGoldCyclesSection(outerEl, tickerIds) {
+  const insts = filterByCategory(DATA.instruments, "gold-jewelry").filter(i => tickerIds.includes(i.id));
+  for (const period of GOLD_CYCLE_PERIODS) {
+    const block = buildPeriodBlock(insts, period);
+    outerEl.appendChild(block);
+    if (block._chartDiv) drawPeriodChart(block._chartDiv, insts, period);
   }
 }
-function round1(n) { return Math.round(n * 10) / 10; }
+
+// Laopu-specific single chart (not split into cycles - it's only existed
+// since its 2024 IPO, too short a span for the named multi-decade gold
+// cycles above to apply).
+function buildLaopuChartWrap(chartEl) {
+  const wrap = document.createElement("div");
+  wrap.style.cssText = "grid-column:1/-1; margin:0 0 16px; padding:12px; border:1px solid var(--border); border-radius:6px;";
+  const titleEl = document.createElement("div");
+  titleEl.style.cssText = "font-size:13px; font-weight:600; margin-bottom:8px;";
+  titleEl.textContent = "Laopu Gold vs China Gold Price (since Laopu's 2024 IPO)";
+  chartEl.style.height = "320px";
+  const caption = document.createElement("div");
+  caption.className = "rev-src";
+  caption.style.marginTop = "6px";
+  caption.textContent = "Laopu's rally is large enough to flatten the other four stocks on a shared chart, so it gets its own. Log scale. Indexed to 100 at its IPO. China gold price is a proxy (COMEX GC=F converted to RMB/gram via daily USD/CNY).";
+  wrap.appendChild(titleEl);
+  wrap.appendChild(chartEl);
+  wrap.appendChild(caption);
+  return wrap;
+}
+function drawLaopuChart(el) {
+  const inst = filterByCategory(DATA.instruments, "gold-jewelry").find(i => i.id === "6181");
+  const series = [];
+  if (inst) {
+    const bars = ((GOLD_HISTORY && GOLD_HISTORY["6181"]) || []).map(b => ({ time: b.d, close: b.c }));
+    if (bars.length) series.push({ label: inst.label, bars });
+  }
+  if (GOLD_PRICE && GOLD_PRICE.length) {
+    series.push({ label: "China gold (proxy)", bars: GOLD_PRICE.map(g => ({ time: g.d, close: g.price })), isGold: true });
+  }
+  if (!series.length) { el.textContent = "No data"; return; }
+  const chart = LightweightCharts.createChart(el, {
+    layout: { background: { color: "transparent" }, textColor: "#7d8590", fontSize: 10 },
+    grid: { vertLines: { color: "#1b2027" }, horzLines: { color: "#1b2027" } },
+    rightPriceScale: { borderColor: "#21262d", mode: 1 },
+    timeScale: { borderColor: "#21262d", timeVisible: false },
+    crosshair: { mode: 0 }, height: 320,
+    handleScroll: false, handleScale: false,
+  });
+  const PALETTE = ["#58a6ff", "#e3b341"];
+  let colorIdx = 0;
+  for (const s of series) {
+    const base = s.bars[0].close;
+    if (!base) continue;
+    const color = s.isGold ? "#e3b341" : PALETTE[colorIdx++ % PALETTE.length];
+    const line = chart.addLineSeries({ color, lineWidth: s.isGold ? 2 : 1.5, priceLineVisible: false, lastValueVisible: true, title: s.label });
+    line.setData(s.bars.map(b => ({ time: b.time, value: round1(100 * b.close / base) })));
+  }
+  chart.priceScale("right").applyOptions({ mode: 1 });
+  chart.timeScale().fitContent();
+}
 
 function drawChart(el, inst) {
   const chart = LightweightCharts.createChart(el, {
@@ -903,21 +911,14 @@ function render() {
     if (cat.key === "gold-jewelry") {
       const laopuEl = document.createElement("div");
       laopuEl.className = "chart";
-      laopuEl.dataset.pendingGoldCompare = "6181";
-      grid.appendChild(buildGoldCompareWrap(laopuEl, "Laopu Gold vs China Gold Price (log scale, since Laopu's 2024 IPO)",
-        "Laopu's rally is large enough to flatten everything else on a shared chart, so it gets its own."));
+      laopuEl.dataset.pendingGoldCompare = "1";
+      grid.appendChild(buildLaopuChartWrap(laopuEl));
 
       const restTickers = ["1929", "0590", "0116", "002867"];
-      const regimes = GOLD_PRICE ? detectGoldRegimes(GOLD_PRICE, 15) : [];
-      const restInsts = filterByCategory(DATA.instruments, "gold-jewelry").filter(i => restTickers.includes(i.id));
-      const restEl = document.createElement("div");
-      restEl.className = "chart";
-      restEl.dataset.pendingGoldCompare = restTickers.join(",");
-      restEl._regimes = regimes;
-      grid.appendChild(buildGoldCompareWrap(restEl,
-        "Chow Tai Fook / Luk Fook / Chow Sang Sang / Chow Tai Seng vs China Gold Price (log scale, full history)",
-        " Shaded bands mark gold rally (green) vs decline (red) regimes, auto-detected as a ≥15% move without a bigger reversal - use the table above to spot which peer diverged from the group in each one.",
-        buildGoldRegimeTable(restInsts, regimes)));
+      const cyclesOuter = document.createElement("div");
+      cyclesOuter.className = "chart";
+      cyclesOuter.dataset.pendingGoldCycles = restTickers.join(",");
+      grid.appendChild(buildGoldCyclesWrap(cyclesOuter));
     }
     // Group by subcategory (gold section headers), sort within each group.
     // China Internet stays flat - the tab is small enough that subsector
@@ -952,9 +953,13 @@ function render() {
         drawHistChart(e.target, e.target._inst);
         OBSERVER.unobserve(e.target);
       } else if (e.target.dataset.pendingGoldCompare) {
-        const tickerIds = e.target.dataset.pendingGoldCompare.split(",");
         delete e.target.dataset.pendingGoldCompare;
-        drawGoldCompareChart(e.target, tickerIds, e.target._regimes);
+        drawLaopuChart(e.target);
+        OBSERVER.unobserve(e.target);
+      } else if (e.target.dataset.pendingGoldCycles) {
+        const tickerIds = e.target.dataset.pendingGoldCycles.split(",");
+        delete e.target.dataset.pendingGoldCycles;
+        drawGoldCyclesSection(e.target, tickerIds);
         OBSERVER.unobserve(e.target);
       }
     }
