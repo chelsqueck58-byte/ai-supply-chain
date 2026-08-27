@@ -378,7 +378,12 @@ function filterByCategory(instruments, category) {
 function renderIdeas(category) {
   const el = document.getElementById("ideas");
   if (STALE) { el.innerHTML = ""; return; }
-  const insts = filterByCategory(DATA.instruments, category);
+  // Summary (category === null) shows enter/take-profit ideas from EVERY
+  // ticker, including SUMMARY_EXCLUDE categories - an active idea is
+  // exactly the kind of thing Summary shouldn't hide. filterByCategory's
+  // exclusion is meant for decluttering the routine per-ticker catalyst
+  // list, not for hiding a real signal.
+  const insts = category ? filterByCategory(DATA.instruments, category) : DATA.instruments;
   const enters = insts.filter(i => i.idea && i.idea.kind === "enter");
   const tps = insts.filter(i => i.idea && i.idea.kind === "take_profit");
   let html = "";
@@ -405,38 +410,36 @@ function prevPerfBlock(prev, label) {
 }
 function catalystRows(category) {
   const rows = [];
-  // Summary tab (category === null) shows macro events only - per-ticker
-  // earnings/dated-events across the whole ~80-name universe belongs on
-  // each ticker's own category tab, not cluttering the top-level overview.
-  if (category) {
-    const insts = filterByCategory(DATA.instruments, category);
-    for (const inst of insts) {
-      const f = inst.fund || {};
-      if (f.next_earnings) {
-        const d = daysTo(f.next_earnings);
-        if (d != null && d >= 0 && d <= 30) {
-          const focus = inst.earn ? inst.earn.split(/\s*Sources?:/i)[0].replace(/\((https?:[^)]+)\)/g, "").trim() : "";
-          rows.push({ id: inst.id, label: inst.label, date: f.next_earnings, days: d,
-            event: "Earnings", focus, prev: inst.prev_earnings, prevLabel: "Last earnings", earn: true });
-        }
+  const insts = filterByCategory(DATA.instruments, category);
+  for (const inst of insts) {
+    const f = inst.fund || {};
+    if (f.next_earnings) {
+      const d = daysTo(f.next_earnings);
+      if (d != null && d >= 0 && d <= 30) {
+        const focus = inst.earn ? inst.earn.split(/\s*Sources?:/i)[0].replace(/\((https?:[^)]+)\)/g, "").trim() : "";
+        rows.push({ id: inst.id, label: inst.label, date: f.next_earnings, days: d,
+          event: "Earnings", focus, prev: inst.prev_earnings, prevLabel: "Last earnings", earn: true });
       }
-      (inst.events || []).forEach(e => {
-        const d = daysTo(e.date);
-        if (d != null && d >= 0 && d <= 30) {
-          rows.push({ id: inst.id, label: inst.label, date: e.date, days: d,
-            event: e.event, focus: "", prev: e.prev_reaction, prevLabel: "Last time", earn: false });
-        }
-      });
     }
+    (inst.events || []).forEach(e => {
+      const d = daysTo(e.date);
+      if (d != null && d >= 0 && d <= 30) {
+        rows.push({ id: inst.id, label: inst.label, date: e.date, days: d,
+          event: e.event, focus: "", prev: e.prev_reaction, prevLabel: "Last time", earn: false });
+      }
+    });
   }
-  // Key macro events (Fed/FOMC, CPI, PPI, NFP, ISM...) — they move every name.
-  (DATA.macro_events || []).forEach(e => {
-    const d = daysTo(e.date);
-    if (d != null && d >= 0 && d <= 30) {
-      rows.push({ id: "MACRO", label: e.source || "", date: e.date, days: d,
-        event: e.event, focus: "", prev: null, prevLabel: "", earn: false, macro: true });
-    }
-  });
+  // Key macro events (Fed/FOMC, CPI, PPI, NFP, ISM...) - Summary tab only
+  // (category === null); category tabs stay scoped to their own tickers.
+  if (!category) {
+    (DATA.macro_events || []).forEach(e => {
+      const d = daysTo(e.date);
+      if (d != null && d >= 0 && d <= 30) {
+        rows.push({ id: "MACRO", label: e.source || "", date: e.date, days: d,
+          event: e.event, focus: "", prev: null, prevLabel: "", earn: false, macro: true });
+      }
+    });
+  }
   rows.sort((a, b) => a.days - b.days || a.id.localeCompare(b.id));
   return rows;
 }
@@ -628,7 +631,7 @@ function badges(inst) {
   return `<span class="badge ${t}" title="trend: price vs 50/200DMA">${tl}</span>${cta}${staleBadge}`;
 }
 
-function buildGoldCompareWrap(chartEl, title, extraCaption) {
+function buildGoldCompareWrap(chartEl, title, extraCaption, tableHtml) {
   const wrap = document.createElement("div");
   wrap.style.cssText = "grid-column:1/-1; margin:0 0 16px; padding:12px; border:1px solid var(--border); border-radius:6px;";
   const titleEl = document.createElement("div");
@@ -641,12 +644,106 @@ function buildGoldCompareWrap(chartEl, title, extraCaption) {
   caption.innerHTML = "Full price history since each stock's own listing date (not capped to the 2-year window used elsewhere on the site); log scale so a big long-run rally doesn't visually flatten the others. Uses split/dividend-adjusted price (Chow Tai Seng had two 1.5:1 splits in 2019/2021 that raw price doesn't account for) - so this reflects real total shareholder return, not just headline share price. Each line indexed to 100 at ITS OWN first available date, not a shared start point - so lines begin at different times but each shows its own true since-inception return. "
     + extraCaption
     + " China gold price is a proxy — international spot/futures gold (COMEX GC=F) converted to RMB/gram via the daily USD/CNY rate, since no direct Shanghai Gold Exchange benchmark is available via this pipeline's data source. SGE tracks international spot closely (arbitraged through FX); normalizing to % return cancels out most of the small, fairly stable premium/discount over spot.";
+  if (tableHtml) {
+    const tableWrap = document.createElement("div");
+    tableWrap.style.marginBottom = "14px";
+    tableWrap.innerHTML = tableHtml;
+    wrap.appendChild(tableWrap);
+  }
   wrap.appendChild(titleEl);
   wrap.appendChild(chartEl);
   wrap.appendChild(caption);
   return wrap;
 }
-function drawGoldCompareChart(el, tickerIds) {
+
+// ZigZag-style regime detection on the gold price series: a "rally" or
+// "decline" is a run of price moving one direction until it reverses by at
+// least thresholdPct from the extreme point reached, matching how a chartist
+// would eyeball distinct up/down legs rather than every daily wiggle.
+function detectGoldRegimes(series, thresholdPct) {
+  if (!series || series.length < 2) return [];
+  const regimes = [];
+  let pivotIdx = 0, pivotPrice = series[0].price, dir = null;
+  for (let i = 1; i < series.length; i++) {
+    const price = series[i].price;
+    if (dir === null) {
+      const change = (price / pivotPrice - 1) * 100;
+      if (Math.abs(change) >= thresholdPct) dir = change > 0 ? "up" : "down";
+      continue;
+    }
+    if (dir === "up") {
+      if (price > pivotPrice) { pivotPrice = price; pivotIdx = i; continue; }
+      if ((price / pivotPrice - 1) * 100 <= -thresholdPct) {
+        regimes.push({ startIdx: regimes.length ? regimes[regimes.length - 1].endIdx : 0, endIdx: pivotIdx, type: "rally" });
+        pivotPrice = price; pivotIdx = i; dir = "down";
+      }
+    } else {
+      if (price < pivotPrice) { pivotPrice = price; pivotIdx = i; continue; }
+      if ((price / pivotPrice - 1) * 100 >= thresholdPct) {
+        regimes.push({ startIdx: regimes.length ? regimes[regimes.length - 1].endIdx : 0, endIdx: pivotIdx, type: "decline" });
+        pivotPrice = price; pivotIdx = i; dir = "up";
+      }
+    }
+  }
+  const lastIdx = series.length - 1;
+  const prevEnd = regimes.length ? regimes[regimes.length - 1].endIdx : 0;
+  if (lastIdx > prevEnd) {
+    regimes.push({ startIdx: prevEnd, endIdx: lastIdx, type: series[lastIdx].price >= series[prevEnd].price ? "rally" : "decline" });
+  }
+  return regimes.map(r => ({
+    start: series[r.startIdx].d, end: series[r.endIdx].d,
+    pctChange: round1((series[r.endIdx].price / series[r.startIdx].price - 1) * 100),
+    type: r.type,
+  }));
+}
+function returnOverPeriod(bars, startDate, endDate) {
+  let startBar = null, endBar = null;
+  for (const b of bars) {
+    if (startBar === null && b.d >= startDate) startBar = b;
+    if (b.d <= endDate) endBar = b; else break;
+  }
+  if (!startBar || !endBar || startBar.d > endBar.d) return null;
+  return round1((endBar.c / startBar.c - 1) * 100);
+}
+// Anomaly = a stock's return in a given regime diverges from its peers'
+// average return that same period by this many percentage points - catches
+// both "fell during a gold rally" and "rallied far harder/softer than peers"
+// cases without needing separate rules for each.
+const REGIME_ANOMALY_THRESHOLD = 20;
+function buildGoldRegimeTable(insts, regimes) {
+  if (!regimes.length) return "";
+  const rows = regimes.map(r => {
+    const returns = {};
+    for (const inst of insts) {
+      returns[inst.id] = returnOverPeriod((GOLD_HISTORY && GOLD_HISTORY[inst.id]) || [], r.start, r.end);
+    }
+    const valid = insts.map(i => returns[i.id]).filter(v => v != null);
+    const peerAvg = valid.length ? round1(valid.reduce((a, b) => a + b, 0) / valid.length) : null;
+    return { ...r, returns, peerAvg };
+  });
+  const pctCell = (v, isAnomaly) => {
+    if (v == null) return `<td class="cmp-na">—</td>`;
+    const cls = v >= 0 ? "u" : "d";
+    const warn = isAnomaly ? ` <span title="Diverges from peer average by ${REGIME_ANOMALY_THRESHOLD}+ pts">⚠</span>` : "";
+    return `<td><span class="pct ${cls}"${isAnomaly ? ' style="font-weight:700"' : ""}>${v >= 0 ? "+" : ""}${v}%</span>${warn}</td>`;
+  };
+  let html = `<table class="cmp-table"><thead><tr><th>Period</th><th>Gold</th>${insts.map(i => `<th>${esc(i.label)}</th>`).join("")}<th>Peer avg</th></tr></thead><tbody>`;
+  for (const row of rows) {
+    const goldCls = row.type === "rally" ? "u" : "d";
+    html += `<tr><td>${row.start} → ${row.end} <span class="pe-nm">(${row.type})</span></td>`;
+    html += `<td><span class="pct ${goldCls}">${row.pctChange >= 0 ? "+" : ""}${row.pctChange}%</span></td>`;
+    for (const inst of insts) {
+      const v = row.returns[inst.id];
+      const isAnomaly = v != null && row.peerAvg != null && Math.abs(v - row.peerAvg) >= REGIME_ANOMALY_THRESHOLD;
+      html += pctCell(v, isAnomaly);
+    }
+    html += `<td>${row.peerAvg != null ? (row.peerAvg >= 0 ? "+" : "") + row.peerAvg + "%" : "—"}</td></tr>`;
+  }
+  html += "</tbody></table>";
+  return html;
+}
+
+function drawGoldCompareChart(el, tickerIds, regimes) {
   const insts = filterByCategory(DATA.instruments, "gold-jewelry").filter(i => tickerIds.includes(i.id));
   const series = insts.map(i => ({
     label: i.label,
@@ -656,6 +753,14 @@ function drawGoldCompareChart(el, tickerIds) {
     series.push({ label: "China gold (proxy)", bars: GOLD_PRICE.map(g => ({ time: g.d, close: g.price })), isGold: true });
   }
   if (!series.length) { el.textContent = "No data"; return; }
+
+  el.style.position = "relative";
+  // Regime shading sits BEHIND the chart's own (transparent-background)
+  // canvas so it reads as a background tint, not an overlay on top of the
+  // lines. Inserted before createChart() so it's earlier in paint order.
+  const shadeEl = document.createElement("div");
+  shadeEl.style.cssText = "position:absolute; inset:0; z-index:0; pointer-events:none; overflow:hidden;";
+  el.appendChild(shadeEl);
 
   const chart = LightweightCharts.createChart(el, {
     layout: { background: { color: "transparent" }, textColor: "#7d8590", fontSize: 10 },
@@ -683,6 +788,24 @@ function drawGoldCompareChart(el, tickerIds) {
   }
   chart.priceScale("right").applyOptions({ mode: 1 });
   chart.timeScale().fitContent();
+
+  if (regimes && regimes.length) {
+    const paintShading = () => {
+      shadeEl.innerHTML = "";
+      const ts = chart.timeScale();
+      for (const r of regimes) {
+        const x1 = ts.timeToCoordinate(r.start);
+        const x2 = ts.timeToCoordinate(r.end);
+        if (x1 == null || x2 == null) continue;
+        const band = document.createElement("div");
+        const left = Math.min(x1, x2), width = Math.max(1, Math.abs(x2 - x1));
+        band.style.cssText = `position:absolute; top:0; bottom:0; left:${left}px; width:${width}px; background:${r.type === "rally" ? "rgba(63,185,80,.10)" : "rgba(248,81,73,.10)"};`;
+        shadeEl.appendChild(band);
+      }
+    };
+    paintShading();
+    window.addEventListener("resize", paintShading);
+  }
 }
 function round1(n) { return Math.round(n * 10) / 10; }
 
@@ -784,10 +907,17 @@ function render() {
       grid.appendChild(buildGoldCompareWrap(laopuEl, "Laopu Gold vs China Gold Price (log scale, since Laopu's 2024 IPO)",
         "Laopu's rally is large enough to flatten everything else on a shared chart, so it gets its own."));
 
+      const restTickers = ["1929", "0590", "0116", "002867"];
+      const regimes = GOLD_PRICE ? detectGoldRegimes(GOLD_PRICE, 15) : [];
+      const restInsts = filterByCategory(DATA.instruments, "gold-jewelry").filter(i => restTickers.includes(i.id));
       const restEl = document.createElement("div");
       restEl.className = "chart";
-      restEl.dataset.pendingGoldCompare = "1929,0590,0116,002867";
-      grid.appendChild(buildGoldCompareWrap(restEl, "Chow Tai Fook / Luk Fook / Chow Sang Sang / Chow Tai Seng vs China Gold Price (log scale, full history)", ""));
+      restEl.dataset.pendingGoldCompare = restTickers.join(",");
+      restEl._regimes = regimes;
+      grid.appendChild(buildGoldCompareWrap(restEl,
+        "Chow Tai Fook / Luk Fook / Chow Sang Sang / Chow Tai Seng vs China Gold Price (log scale, full history)",
+        " Shaded bands mark gold rally (green) vs decline (red) regimes, auto-detected as a ≥15% move without a bigger reversal - use the table above to spot which peer diverged from the group in each one.",
+        buildGoldRegimeTable(restInsts, regimes)));
     }
     // Group by subcategory (gold section headers), sort within each group.
     // China Internet stays flat - the tab is small enough that subsector
@@ -824,7 +954,7 @@ function render() {
       } else if (e.target.dataset.pendingGoldCompare) {
         const tickerIds = e.target.dataset.pendingGoldCompare.split(",");
         delete e.target.dataset.pendingGoldCompare;
-        drawGoldCompareChart(e.target, tickerIds);
+        drawGoldCompareChart(e.target, tickerIds, e.target._regimes);
         OBSERVER.unobserve(e.target);
       }
     }
