@@ -405,24 +405,29 @@ function prevPerfBlock(prev, label) {
 }
 function catalystRows(category) {
   const rows = [];
-  const insts = filterByCategory(DATA.instruments, category);
-  for (const inst of insts) {
-    const f = inst.fund || {};
-    if (f.next_earnings) {
-      const d = daysTo(f.next_earnings);
-      if (d != null && d >= 0 && d <= 30) {
-        const focus = inst.earn ? inst.earn.split(/\s*Sources?:/i)[0].replace(/\((https?:[^)]+)\)/g, "").trim() : "";
-        rows.push({ id: inst.id, label: inst.label, date: f.next_earnings, days: d,
-          event: "Earnings", focus, prev: inst.prev_earnings, prevLabel: "Last earnings", earn: true });
+  // Summary tab (category === null) shows macro events only - per-ticker
+  // earnings/dated-events across the whole ~80-name universe belongs on
+  // each ticker's own category tab, not cluttering the top-level overview.
+  if (category) {
+    const insts = filterByCategory(DATA.instruments, category);
+    for (const inst of insts) {
+      const f = inst.fund || {};
+      if (f.next_earnings) {
+        const d = daysTo(f.next_earnings);
+        if (d != null && d >= 0 && d <= 30) {
+          const focus = inst.earn ? inst.earn.split(/\s*Sources?:/i)[0].replace(/\((https?:[^)]+)\)/g, "").trim() : "";
+          rows.push({ id: inst.id, label: inst.label, date: f.next_earnings, days: d,
+            event: "Earnings", focus, prev: inst.prev_earnings, prevLabel: "Last earnings", earn: true });
+        }
       }
+      (inst.events || []).forEach(e => {
+        const d = daysTo(e.date);
+        if (d != null && d >= 0 && d <= 30) {
+          rows.push({ id: inst.id, label: inst.label, date: e.date, days: d,
+            event: e.event, focus: "", prev: e.prev_reaction, prevLabel: "Last time", earn: false });
+        }
+      });
     }
-    (inst.events || []).forEach(e => {
-      const d = daysTo(e.date);
-      if (d != null && d >= 0 && d <= 30) {
-        rows.push({ id: inst.id, label: inst.label, date: e.date, days: d,
-          event: e.event, focus: "", prev: e.prev_reaction, prevLabel: "Last time", earn: false });
-      }
-    });
   }
   // Key macro events (Fed/FOMC, CPI, PPI, NFP, ISM...) — they move every name.
   (DATA.macro_events || []).forEach(e => {
