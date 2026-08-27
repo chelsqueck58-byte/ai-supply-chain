@@ -192,7 +192,7 @@
 <script>
 "use strict";
 const TREND_ORDER = { up: 0, flat: 1, down: 2 };
-let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, DEEP_FUND = null, GEO_MIX = null, FX_RATES = null, OFF_BS = null, HIST_PE = null, FWD_PE = null, ROIC = null, STALE = false, OBSERVER = null;
+let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, DEEP_FUND = null, GEO_MIX = null, FX_RATES = null, OFF_BS = null, HIST_PE = null, FWD_PE = null, ROIC = null, GOLD_PRICE = null, STALE = false, OBSERVER = null;
 const REVENUE_TAB_CATEGORIES = new Set(["china-internet", "compute", "hyperscaler-cloud", "platform"]);
 // Individual tickers pulled in from a category that isn't otherwise in
 // scope (e.g. ASML from Equipment) - added one at a time on request rather
@@ -628,6 +628,63 @@ function badges(inst) {
   return `<span class="badge ${t}" title="trend: price vs 50/200DMA">${tl}</span>${cta}${staleBadge}`;
 }
 
+function buildGoldCompareWrap(chartEl) {
+  const wrap = document.createElement("div");
+  wrap.style.cssText = "margin:0 0 16px; padding:12px; border:1px solid var(--border); border-radius:6px;";
+  const title = document.createElement("div");
+  title.style.cssText = "font-size:13px; font-weight:600; margin-bottom:8px;";
+  title.textContent = "Stock Performance vs China Gold Price (normalized)";
+  chartEl.style.height = "320px";
+  const caption = document.createElement("div");
+  caption.className = "rev-src";
+  caption.style.marginTop = "6px";
+  caption.innerHTML = "Each line indexed to 100 at the earliest date common to all series. China gold price is a proxy — international spot/futures gold (COMEX GC=F) converted to RMB/gram via the daily USD/CNY rate, since no direct Shanghai Gold Exchange benchmark is available via this pipeline's data source. SGE tracks international spot closely (arbitraged through FX); normalizing to % return cancels out most of the small, fairly stable premium/discount over spot.";
+  wrap.appendChild(title);
+  wrap.appendChild(chartEl);
+  wrap.appendChild(caption);
+  return wrap;
+}
+function drawGoldCompareChart(el) {
+  const insts = filterByCategory(DATA.instruments, "gold-jewelry").filter(i => i.bars && i.bars.length);
+  const series = insts.map(i => ({ label: i.label, bars: i.bars.map(b => ({ time: b.d, close: b.c })) }));
+  if (GOLD_PRICE && GOLD_PRICE.length) {
+    series.push({ label: "China gold (proxy)", bars: GOLD_PRICE.map(g => ({ time: g.d, close: g.price })), isGold: true });
+  }
+  if (!series.length) { el.textContent = "No data"; return; }
+
+  // Earliest date common to every series - can't index-to-100 a series that
+  // doesn't have a data point yet at some other series' start date.
+  const startDate = series.reduce((max, s) => {
+    const first = s.bars[0] && s.bars[0].time;
+    return first && first > max ? first : max;
+  }, series[0].bars[0].time);
+
+  const chart = LightweightCharts.createChart(el, {
+    layout: { background: { color: "transparent" }, textColor: "#7d8590", fontSize: 10 },
+    grid: { vertLines: { color: "#1b2027" }, horzLines: { color: "#1b2027" } },
+    rightPriceScale: { borderColor: "#21262d" },
+    timeScale: { borderColor: "#21262d", timeVisible: false },
+    crosshair: { mode: 0 }, height: 320,
+  });
+  const PALETTE = ["#58a6ff", "#3fb950", "#f778ba", "#a371f7", "#ff9800"];
+  let colorIdx = 0;
+  for (const s of series) {
+    const fromStart = s.bars.filter(b => b.time >= startDate);
+    if (!fromStart.length) continue;
+    const base = fromStart[0].close;
+    if (!base) continue;
+    const color = s.isGold ? "#e3b341" : PALETTE[colorIdx++ % PALETTE.length];
+    const line = chart.addLineSeries({
+      color, lineWidth: s.isGold ? 2 : 1.5,
+      priceLineVisible: false, lastValueVisible: true,
+      title: s.label,
+    });
+    line.setData(fromStart.map(b => ({ time: b.time, value: round1(100 * b.close / base) })));
+  }
+  chart.timeScale().fitContent();
+}
+function round1(n) { return Math.round(n * 10) / 10; }
+
 function drawChart(el, inst) {
   const chart = LightweightCharts.createChart(el, {
     layout: { background: { color: "transparent" }, textColor: "#7d8590", fontSize: 10 },
@@ -719,6 +776,12 @@ function render() {
   for (const cat of CATEGORIES) {
     const grid = document.getElementById("grid-" + cat.key);
     grid.innerHTML = "";
+    if (cat.key === "gold-jewelry") {
+      const cmpEl = document.createElement("div");
+      cmpEl.className = "chart";
+      cmpEl.dataset.pendingGoldCompare = "1";
+      grid.appendChild(buildGoldCompareWrap(cmpEl));
+    }
     // Group by subcategory (gold section headers), sort within each group.
     // China Internet stays flat - the tab is small enough that subsector
     // labels (E-commerce/Gaming/Search/etc) added noise without helping.
@@ -750,6 +813,10 @@ function render() {
       } else if (e.target.dataset.pendingHist) {
         delete e.target.dataset.pendingHist;
         drawHistChart(e.target, e.target._inst);
+        OBSERVER.unobserve(e.target);
+      } else if (e.target.dataset.pendingGoldCompare) {
+        delete e.target.dataset.pendingGoldCompare;
+        drawGoldCompareChart(e.target);
         OBSERVER.unobserve(e.target);
       }
     }
@@ -1360,8 +1427,9 @@ function load() {
     fetch("./historical-pe.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./forward-pe.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./roic.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
-  ]).then(([data, moves, scmap, earnDates, revMix, deepFund, geoMix, fxRates, offBs, histPe, fwdPe, roic]) => {
-    DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates; REV_MIX = revMix; DEEP_FUND = deepFund; GEO_MIX = geoMix; FX_RATES = fxRates; OFF_BS = offBs; HIST_PE = histPe; FWD_PE = fwdPe; ROIC = roic;
+    fetch("./gold-price-cny.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => []),
+  ]).then(([data, moves, scmap, earnDates, revMix, deepFund, geoMix, fxRates, offBs, histPe, fwdPe, roic, goldPrice]) => {
+    DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates; REV_MIX = revMix; DEEP_FUND = deepFund; GEO_MIX = geoMix; FX_RATES = fxRates; OFF_BS = offBs; HIST_PE = histPe; FWD_PE = fwdPe; ROIC = roic; GOLD_PRICE = goldPrice;
     STALE = checkStale(DATA);
     const ideas = DATA.instruments.filter(i => i.idea && i.idea.kind === "enter").length;
     document.getElementById("meta").textContent =
