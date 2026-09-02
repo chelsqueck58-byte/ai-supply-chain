@@ -7,9 +7,18 @@
       "role": "direct",
       "amount": "$6.3B",
       "date": "2025-09-09",
-      "description": "NVIDIA committed to buy CoreWeave's unsold cloud capacity through April 2032 - a \"buyer of last resort\" guarantee, not a loan. Sits on top of NVIDIA's separate ~$2B CoreWeave equity stake; CoreWeave itself raised $7.5B of GPU-collateralized debt to buy NVIDIA chips.",
-      "status": "confirmed",
-      "source": "CNBC"
+      "description": "NVIDIA committed to buy CoreWeave's unsold cloud capacity through April 2032 - a \"buyer of last resort\" guarantee, not a loan. Sits on top of NVIDIA's separate ~$2B CoreWeave equity stake; CoreWeave itself raised $7.5B of GPU-collateralized debt to buy NVIDIA chips. STILL ACTIVE as of Q3 2026 (CoreWeave's own CEO cited it again on that quarter's earnings call) - distinct and unaffected by the broader revenue-sharing program below being paused.",
+      "status": "confirmed - still active",
+      "source": "CNBC / CoreWeave Q3 2026 earnings call"
+    },
+    {
+      "name": "\"AI Compute Partnership\" revenue-sharing program",
+      "role": "direct - credit support + revenue share",
+      "amount": "~210,000 GPUs (Sharon AI + Firmus, initial cohort)",
+      "date": "2026-07-01",
+      "description": "A broader, formalized version of the CoreWeave-style backstop: NVIDIA provides credit support/backstop guarantees to smaller AI clouds building out capacity, in exchange for 50% of cloud revenue above a base hourly rate threshold - on top of the normal chip sale. First named partners: Sharon AI (~40K GB300 GPUs, Australia) and Firmus Technologies (~170K GPUs, Indonesia). PAUSED after ~2 months (late Aug 2026): NVIDIA employees flagged antitrust exposure internally, and prospective partners objected to being required to route customer approval through NVIDIA. NVIDIA has left the door open to restructure or reabsorb it, and a spokesperson maintains the underlying July business model \"is still in place and continues to evolve\" even as new deal-signing is on hold - a genuinely unsettled, not fully-resolved, status.",
+      "status": "paused (as of late Aug 2026)",
+      "source": "NVIDIA Blog (Jul 1 2026) / WSJ, Benzinga, The Next Web (pause reporting)"
     },
     {
       "name": "OpenAI Ohio data center financing",
