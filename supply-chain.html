@@ -1337,7 +1337,7 @@ function renderCircularFinancing() {
         <td style="max-width:150px; white-space:normal;"><b>${esc(r.counterparty)}</b>${nvdaBadge}</td>
         <td style="max-width:280px; white-space:normal;">${esc(r.equity || "—")}</td>
         <td style="max-width:280px; white-space:normal;">${esc(r.compute_commitment || "—")}</td>
-        <td style="max-width:340px; white-space:normal;"><span class="rev-qual">${esc(r.why_circular || "")}</span></td>
+        <td style="max-width:380px; min-width:260px; white-space:normal; font-size:11px; line-height:1.4; color:var(--text);">${esc(r.why_circular || "")}</td>
         <td class="pe-nm" style="max-width:140px; white-space:normal;">${esc(r.date || "—")}<br>${esc(r.source || "")}</td>
       </tr>`;
     }
