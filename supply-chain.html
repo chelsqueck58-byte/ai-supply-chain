@@ -192,7 +192,7 @@
 <script>
 "use strict";
 const TREND_ORDER = { up: 0, flat: 1, down: 2 };
-let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, DEEP_FUND = null, GEO_MIX = null, FX_RATES = null, OFF_BS = null, HIST_PE = null, FWD_PE = null, ROIC = null, STALE = false, OBSERVER = null;
+let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, DEEP_FUND = null, GEO_MIX = null, FX_RATES = null, OFF_BS = null, HIST_PE = null, FWD_PE = null, ROIC = null, NVDA_PARTNERSHIPS = null, STALE = false, OBSERVER = null;
 const REVENUE_TAB_CATEGORIES = new Set(["china-internet", "compute", "hyperscaler-cloud", "platform"]);
 // Individual tickers pulled in from a category that isn't otherwise in
 // scope (e.g. ASML from Equipment) - added one at a time on request rather
@@ -1089,6 +1089,104 @@ function computeTtmEps(hist) {
   return last4.reduce((s, q) => s + q.actual, 0);
 }
 
+const NVDA_ECO_CATEGORY_COLORS = {
+  "Chip/Hardware": "#58a6ff",
+  "Cloud/Hyperscaler": "#3fb950",
+  "AI Model/Software": "#f778ba",
+  "Enterprise/Vertical": "#a371f7",
+  "Sovereign AI/Government": "#ff9800",
+  "Telecom/Networking": "#e3b341",
+};
+function nvdaEcoShortLabel(partner) {
+  const first = partner.split("/")[0].trim();
+  const extra = partner.split("/").length - 1;
+  return extra > 0 ? `${first} +${extra}` : first;
+}
+function renderNvdaEcosystem() {
+  const wrap = document.getElementById("nvda-eco-wrap");
+  if (wrap.dataset.rendered) return;
+  wrap.dataset.rendered = "1";
+  const data = NVDA_PARTNERSHIPS;
+  const partnerships = (data && data.partnerships) || [];
+  if (!partnerships.length) {
+    wrap.innerHTML = `<div class="rev-none">No partnership data available.</div>`;
+    return;
+  }
+  const byCat = new Map();
+  for (const p of partnerships) {
+    if (!byCat.has(p.category)) byCat.set(p.category, []);
+    byCat.get(p.category).push(p);
+  }
+  const categories = Array.from(byCat.keys());
+  const total = partnerships.length;
+
+  // Hub-and-spoke: NVDA at center, one hub node per category positioned
+  // around it, each category's partners spread in an arc beyond its hub.
+  // Sector width per category is proportional to its partner count so a
+  // 6-partner category (Enterprise/Vertical) doesn't visually cramp against
+  // a 1-partner one (Telecom/Networking).
+  const cx = 500, cy = 420, catR = 165, partnerR = 330;
+  let angleCursor = -90; // start at top, go clockwise
+  const nodes = []; // {x,y,label,color,type,title}
+  const lines = []; // {x1,y1,x2,y2,color}
+  for (const cat of categories) {
+    const members = byCat.get(cat);
+    const sectorWidth = 360 * (members.length / total);
+    const catAngle = angleCursor + sectorWidth / 2;
+    const color = NVDA_ECO_CATEGORY_COLORS[cat] || "#7d8590";
+    const catRad = (catAngle * Math.PI) / 180;
+    const catX = cx + catR * Math.cos(catRad), catY = cy + catR * Math.sin(catRad);
+    nodes.push({ x: catX, y: catY, label: cat, color, type: "cat" });
+    lines.push({ x1: cx, y1: cy, x2: catX, y2: catY, color });
+
+    const innerSpan = Math.min(sectorWidth * 0.85, members.length > 1 ? sectorWidth * 0.85 : 0);
+    members.forEach((p, i) => {
+      const t = members.length > 1 ? (i / (members.length - 1)) - 0.5 : 0;
+      const pAngle = catAngle + t * innerSpan;
+      const pRad = (pAngle * Math.PI) / 180;
+      const px = cx + partnerR * Math.cos(pRad), py = cy + partnerR * Math.sin(pRad);
+      nodes.push({ x: px, y: py, label: nvdaEcoShortLabel(p.partner), color, type: "partner", unconfirmed: p.status === "unconfirmed", title: p.partner });
+      lines.push({ x1: catX, y1: catY, x2: px, y2: py, color });
+    });
+    angleCursor += sectorWidth;
+  }
+
+  const svgLines = lines.map(l => `<line x1="${l.x1.toFixed(1)}" y1="${l.y1.toFixed(1)}" x2="${l.x2.toFixed(1)}" y2="${l.y2.toFixed(1)}" stroke="${l.color}" stroke-opacity="0.35" stroke-width="1.5"/>`).join("");
+  const svgNodes = nodes.map(n => {
+    const r = n.type === "cat" ? 8 : 5;
+    const dy = n.y > cy ? 16 : -10;
+    const dash = n.unconfirmed ? ' stroke-dasharray="2,2"' : "";
+    return `<g>
+      <circle cx="${n.x.toFixed(1)}" cy="${n.y.toFixed(1)}" r="${r}" fill="${n.color}"${dash} stroke="#0d1117" stroke-width="1.5">
+        <title>${esc(n.title || n.label)}</title>
+      </circle>
+      <text x="${n.x.toFixed(1)}" y="${(n.y + dy).toFixed(1)}" text-anchor="middle" font-size="${n.type === "cat" ? 11 : 9.5}" font-weight="${n.type === "cat" ? 600 : 400}" fill="${n.type === "cat" ? n.color : "#c9d1d9"}">${esc(n.label)}${n.unconfirmed ? " *" : ""}</text>
+    </g>`;
+  }).join("");
+  const centerNode = `<circle cx="${cx}" cy="${cy}" r="26" fill="#161b22" stroke="#76b900" stroke-width="2.5"/>
+    <text x="${cx}" y="${cy + 5}" text-anchor="middle" font-size="14" font-weight="700" fill="#76b900">NVDA</text>`;
+
+  const mapHtml = `<svg viewBox="0 0 1000 800" style="width:100%; height:auto; max-height:640px;">
+    ${svgLines}${svgNodes}${centerNode}
+  </svg>`;
+
+  const rows = partnerships.slice().sort((a, b) => (b.date || "").localeCompare(a.date || "")).map(p => `<tr>
+    <td><b>${esc(p.partner)}</b></td>
+    <td><span class="rev-qual" style="background:${NVDA_ECO_CATEGORY_COLORS[p.category] || "#7d8590"}22; color:${NVDA_ECO_CATEGORY_COLORS[p.category] || "#7d8590"}; padding:2px 6px; border-radius:4px; font-size:10px;">${esc(p.category)}</span></td>
+    <td>${esc(p.date || "—")}</td>
+    <td>${p.status === "unconfirmed" ? '<span class="pe-nm" title="Reported/rumored, not yet signed">⚠ unconfirmed</span>' : '<span class="pct u">confirmed</span>'}</td>
+    <td style="max-width:420px">${esc(p.description || "")}</td>
+    <td class="pe-nm">${esc(p.source || "")}</td>
+  </tr>`).join("");
+
+  wrap.innerHTML = `<div class="hist-head">NVIDIA's ${new Date().getFullYear()} Partnership Ecosystem</div>
+    <div class="rev-src" style="margin-bottom:10px">Curated, not exhaustive - the most significant, widely-covered partnerships NVIDIA announced this year, grouped by category. * / dashed node = reported but unconfirmed (not yet signed). ${data.fetched ? `Researched as of ${esc(data.fetched)}.` : ""}</div>
+    ${mapHtml}
+    <table class="cmp-table" style="margin-top:18px"><thead><tr>
+      <th>Partner</th><th>Category</th><th>Date</th><th>Status</th><th>What it is</th><th>Source</th>
+    </tr></thead><tbody>${rows}</tbody></table>`;
+}
+
 function renderPeHistory() {
   const wrap = document.getElementById("pe-wrap");
   if (wrap.dataset.rendered) return;
@@ -1278,6 +1376,8 @@ window.showTab = function (tabKey) {
   document.getElementById("compare-wrap").style.display = tabKey === "compare" ? "" : "none";
   document.getElementById("tab-pe").classList.toggle("active", tabKey === "pe");
   document.getElementById("pe-wrap").style.display = tabKey === "pe" ? "" : "none";
+  document.getElementById("tab-nvda-eco").classList.toggle("active", tabKey === "nvda-eco");
+  document.getElementById("nvda-eco-wrap").style.display = tabKey === "nvda-eco" ? "" : "none";
   for (const c of CATEGORIES) {
     document.getElementById("tab-" + c.key).classList.toggle("active", tabKey === c.key);
     const show = tabKey === c.key;
@@ -1288,7 +1388,7 @@ window.showTab = function (tabKey) {
   // sections. Those divs are fixed top-level elements shared across every
   // tab, so without this they'd keep showing stale content from whichever
   // tab was active before switching here.
-  const showIdeas = tabKey !== "revenue" && tabKey !== "compare" && tabKey !== "pe";
+  const showIdeas = tabKey !== "revenue" && tabKey !== "compare" && tabKey !== "pe" && tabKey !== "nvda-eco";
   document.getElementById("ideas").style.display = showIdeas ? "" : "none";
   document.getElementById("catalysts30").style.display = showIdeas ? "" : "none";
   document.getElementById("pastCatalysts").style.display = showIdeas ? "" : "none";
@@ -1302,6 +1402,10 @@ window.showTab = function (tabKey) {
   }
   if (tabKey === "pe") {
     if (DATA) renderPeHistory();
+    return;
+  }
+  if (tabKey === "nvda-eco") {
+    if (DATA) renderNvdaEcosystem();
     return;
   }
   const category = tabKey === "summary" ? null : tabKey;
@@ -1346,6 +1450,11 @@ function buildShell() {
   const peWrap = document.createElement("div");
   peWrap.id = "pe-wrap"; peWrap.className = "cmp-wrap"; peWrap.style.display = "none";
   grids.appendChild(peWrap);
+
+  mk("nvda-eco", "NVDA Ecosystem");
+  const nvdaEcoWrap = document.createElement("div");
+  nvdaEcoWrap.id = "nvda-eco-wrap"; nvdaEcoWrap.className = "cmp-wrap"; nvdaEcoWrap.style.display = "none";
+  grids.appendChild(nvdaEcoWrap);
 }
 
 function load() {
@@ -1364,8 +1473,9 @@ function load() {
     fetch("./historical-pe.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./forward-pe.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./roic.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
-  ]).then(([data, moves, scmap, earnDates, revMix, deepFund, geoMix, fxRates, offBs, histPe, fwdPe, roic]) => {
-    DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates; REV_MIX = revMix; DEEP_FUND = deepFund; GEO_MIX = geoMix; FX_RATES = fxRates; OFF_BS = offBs; HIST_PE = histPe; FWD_PE = fwdPe; ROIC = roic;
+    fetch("./nvda-partnerships.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
+  ]).then(([data, moves, scmap, earnDates, revMix, deepFund, geoMix, fxRates, offBs, histPe, fwdPe, roic, nvdaPartnerships]) => {
+    DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates; REV_MIX = revMix; DEEP_FUND = deepFund; GEO_MIX = geoMix; FX_RATES = fxRates; OFF_BS = offBs; HIST_PE = histPe; FWD_PE = fwdPe; ROIC = roic; NVDA_PARTNERSHIPS = nvdaPartnerships;
     STALE = checkStale(DATA);
     const ideas = DATA.instruments.filter(i => i.idea && i.idea.kind === "enter").length;
     document.getElementById("meta").textContent =
