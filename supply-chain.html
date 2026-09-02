@@ -193,7 +193,7 @@
 <script>
 "use strict";
 const TREND_ORDER = { up: 0, flat: 1, down: 2 };
-let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, DEEP_FUND = null, GEO_MIX = null, FX_RATES = null, OFF_BS = null, HIST_PE = null, FWD_PE = null, ROIC = null, NVDA_PARTNERSHIPS = null, NVDA_DEBT = null, STALE = false, OBSERVER = null;
+let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, DEEP_FUND = null, GEO_MIX = null, FX_RATES = null, OFF_BS = null, HIST_PE = null, FWD_PE = null, ROIC = null, NVDA_PARTNERSHIPS = null, NVDA_DEBT = null, CIRC_FIN = null, STALE = false, OBSERVER = null;
 const REVENUE_TAB_CATEGORIES = new Set(["china-internet", "compute", "hyperscaler-cloud", "platform"]);
 // Individual tickers pulled in from a category that isn't otherwise in
 // scope (e.g. ASML from Equipment) - added one at a time on request rather
@@ -1237,6 +1237,45 @@ function renderNvdaEcosystem() {
     ${debtHtml}`;
 }
 
+const CIRC_FIN_LAB_COLORS = { "OpenAI": "#00a67e", "Anthropic": "#d97757" };
+
+function renderCircularFinancing() {
+  const wrap = document.getElementById("circ-fin-wrap");
+  if (wrap.dataset.rendered) return;
+  wrap.dataset.rendered = "1";
+  const data = CIRC_FIN;
+  const rels = (data && data.relationships) || [];
+  if (!rels.length) {
+    wrap.innerHTML = `<div class="rev-none">No circular financing data available.</div>`;
+    return;
+  }
+  const byLab = new Map();
+  for (const r of rels) {
+    if (!byLab.has(r.lab)) byLab.set(r.lab, []);
+    byLab.get(r.lab).push(r);
+  }
+  let rows = "";
+  for (const [lab, members] of byLab) {
+    const color = CIRC_FIN_LAB_COLORS[lab] || "#7d8590";
+    rows += `<tr><td colspan="5" style="padding-top:12px;"><div style="font-weight:700; color:${color}; font-size:12px;">${esc(lab)}</div></td></tr>`;
+    const sorted = members.slice().sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+    for (const r of sorted) {
+      rows += `<tr>
+        <td style="max-width:150px; white-space:normal;"><b>${esc(r.counterparty)}</b></td>
+        <td style="max-width:280px; white-space:normal;">${esc(r.equity || "—")}</td>
+        <td style="max-width:280px; white-space:normal;">${esc(r.compute_commitment || "—")}</td>
+        <td style="max-width:340px; white-space:normal;"><span class="rev-qual">${esc(r.why_circular || "")}</span></td>
+        <td class="pe-nm" style="max-width:140px; white-space:normal;">${esc(r.date || "—")}<br>${esc(r.source || "")}</td>
+      </tr>`;
+    }
+  }
+  wrap.innerHTML = `<div class="hist-head">AI Industry Circular Financing</div>
+    <div class="rev-src" style="margin-bottom:10px">${esc(data.note || "")} ${data.fetched ? `Researched as of ${esc(data.fetched)}.` : ""}</div>
+    <table class="cmp-table"><thead><tr>
+      <th>Counterparty</th><th>Equity Investment</th><th>Compute/Spend Commitment</th><th>Why It's Circular</th><th>Date / Source</th>
+    </tr></thead><tbody>${rows}</tbody></table>`;
+}
+
 function renderPeHistory() {
   const wrap = document.getElementById("pe-wrap");
   if (wrap.dataset.rendered) return;
@@ -1428,6 +1467,8 @@ window.showTab = function (tabKey) {
   document.getElementById("pe-wrap").style.display = tabKey === "pe" ? "" : "none";
   document.getElementById("tab-nvda-eco").classList.toggle("active", tabKey === "nvda-eco");
   document.getElementById("nvda-eco-wrap").style.display = tabKey === "nvda-eco" ? "" : "none";
+  document.getElementById("tab-circ-fin").classList.toggle("active", tabKey === "circ-fin");
+  document.getElementById("circ-fin-wrap").style.display = tabKey === "circ-fin" ? "" : "none";
   for (const c of CATEGORIES) {
     document.getElementById("tab-" + c.key).classList.toggle("active", tabKey === c.key);
     const show = tabKey === c.key;
@@ -1438,7 +1479,7 @@ window.showTab = function (tabKey) {
   // sections. Those divs are fixed top-level elements shared across every
   // tab, so without this they'd keep showing stale content from whichever
   // tab was active before switching here.
-  const showIdeas = tabKey !== "revenue" && tabKey !== "compare" && tabKey !== "pe" && tabKey !== "nvda-eco";
+  const showIdeas = tabKey !== "revenue" && tabKey !== "compare" && tabKey !== "pe" && tabKey !== "nvda-eco" && tabKey !== "circ-fin";
   document.getElementById("ideas").style.display = showIdeas ? "" : "none";
   document.getElementById("catalysts30").style.display = showIdeas ? "" : "none";
   document.getElementById("pastCatalysts").style.display = showIdeas ? "" : "none";
@@ -1456,6 +1497,10 @@ window.showTab = function (tabKey) {
   }
   if (tabKey === "nvda-eco") {
     if (DATA) renderNvdaEcosystem();
+    return;
+  }
+  if (tabKey === "circ-fin") {
+    if (DATA) renderCircularFinancing();
     return;
   }
   const category = tabKey === "summary" ? null : tabKey;
@@ -1505,6 +1550,11 @@ function buildShell() {
   const nvdaEcoWrap = document.createElement("div");
   nvdaEcoWrap.id = "nvda-eco-wrap"; nvdaEcoWrap.className = "cmp-wrap"; nvdaEcoWrap.style.display = "none";
   grids.appendChild(nvdaEcoWrap);
+
+  mk("circ-fin", "Circular Financing");
+  const circFinWrap = document.createElement("div");
+  circFinWrap.id = "circ-fin-wrap"; circFinWrap.className = "cmp-wrap"; circFinWrap.style.display = "none";
+  grids.appendChild(circFinWrap);
 }
 
 function load() {
@@ -1525,8 +1575,9 @@ function load() {
     fetch("./roic.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./nvda-partnerships.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./nvda-debt-financing.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
-  ]).then(([data, moves, scmap, earnDates, revMix, deepFund, geoMix, fxRates, offBs, histPe, fwdPe, roic, nvdaPartnerships, nvdaDebt]) => {
-    DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates; REV_MIX = revMix; DEEP_FUND = deepFund; GEO_MIX = geoMix; FX_RATES = fxRates; OFF_BS = offBs; HIST_PE = histPe; FWD_PE = fwdPe; ROIC = roic; NVDA_PARTNERSHIPS = nvdaPartnerships; NVDA_DEBT = nvdaDebt;
+    fetch("./circular-financing.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
+  ]).then(([data, moves, scmap, earnDates, revMix, deepFund, geoMix, fxRates, offBs, histPe, fwdPe, roic, nvdaPartnerships, nvdaDebt, circFin]) => {
+    DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates; REV_MIX = revMix; DEEP_FUND = deepFund; GEO_MIX = geoMix; FX_RATES = fxRates; OFF_BS = offBs; HIST_PE = histPe; FWD_PE = fwdPe; ROIC = roic; NVDA_PARTNERSHIPS = nvdaPartnerships; NVDA_DEBT = nvdaDebt; CIRC_FIN = circFin;
     STALE = checkStale(DATA);
     const ideas = DATA.instruments.filter(i => i.idea && i.idea.kind === "enter").length;
     document.getElementById("meta").textContent =

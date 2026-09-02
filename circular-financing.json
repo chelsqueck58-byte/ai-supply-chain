@@ -1,0 +1,86 @@
+{
+  "fetched": "2026-09-02",
+  "note": "The web of interlocking equity stakes + compute-spend commitments across the AI industry: a chip/cloud provider invests in an AI lab, and the AI lab commits to spend a large multiple of that investment back with the same provider (or an affiliate) for compute. Curated, not exhaustive - the largest, most-cited relationships for OpenAI and Anthropic specifically. NVIDIA's own circular deals (OpenAI, Anthropic/Lambda/Hut8, CoreWeave) are summarized here too but detailed fully on the NVDA Ecosystem tab.",
+  "relationships": [
+    {
+      "lab": "OpenAI",
+      "counterparty": "Microsoft",
+      "equity": "Microsoft has invested >$13B in OpenAI since 2019 ($11.9B funded as of Jun 30 2026), holding ~27% of OpenAI on an as-converted basis after the Oct 2025 recapitalization.",
+      "compute_commitment": "OpenAI committed to an incremental $250B of Azure spend as part of the Oct 2025 restructuring, on top of its existing Azure commitment. Microsoft booked $24.1B of FY2026 revenue from OpenAI (incl. revenue-share payments) and carried $6B of OpenAI receivables as of Jun 30 2026.",
+      "date": "2025-10-28",
+      "why_circular": "Microsoft's equity stake rises in value as OpenAI grows, funded substantially by OpenAI's own committed Azure spend - which itself shows up as Microsoft's cloud revenue and (per NextPlatform's Jan 2026 analysis) makes Microsoft arguably MORE dependent on OpenAI as a customer than the reverse.",
+      "status": "confirmed",
+      "source": "Microsoft Blog / CNBC / NextPlatform"
+    },
+    {
+      "lab": "OpenAI",
+      "counterparty": "Amazon / AWS",
+      "equity": "No direct Amazon equity stake in OpenAI disclosed (unlike Anthropic below) - this is a pure compute-supply relationship, not an equity loop.",
+      "compute_commitment": "Original $38B multi-year AWS deal (Nov 2025) expanded by a further $100B over 8 years (~Mar 2026), bringing OpenAI's total AWS commitment to ~$138B. Commits OpenAI to ~2GW of Trainium capacity - Trainium3 now, Trainium4 from 2027 - to support Stateful Runtime, Frontier and other workloads.",
+      "date": "2026-03-16",
+      "why_circular": "Not equity-circular, but capacity-circular: OpenAI is simultaneously NVIDIA's largest disclosed compute customer AND now a ~2GW anchor customer for Amazon's competing in-house Trainium silicon - diversifying away from NVIDIA dependency while Amazon uses the same OpenAI-scale commitment to justify Trainium capex, mirroring the Anthropic-AWS structure below without the equity component.",
+      "status": "confirmed",
+      "source": "DataCenterDynamics / Constellation Research / CNBC"
+    },
+    {
+      "lab": "OpenAI",
+      "counterparty": "Oracle (Stargate)",
+      "equity": "No direct Oracle equity stake in OpenAI - Oracle's exposure is entirely as Stargate's infrastructure builder/lessor.",
+      "compute_commitment": "$300B, 5-year cloud contract for 4.5GW of additional Stargate data center capacity, starting 2027 - the largest single AI infrastructure contract disclosed to date. Sits within the broader OpenAI/Oracle/SoftBank Stargate JV targeting ~10GW and $400B+ of investment over 3 years (Abilene TX flagship plus new Michigan/Wisconsin/Wyoming/Pennsylvania sites).",
+      "date": "2026-01-01",
+      "why_circular": "OpenAI has committed spend (~$300B+) that dwarfs its own current revenue base, betting future growth will cover a contract signed years before the capacity is even built - the same structural pattern critics flag with NVIDIA's vendor-financing deals, just with Oracle as the counterparty instead of a chip maker.",
+      "status": "confirmed",
+      "source": "Data Center Frontier / OpenAI Newsroom"
+    },
+    {
+      "lab": "OpenAI",
+      "counterparty": "SoftBank",
+      "equity": "SoftBank completed a $40-41B investment in OpenAI (finalized Dec 2025 with a final ~$22B tranche), taking an ~11% stake and valuing OpenAI at ~$300B post-money (a later Oct 2025 secondary sale valued it nearer $500B).",
+      "compute_commitment": "SoftBank is co-funding Stargate alongside OpenAI and Oracle (targeting up to $500B of AI data center investment) - i.e. a large share of SoftBank's OpenAI investment functions as capital for infrastructure OpenAI itself will lease and consume.",
+      "date": "2025-12-30",
+      "why_circular": "SoftBank is reported (per Benzinga, Jun 2026) to be using its own OpenAI shares as loan collateral to fund further Stargate buildout - equity in OpenAI is being leveraged to finance the very data centers OpenAI will rent, raising lender concern about a self-referential capital structure.",
+      "status": "confirmed",
+      "source": "CNBC / Benzinga"
+    },
+    {
+      "lab": "OpenAI",
+      "counterparty": "NVIDIA",
+      "equity": "NVIDIA finalized a $30B equity stake in OpenAI's $110B Feb 2026 funding round - see NVDA Ecosystem tab for full detail.",
+      "compute_commitment": "Original framework: up to $100B tied to 10GW of NVIDIA systems (Vera Rubin generation), disclosed 2025 and scaled down in the 2026 round.",
+      "date": "2026-02-27",
+      "why_circular": "The clearest chip-maker version of this pattern: NVIDIA invests in its own largest GPU customer, whose committed future GPU purchases are what the investment is implicitly betting on. See NVDA Ecosystem tab for the full partnerships and debt-financing detail.",
+      "status": "confirmed",
+      "source": "Barchart (see NVDA Ecosystem tab)"
+    },
+    {
+      "lab": "Anthropic",
+      "counterparty": "Amazon / AWS",
+      "equity": "Amazon has invested $5B immediately plus up to $20B more tied to commercial milestones (up to $25B total, announced Apr 20 2026) - on top of Amazon's earlier ~$8B invested in 2023-2024, making Amazon one of Anthropic's largest backers.",
+      "compute_commitment": "Anthropic committed to spend more than $100B on AWS technologies over 10 years, securing up to 5GW of Trainium and Graviton capacity (spanning Trainium2/3/4 and future generations, plus tens of millions of Graviton CPU cores). Trainium2 capacity began landing H1 2026, with ~1GW of Trainium2/3 following later in the year. Anthropic also makes Claude available on AWS Bedrock.",
+      "date": "2026-04-20",
+      "why_circular": "The largest publicly disclosed AI training contract steered toward non-NVIDIA silicon: Amazon's equity check funds Anthropic, whose committed spend then anchors demand for Amazon's own competing chip (Trainium) rather than NVIDIA's - a chip-maker-vs-chip-maker version of the same circularity pattern, not just cloud-vs-lab.",
+      "status": "confirmed",
+      "source": "Anthropic Newsroom / DataCenterDynamics / AboutAmazon"
+    },
+    {
+      "lab": "Anthropic",
+      "counterparty": "Google",
+      "equity": "Google invested ~$2B in 2023 and another ~$1B in 2025; an Apr 24 2026 deal lifted Anthropic's post-money valuation to $350B as part of locking in additional TPU capacity.",
+      "compute_commitment": "Oct 2025: access to up to 1 million Google TPUs and 1GW+ of capacity coming online in 2026, a deal worth 'tens of billions of dollars' - Anthropic's largest TPU commitment. Apr 2026: expanded to 5GW of dedicated TPU capacity. Six months later, expanded again with Broadcom joining for multiple additional gigawatts starting 2027.",
+      "date": "2025-10-23",
+      "why_circular": "Same structure as the AWS relationship, mirrored with Google's TPU silicon: Google's equity stake in Anthropic sits alongside a compute contract worth many multiples of that equity, steering one of the largest AI labs onto Google's own custom chip instead of (or alongside) NVIDIA GPUs.",
+      "status": "confirmed",
+      "source": "CNBC / DataCenterDynamics / Anthropic Newsroom"
+    },
+    {
+      "lab": "Anthropic",
+      "counterparty": "NVIDIA / Lambda / Hut 8",
+      "equity": "NVIDIA holds a $10B equity stake in Anthropic (Series G, alongside Microsoft's $5B) - see NVDA Ecosystem tab.",
+      "compute_commitment": "Anthropic signed a separate $35B compute deal with Lambda (an NVIDIA-backed cloud provider); NVIDIA itself holds the lease on the Nueces County, TX data center (built by Hut 8) supplying that capacity - full detail on the NVDA Ecosystem tab's debt-financing table.",
+      "date": "2026-08-31",
+      "why_circular": "The single most-cited example of AI-industry circularity: an NVIDIA-backed AI lab renting from an NVIDIA-backed cloud provider, inside an NVIDIA-leased building, full of NVIDIA chips. See NVDA Ecosystem tab for full detail and the CFO/analyst commentary on this specific deal.",
+      "status": "confirmed",
+      "source": "Bloomberg / WSJ (see NVDA Ecosystem tab)"
+    }
+  ]
+}
