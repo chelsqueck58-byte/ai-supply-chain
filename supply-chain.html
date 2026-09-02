@@ -1237,7 +1237,7 @@ function renderNvdaEcosystem() {
     ${debtHtml}`;
 }
 
-const CIRC_FIN_LAB_COLORS = { "OpenAI": "#00a67e", "Anthropic": "#d97757" };
+const CIRC_FIN_LAB_COLORS = { "OpenAI": "#00a67e", "Anthropic": "#d97757", "CoreWeave": "#58a6ff", "xAI / SpaceX": "#a371f7" };
 
 function renderCircularFinancing() {
   const wrap = document.getElementById("circ-fin-wrap");
@@ -1260,8 +1260,9 @@ function renderCircularFinancing() {
     rows += `<tr><td colspan="5" style="padding-top:12px;"><div style="font-weight:700; color:${color}; font-size:12px;">${esc(lab)}</div></td></tr>`;
     const sorted = members.slice().sort((a, b) => (b.date || "").localeCompare(a.date || ""));
     for (const r of sorted) {
+      const nvdaBadge = r.nvda ? ` <span class="pe-nm" style="color:#76b900" title="Involves NVIDIA">◆ NVDA</span>` : "";
       rows += `<tr>
-        <td style="max-width:150px; white-space:normal;"><b>${esc(r.counterparty)}</b></td>
+        <td style="max-width:150px; white-space:normal;"><b>${esc(r.counterparty)}</b>${nvdaBadge}</td>
         <td style="max-width:280px; white-space:normal;">${esc(r.equity || "—")}</td>
         <td style="max-width:280px; white-space:normal;">${esc(r.compute_commitment || "—")}</td>
         <td style="max-width:340px; white-space:normal;"><span class="rev-qual">${esc(r.why_circular || "")}</span></td>
