@@ -869,11 +869,14 @@ function _renderRevenueMixImpl(wrap) {
       if (!rev || !rev.segments || !rev.segments.length) {
         html += `<div class="rev-none">No segment breakdown available${rev && rev.fiscal_period === null && rev.source === null ? " (too newly listed / not yet filed)" : " yet"}</div>`;
       } else {
-        html += `<div class="rev-period">${esc(rev.fiscal_period || "")}</div>`;
+        const ccySym = CCY_SYMBOL[rev.currency] || (rev.currency ? rev.currency + " " : "");
+        const totalStr = typeof rev.total_revenue_m === "number" ? fmtMoney(rev.total_revenue_m * 1e6, ccySym) : null;
+        html += `<div class="rev-period">${esc(rev.fiscal_period || "")}${totalStr ? ` · Total revenue: ${esc(totalStr)}` : ""}${rev.currency ? ` <span class="pe-nm">(${esc(rev.currency)})</span>` : ""}</div>`;
         const segs = [...rev.segments].sort((a, b) => (b.pct || 0) - (a.pct || 0));
         html += `<table class="rev-mini-table"><tbody>`;
         for (const s of segs) {
           const pct = typeof s.pct === "number" ? s.pct : 0;
+          const revStr = typeof s.revenue_m === "number" ? fmtMoney(s.revenue_m * 1e6, ccySym) : null;
           const margin = findMargin(df && df.segment_margins, s.name);
           let marginCell = `<span class="cmp-na">—</span>`;
           if (margin && typeof margin.margin_pct === "number") {
@@ -881,7 +884,7 @@ function _renderRevenueMixImpl(wrap) {
           } else if (margin && margin.note) {
             marginCell = `<span class="rev-qual" title="${esc(margin.note)}">qual.</span>`;
           }
-          html += `<tr><td class="rev-mini-name">${esc(s.name)}</td><td class="rev-mini-num">${pct.toFixed(1)}%</td><td class="rev-mini-num">${marginCell}</td></tr>`;
+          html += `<tr><td class="rev-mini-name">${esc(s.name)}</td><td class="rev-mini-num">${revStr ? esc(revStr) : '<span class="cmp-na">—</span>'}</td><td class="rev-mini-num">${pct.toFixed(1)}%</td><td class="rev-mini-num">${marginCell}</td></tr>`;
         }
         html += `</tbody></table>`;
         if (df && df.filing_check_note && (!df.segment_margins || !df.segment_margins.length)) {
@@ -905,7 +908,7 @@ function _renderRevenueMixImpl(wrap) {
   wrap.innerHTML = html || `<div class="rev-none" style="padding:16px">No data</div>`;
 }
 
-const CCY_SYMBOL = { USD: "$", HKD: "HK$", CNY: "¥", KRW: "₩", SGD: "S$" };
+const CCY_SYMBOL = { USD: "$", HKD: "HK$", CNY: "¥", RMB: "¥", KRW: "₩", SGD: "S$", EUR: "€", TWD: "NT$" };
 function fmtMoney(n, symbol) {
   if (n === null || n === undefined) return null;
   const abs = Math.abs(n);
@@ -1090,7 +1093,7 @@ function computeTtmEps(hist) {
 }
 
 const NVDA_ECO_CATEGORY_COLORS = {
-  "Chip/Hardware": "#58a6ff",
+  "Strategic Investment (Kingmaker)": "#f85149",
   "Cloud/Hyperscaler": "#3fb950",
   "AI Model/Software": "#f778ba",
   "Enterprise/Vertical": "#a371f7",
@@ -1171,16 +1174,16 @@ function renderNvdaEcosystem() {
   </svg>`;
 
   const rows = partnerships.slice().sort((a, b) => (b.date || "").localeCompare(a.date || "")).map(p => `<tr>
-    <td><b>${esc(p.partner)}</b></td>
-    <td><span class="rev-qual" style="background:${NVDA_ECO_CATEGORY_COLORS[p.category] || "#7d8590"}22; color:${NVDA_ECO_CATEGORY_COLORS[p.category] || "#7d8590"}; padding:2px 6px; border-radius:4px; font-size:10px;">${esc(p.category)}</span></td>
+    <td style="max-width:150px; white-space:normal;"><b>${esc(p.partner)}</b></td>
+    <td style="white-space:normal;"><span class="rev-qual" style="background:${NVDA_ECO_CATEGORY_COLORS[p.category] || "#7d8590"}22; color:${NVDA_ECO_CATEGORY_COLORS[p.category] || "#7d8590"}; padding:2px 6px; border-radius:4px; font-size:10px; white-space:nowrap;">${esc(p.category)}</span></td>
     <td>${esc(p.date || "—")}</td>
-    <td>${p.status === "unconfirmed" ? '<span class="pe-nm" title="Reported/rumored, not yet signed">⚠ unconfirmed</span>' : '<span class="pct u">confirmed</span>'}</td>
-    <td style="max-width:420px">${esc(p.description || "")}</td>
-    <td class="pe-nm">${esc(p.source || "")}</td>
+    <td style="white-space:nowrap;">${p.status === "unconfirmed" ? '<span class="pe-nm" title="Reported/rumored, not yet signed">⚠ unconfirmed</span>' : '<span class="pct u">confirmed</span>'}</td>
+    <td style="max-width:420px; white-space:normal;">${esc(p.description || "")}</td>
+    <td class="pe-nm" style="max-width:160px; white-space:normal;">${esc(p.source || "")}</td>
   </tr>`).join("");
 
   wrap.innerHTML = `<div class="hist-head">NVIDIA's ${new Date().getFullYear()} Partnership Ecosystem</div>
-    <div class="rev-src" style="margin-bottom:10px">Curated, not exhaustive - the most significant, widely-covered partnerships NVIDIA announced this year, grouped by category. * / dashed node = reported but unconfirmed (not yet signed). ${data.fetched ? `Researched as of ${esc(data.fetched)}.` : ""}</div>
+    <div class="rev-src" style="margin-bottom:10px">Curated, not exhaustive - the most significant, widely-covered partnerships NVIDIA announced this year, grouped by category. <b style="color:#f85149">Strategic Investment (Kingmaker)</b> is its own category, not folded into Chip/Hardware or Cloud/Hyperscaler: these are direct equity stakes (MediaTek, Marvell) and neocloud investments (Nebius, CoreWeave) where NVIDIA is financially building up the next generation of ASIC and GPU-cloud challengers rather than treating them as pure competitors or customers - aligning them to NVIDIA's own ecosystem instead. * / dashed node = reported but unconfirmed (not yet signed). ${data.fetched ? `Researched as of ${esc(data.fetched)}.` : ""}</div>
     ${mapHtml}
     <table class="cmp-table" style="margin-top:18px"><thead><tr>
       <th>Partner</th><th>Category</th><th>Date</th><th>Status</th><th>What it is</th><th>Source</th>

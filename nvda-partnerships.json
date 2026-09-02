@@ -1,65 +1,174 @@
 {
-  "fetched": "2026-09-02",
+  "fetched": "2026-09-03",
   "note": "Curated, not exhaustive - the most significant/widely-covered NVDA partnerships announced in calendar year 2026. Manually researched and verified; re-run scripts/nvda_partnerships.py to refresh.",
   "partnerships": [
-    {"partner": "MediaTek", "category": "Chip/Hardware", "date": "2026-08-31", "status": "confirmed",
-      "description": "NVIDIA invests $3.5B in MediaTek convertible bonds; MediaTek adopts NVLink Fusion for custom XPUs in NVLink-connected AI factories, co-develops chips for RTX Spark/DGX Spark PCs, continues automotive SoC work.",
-      "source": "NVIDIA IR / CNBC"},
-
-    {"partner": "AWS", "category": "Cloud/Hyperscaler", "date": "2026-03-20", "status": "confirmed",
+    {
+      "partner": "MediaTek",
+      "category": "Strategic Investment (Kingmaker)",
+      "date": "2026-08-31",
+      "status": "confirmed",
+      "description": "NVIDIA invests $3.5B in MediaTek convertible bonds; MediaTek adopts NVLink Fusion for custom XPUs in NVLink-connected AI factories, co-develops chips for RTX Spark/DGX Spark PCs, continues automotive SoC work. Same playbook as Marvell: direct capital + ecosystem lock-in to a rising ASIC player rather than treating it as a pure GPU competitor.",
+      "source": "NVIDIA IR / CNBC"
+    },
+    {
+      "partner": "Marvell (MRVL)",
+      "category": "Strategic Investment (Kingmaker)",
+      "date": "2026-03-31",
+      "status": "confirmed",
+      "description": "NVIDIA invests $2B directly in Marvell, bundled with an NVLink Fusion partnership - Marvell builds custom XPUs and NVLink Fusion-compatible scale-up networking interoperable with NVIDIA Vera CPUs, ConnectX NICs, BlueField DPUs and Spectrum-X switches, plus joint silicon-photonics work. A major hyperscaler ASIC design partner (Amazon Trainium, Google TPU) now financially aligned with NVIDIA instead of purely competing with it.",
+      "source": "NVIDIA Newsroom / Marvell IR"
+    },
+    {
+      "partner": "Nebius (NBIS)",
+      "category": "Strategic Investment (Kingmaker)",
+      "date": "2026-03-11",
+      "status": "confirmed",
+      "description": "NVIDIA invests $2B in Nebius (~8-9% stake, plus warrants) - Nebius targets 5GW of NVIDIA chip deployment by 2030 with early access to next-gen Vera Rubin chips and joint rack co-design/fleet-management work. A \"neocloud\" GPU-cloud provider built up as an alternative capacity source to the traditional hyperscalers, financially tied to NVIDIA.",
+      "source": "CNBC"
+    },
+    {
+      "partner": "CoreWeave (CRWV)",
+      "category": "Strategic Investment (Kingmaker)",
+      "date": "2026-01-26",
+      "status": "confirmed",
+      "description": "NVIDIA's largest and longest-running neocloud bet: early pre-IPO investor, ~7% stake at March 2025 IPO, added ~$2B (24.2M shares) in Jan 2026 taking it to ~13%, then increased again in Q1 2026 to 47.2M+ shares (~11%, ~$4.9B) - NVIDIA's second-largest shareholder. CoreWeave commits to deploying future NVIDIA infrastructure (Rubin GPUs, Vera CPUs) for its 5GW-by-2030 buildout.",
+      "source": "CNBC / NextPlatform / IndexBox"
+    },
+    {
+      "partner": "AWS",
+      "category": "Cloud/Hyperscaler",
+      "date": "2026-03-20",
+      "status": "confirmed",
       "description": "Deploying 1M+ NVIDIA GPUs (Blackwell GB200 NVL72, moving to Rubin) across AWS regions.",
-      "source": "Virtualization Review, GTC 2026"},
-    {"partner": "Microsoft Azure", "category": "Cloud/Hyperscaler", "date": "2026-03-20", "status": "confirmed",
+      "source": "Virtualization Review, GTC 2026"
+    },
+    {
+      "partner": "Microsoft Azure",
+      "category": "Cloud/Hyperscaler",
+      "date": "2026-03-20",
+      "status": "confirmed",
       "description": "Among first clouds offering Grace Blackwell GB200 + Quantum-X800 InfiniBand across Azure/Fabric/365.",
-      "source": "GTC 2026"},
-    {"partner": "Google Cloud", "category": "Cloud/Hyperscaler", "date": "2026-03-20", "status": "confirmed",
+      "source": "GTC 2026"
+    },
+    {
+      "partner": "Google Cloud",
+      "category": "Cloud/Hyperscaler",
+      "date": "2026-03-20",
+      "status": "confirmed",
       "description": "Adopting the Grace Blackwell platform plus NVIDIA DGX Cloud service.",
-      "source": "GTC 2026"},
-    {"partner": "Lambda", "category": "Cloud/Hyperscaler", "date": "2026-08-31", "status": "confirmed",
+      "source": "GTC 2026"
+    },
+    {
+      "partner": "Lambda",
+      "category": "Cloud/Hyperscaler",
+      "date": "2026-08-31",
+      "status": "confirmed",
       "description": "Anthropic signed a $35B compute deal with NVIDIA-backed cloud provider Lambda; NVIDIA holds the lease on the Nueces County, TX data center (built by Hut 8) powering it.",
-      "source": "Bloomberg"},
-
-    {"partner": "Hugging Face", "category": "AI Model/Software", "date": "2026-08-26", "status": "unconfirmed",
+      "source": "Bloomberg"
+    },
+    {
+      "partner": "Hugging Face",
+      "category": "AI Model/Software",
+      "date": "2026-08-26",
+      "status": "unconfirmed",
       "description": "Reported $12.9-13B acquisition talks, NOT yet signed - would be NVIDIA's largest deal ever, extending an investor relationship since 2023.",
-      "source": "TechCrunch / Forbes"},
-    {"partner": "OpenAI", "category": "AI Model/Software", "date": "2026-02-27", "status": "confirmed",
+      "source": "TechCrunch / Forbes"
+    },
+    {
+      "partner": "OpenAI",
+      "category": "AI Model/Software",
+      "date": "2026-02-27",
+      "status": "confirmed",
       "description": "NVIDIA finalized a $30B equity stake in OpenAI's $110B funding round - a scaled-down cut of the original $100B/10GW commitment disclosed in 2025.",
-      "source": "Barchart"},
-    {"partner": "Mistral AI", "category": "AI Model/Software", "date": "2026-03-01", "status": "confirmed",
+      "source": "Barchart"
+    },
+    {
+      "partner": "Mistral AI",
+      "category": "AI Model/Software",
+      "date": "2026-03-01",
+      "status": "confirmed",
       "description": "Founding member of NVIDIA's Nemotron Coalition; co-developing open frontier models (Mistral 3), deployed across NVIDIA compute and tooling.",
-      "source": "NVIDIA Blog, GTC Paris"},
-
-    {"partner": "Eli Lilly", "category": "Enterprise/Vertical", "date": "2026-01-12", "status": "confirmed",
+      "source": "NVIDIA Blog, GTC Paris"
+    },
+    {
+      "partner": "Eli Lilly",
+      "category": "Enterprise/Vertical",
+      "date": "2026-01-12",
+      "status": "confirmed",
       "description": "5-year, $1B strategic partnership for AI-driven drug discovery.",
-      "source": "Bio-IT World, JPM Healthcare Conference"},
-    {"partner": "Mayo Clinic / IQVIA / Illumina / Arc Institute", "category": "Enterprise/Vertical", "date": "2026-03-20", "status": "confirmed",
+      "source": "Bio-IT World, JPM Healthcare Conference"
+    },
+    {
+      "partner": "Mayo Clinic / IQVIA / Illumina / Arc Institute",
+      "category": "Enterprise/Vertical",
+      "date": "2026-03-20",
+      "status": "confirmed",
       "description": "Mayo deploying DGX Blackwell + MONAI imaging platform; IQVIA/Illumina/Arc on genomics, clinical-trial AI agents, expanded BioNeMo platform.",
-      "source": "NVIDIA Newsroom, GTC 2026"},
-    {"partner": "Toyota", "category": "Enterprise/Vertical", "date": "2026-03-20", "status": "confirmed",
+      "source": "NVIDIA Newsroom, GTC 2026"
+    },
+    {
+      "partner": "Toyota",
+      "category": "Enterprise/Vertical",
+      "date": "2026-03-20",
+      "status": "confirmed",
       "description": "Expanded partnership into AI factories, smart cities, traffic intelligence, and manufacturing, beyond existing DRIVE work.",
-      "source": "Yahoo Finance, GTC 2026"},
-    {"partner": "Mercedes-Benz", "category": "Enterprise/Vertical", "date": "2026-01-01", "status": "confirmed",
+      "source": "Yahoo Finance, GTC 2026"
+    },
+    {
+      "partner": "Mercedes-Benz",
+      "category": "Enterprise/Vertical",
+      "date": "2026-01-01",
+      "status": "confirmed",
       "description": "New CLA uses NVIDIA DRIVE AV software for enhanced Level 2 driver assistance.",
-      "source": "NVIDIA"},
-    {"partner": "BYD / Hyundai / Nissan / Geely", "category": "Enterprise/Vertical", "date": "2026-01-01", "status": "confirmed",
+      "source": "NVIDIA"
+    },
+    {
+      "partner": "BYD / Hyundai / Nissan / Geely",
+      "category": "Enterprise/Vertical",
+      "date": "2026-01-01",
+      "status": "confirmed",
       "description": "New automaker adopters of NVIDIA's robotaxi-ready compute/software stack.",
-      "source": "NVIDIA"},
-    {"partner": "ABB / Universal Robots / KUKA / Boston Dynamics / Figure / 1X / Agility / AGIBOT / NEURA / Skild AI", "category": "Enterprise/Vertical", "date": "2026-03-20", "status": "confirmed",
+      "source": "NVIDIA"
+    },
+    {
+      "partner": "ABB / Universal Robots / KUKA / Boston Dynamics / Figure / 1X / Agility / AGIBOT / NEURA / Skild AI",
+      "category": "Enterprise/Vertical",
+      "date": "2026-03-20",
+      "status": "confirmed",
       "description": "Robotics coalition integrating NVIDIA Isaac/Omniverse physical-AI models for humanoid and industrial robots.",
-      "source": "NVIDIA IR, GTC 2026"},
-
-    {"partner": "Palantir", "category": "Sovereign AI/Government", "date": "2026-07-01", "status": "confirmed",
+      "source": "NVIDIA IR, GTC 2026"
+    },
+    {
+      "partner": "Palantir",
+      "category": "Sovereign AI/Government",
+      "date": "2026-07-01",
+      "status": "confirmed",
       "description": "Sovereign AI stack (AIOS-RA on 8x Blackwell Ultra + Spectrum-X); expanded mid-2026 to give US federal agencies/critical-infrastructure operators customizable models (via NVIDIA Nemotron) inside air-gapped/classified networks.",
-      "source": "SDxCentral"},
-    {"partner": "NAVER (South Korea)", "category": "Sovereign AI/Government", "date": "2026-01-01", "status": "confirmed",
+      "source": "SDxCentral"
+    },
+    {
+      "partner": "NAVER (South Korea)",
+      "category": "Sovereign AI/Government",
+      "date": "2026-01-01",
+      "status": "confirmed",
       "description": "South Korea sovereign AI factory, starting at 55MW at GAK Sejong.",
-      "source": "NVIDIA"},
-    {"partner": "Reliance / Yotta / E2E Networks / L&T (India)", "category": "Sovereign AI/Government", "date": "2026-06-19", "status": "confirmed",
+      "source": "NVIDIA"
+    },
+    {
+      "partner": "Reliance / Yotta / E2E Networks / L&T (India)",
+      "category": "Sovereign AI/Government",
+      "date": "2026-06-19",
+      "status": "confirmed",
       "description": "20,000+ Blackwell Ultra GPUs deployed for the IndiaAI Mission; Reliance building a GB300-powered sovereign AI backbone with Omniverse digital twins in Jamnagar.",
-      "source": "Computer Weekly / Republic World"},
-
-    {"partner": "Nokia / Ericsson / Cisco / Deutsche Telekom / T-Mobile / SoftBank / SK Telecom / BT Group / Booz Allen / MITRE", "category": "Telecom/Networking", "date": "2026-03-20", "status": "confirmed",
+      "source": "Computer Weekly / Republic World"
+    },
+    {
+      "partner": "Nokia / Ericsson / Cisco / Deutsche Telekom / T-Mobile / SoftBank / SK Telecom / BT Group / Booz Allen / MITRE",
+      "category": "Telecom/Networking",
+      "date": "2026-03-20",
+      "status": "confirmed",
       "description": "6G Coalition - multi-party commitment to build AI-native, open 6G platforms; trials from 2028, commercial ~2030.",
-      "source": "NVIDIA IR, GTC 2026"}
+      "source": "NVIDIA IR, GTC 2026"
+    }
   ]
 }
