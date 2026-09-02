@@ -132,7 +132,8 @@
   .cmp-id { color:var(--muted); font-size:9px; margin-left:4px; }
   .cmp-na { color:var(--muted); }
   .cmp-src-note { color:var(--muted); font-size:8px; font-style:italic; white-space:normal; max-width:200px; }
-  .cmp-capex-headline { color:#f5c518; font-weight:700; font-size:11px; cursor:help; text-decoration:underline dotted; white-space:normal; max-width:220px; }
+  .cmp-capex-headline { cursor:help; text-decoration:underline dotted; white-space:normal; max-width:220px; }
+  .cmp-capex-headline b { font-weight:700; }
   /* Compare tab only (scoped via #compare-wrap - .cmp-table is shared with
      the P/E History tab, which wasn't part of this request). Company and
      Mkt Cap are the shortest-content columns; narrowing them frees up
@@ -941,6 +942,16 @@ function fmtMarginType(type) {
   if (t.startsWith("operating")) return "Op. Margin";
   return type || "";
 }
+// Bolds just the leading number/range (e.g. "$130-145B", "RMB380bn", "~$1B")
+// in a capex headline, leaving the rest as plain text matching every other
+// Compare tab cell - the whole headline used to render bold+yellow, which
+// stood out from the rest of the row for no real reason.
+function capexHeadlineHtml(headline) {
+  const m = headline.match(/^([~<>]?\s*(?:up to\s+)?(?:[A-Z]{0,3}\$|RMB|HK\$|NT\$|£|€)?\s*[\d.]+(?:\s*[-–]\s*[\d.]+)?\s*(?:bn|B|M|T|%|K)\b)/i);
+  if (!m) return esc(headline);
+  const numPart = m[1];
+  return `<b>${esc(numPart)}</b>${esc(headline.slice(numPart.length))}`;
+}
 
 function renderCompareTable() {
   // See renderRevenueMix's comment - same defense-in-depth against a
@@ -1019,7 +1030,7 @@ function _renderCompareTableImpl(wrap) {
       if (df && df.capex_guidance && df.capex_guidance.headline) {
         const cg = df.capex_guidance;
         const tip = [cg.detail, cg.period, cg.source].filter(Boolean).join(" — ");
-        guidanceCell = `<span class="cmp-capex-headline" title="${esc(tip)}">${esc(cg.headline)}</span>`;
+        guidanceCell = `<span class="cmp-capex-headline" title="${esc(tip)}">${capexHeadlineHtml(cg.headline)}</span>`;
       }
       rows += `<tr>
         <td>${companyIdCell(inst)}</td>
