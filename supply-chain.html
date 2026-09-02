@@ -1391,7 +1391,7 @@ function _renderPeHistoryImpl(wrap) {
       <th>Company</th><th>Price</th><th>TTM P/E</th><th>Fwd P/E</th><th>PEG</th>
       <th>52-wk Price Range</th><th>Implied P/E Range (52-wk)</th>
     </tr></thead><tbody>${rows}</tbody></table>
-    <div class="rev-src" style="margin-top:8px">TTM P/E uses actual trailing EPS from the last 4 reported quarters (Yahoo). Implied P/E range applies TODAY's TTM EPS to the 52-week price high/low, so it shows where the stock has traded at its CURRENT earnings power — not a true multi-year re-rating history (only 4 quarters of EPS are tracked, not enough to reconstruct EPS at each point in the past). Marker shows where the current price sits in that range; hover for the exact percentile. Fwd P/E and PEG are Yahoo consensus estimates. N/M = not meaningful (trailing EPS negative).</div>`
+    <div class="rev-src" style="margin-top:8px">TTM P/E uses actual trailing EPS from the last 4 reported quarters (Yahoo). Implied P/E range applies TODAY's TTM EPS to the 52-week price high/low, so it shows where the stock has traded at its CURRENT earnings power — not a true multi-year re-rating history (only 4 quarters of EPS are tracked, not enough to reconstruct EPS at each point in the past). Marker shows where the current price sits in that range; hover for the exact percentile. Fwd P/E is Yahoo's consensus estimate. PEG is computed here (not Yahoo's own pegRatio, which is a black-box trailing-P/E-vs-~5yr-growth blend) as Fwd P/E ÷ next-fiscal-year consensus EPS growth (Yahoo earningsTrend "+1y" period) — a true forward-vs-forward ratio, blank when forward growth is flat/negative rather than showing a meaningless or negative PEG. N/M = not meaningful (trailing EPS negative).</div>`
     + buildHistPeSection();
 }
 
