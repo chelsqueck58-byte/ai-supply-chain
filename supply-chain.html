@@ -982,7 +982,7 @@ function _renderCompareTableImpl(wrap) {
   const na = `<span class="cmp-na">—</span>`;
   let rows = "";
   for (const [cat, list] of byCat) {
-    rows += `<tr class="cmp-cat-row"><td colspan="11">${esc(cat)}</td></tr>`;
+    rows += `<tr class="cmp-cat-row"><td colspan="12">${esc(cat)}</td></tr>`;
     for (const inst of sortForCategoryTab(list, cat)) {
       const f = inst.fund || {};
       const df = DEEP_FUND && DEEP_FUND[inst.id];
@@ -992,6 +992,7 @@ function _renderCompareTableImpl(wrap) {
       const om = fmtPctPlain(f.operating_margin) || na;
       const npm = fmtPctPlain(f.net_margin) || na;
       const ocf = fmtMarketCap(f.operating_cashflow, inst.currency) || na;
+      const fcf = fmtMarketCap(f.free_cashflow, inst.currency) || na;
 
       // The published figure the market actually cites (GuruFocus,
       // StockAnalysis, etc.), not computed here - Yahoo's free API doesn't
@@ -1013,18 +1014,16 @@ function _renderCompareTableImpl(wrap) {
           + `<span class="pe-nm" title="${esc(tip)}">${esc(periodShort)}</span>`;
       }
 
-      let debtCell = na;
-      if (f.total_debt != null || f.total_cash != null) {
-        const parts = [];
-        if (f.total_debt != null) parts.push(`Debt: ${fmtMarketCap(f.total_debt, inst.currency)}`);
-        if (f.total_cash != null) parts.push(`Cash: ${fmtMarketCap(f.total_cash, inst.currency)}`);
-        if (f.total_debt != null && f.total_cash != null) {
-          const net = f.total_cash - f.total_debt;
-          const netLabel = net >= 0 ? "Net cash" : "Net debt";
-          parts.push(`<b>${netLabel}: ${fmtMarketCap(Math.abs(net), inst.currency)}</b>`);
-        }
-        if (f.debt_to_equity != null) parts.push(`D/E: ${f.debt_to_equity.toFixed(0)}%`);
-        debtCell = `<div class="cmp-seg-list">${parts.join("<br>")}</div>`;
+      let netCashCell = na;
+      if (f.total_debt != null && f.total_cash != null) {
+        const net = f.total_cash - f.total_debt;
+        const sign = net < 0 ? "-" : "";
+        const de = f.debt_to_equity != null ? `<br><span class="pe-nm">D/E: ${f.debt_to_equity.toFixed(0)}%</span>` : "";
+        netCashCell = `${sign}${fmtMarketCap(Math.abs(net), inst.currency)}${de}`;
+      } else if (f.total_cash != null) {
+        netCashCell = `${fmtMarketCap(f.total_cash, inst.currency)} <span class="pe-nm">(cash only, no debt figure)</span>`;
+      } else if (f.total_debt != null) {
+        netCashCell = `-${fmtMarketCap(f.total_debt, inst.currency)} <span class="pe-nm">(debt only, no cash figure)</span>`;
       }
       const offBs = OFF_BS && OFF_BS[inst.id];
       let offBsCell = na;
@@ -1061,7 +1060,8 @@ function _renderCompareTableImpl(wrap) {
         <td>${npm}</td>
         <td>${roicCell}</td>
         <td>${ocf}</td>
-        <td>${debtCell}</td>
+        <td>${fcf}</td>
+        <td>${netCashCell}</td>
         <td>${offBsCell}</td>
         <td>${guidanceCell}</td>
       </tr>`;
@@ -1069,9 +1069,9 @@ function _renderCompareTableImpl(wrap) {
   }
   wrap.innerHTML = `<table class="cmp-table"><thead><tr>
       <th>Company</th><th>Mkt Cap</th><th>Fwd P/E</th><th>GM%</th><th>OM%</th><th>NP%</th>
-      <th>ROIC</th><th>OCF</th><th>Debt/Cash</th><th>Off-BS Liabilities</th><th>Capex Guidance</th>
+      <th>ROIC</th><th>OCF</th><th>FCF</th><th>Net Cash</th><th>Off-BS Liabilities</th><th>Capex Guidance</th>
     </tr></thead><tbody>${rows}</tbody></table>
-    <div class="rev-src" style="margin-top:8px">Mkt cap/debt/cash/OCF shown in each stock's native trading currency with a USD-equivalent in parentheses (via current FX rate). GM/OM/NP are company-wide (Yahoo financial data). ROIC is the published TTM figure from a named data provider (GuruFocus, StockAnalysis.com, etc.) — the commonly-cited figure, not computed here, since Yahoo's free API lacks the balance-sheet detail and ROIC has too many competing formula variants for a homegrown version to reliably match what "ROIC" means elsewhere for a given name; hover for source/period. OCF is trailing twelve-month operating cash flow (Yahoo financial data). Capex guidance and off-BS liabilities are research-derived from company filings/earnings calls, refreshed periodically (not daily) — see each cell's source period for freshness.</div>`;
+    <div class="rev-src" style="margin-top:8px">Mkt cap/net cash/OCF/FCF shown in each stock's native trading currency with a USD-equivalent in parentheses (via current FX rate). GM/OM/NP are company-wide (Yahoo financial data). ROIC is the published TTM figure from a named data provider (GuruFocus, StockAnalysis.com, etc.) — the commonly-cited figure, not computed here, since Yahoo's free API lacks the balance-sheet detail and ROIC has too many competing formula variants for a homegrown version to reliably match what "ROIC" means elsewhere for a given name; hover for source/period. OCF/FCF are trailing twelve-month (Yahoo financial data) — a small number of very recent HK IPOs and secondary listings (e.g. Zhipu AI, MiniMax, Baidu's HK line) don't have this populated yet in Yahoo's free feed even though other fields are present, shown as — rather than guessed. Net Cash is Total Cash − Total Debt, shown with a "-" prefix when the company carries net debt instead. Capex guidance and off-BS liabilities are research-derived from company filings/earnings calls, refreshed periodically (not daily) — see each cell's source period for freshness.</div>`;
 }
 
 // TTM EPS = sum of the last 4 REPORTED (actual, not estimated) quarterly EPS.
