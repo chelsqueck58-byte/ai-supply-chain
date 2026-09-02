@@ -130,20 +130,9 @@
     font-size:9px; letter-spacing:.3px; border-bottom:1px solid var(--border); white-space:normal; }
   .cmp-name { font-weight:600; color:var(--text); }
   .cmp-id { color:var(--muted); font-size:9px; margin-left:4px; }
-  /* Debt/Cash and Off-BS Liabilities share this class - widened so their
-     multi-line lists (Debt/Cash/Net/D-E, or several commitment line items)
-     wrap less, which is what actually drives row height. */
-  .cmp-seg-list { white-space:normal; max-width:400px; font-size:9px; color:var(--muted); line-height:1.25; }
-  .cmp-seg-list b { color:var(--text); }
   .cmp-na { color:var(--muted); }
   .cmp-src-note { color:var(--muted); font-size:8px; font-style:italic; white-space:normal; max-width:200px; }
-  .cmp-capex-headline { color:#f5c518; font-weight:700; font-size:12px; margin-bottom:2px; white-space:nowrap; }
-  /* Wider than .cmp-seg-list on purpose - capex guidance text is usually the
-     longest cell in the row, so it wraps into the most lines. A wider column
-     here means fewer wrapped lines, which shortens every row's height and
-     lets more stocks fit on screen without scrolling. */
-  .cmp-capex-text { white-space:normal; max-width:500px; font-size:9px; color:var(--muted); line-height:1.25;
-    display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+  .cmp-capex-headline { color:#f5c518; font-weight:700; font-size:11px; cursor:help; text-decoration:underline dotted; white-space:normal; max-width:220px; }
   /* Compare tab only (scoped via #compare-wrap - .cmp-table is shared with
      the P/E History tab, which wasn't part of this request). Company and
      Mkt Cap are the shortest-content columns; narrowing them frees up
@@ -193,7 +182,7 @@
 <script>
 "use strict";
 const TREND_ORDER = { up: 0, flat: 1, down: 2 };
-let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, DEEP_FUND = null, GEO_MIX = null, FX_RATES = null, OFF_BS = null, HIST_PE = null, FWD_PE = null, ROIC = null, NVDA_PARTNERSHIPS = null, NVDA_DEBT = null, CIRC_FIN = null, STALE = false, OBSERVER = null;
+let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, DEEP_FUND = null, GEO_MIX = null, FX_RATES = null, HIST_PE = null, FWD_PE = null, ROIC = null, NVDA_PARTNERSHIPS = null, NVDA_DEBT = null, CIRC_FIN = null, STALE = false, OBSERVER = null;
 const REVENUE_TAB_CATEGORIES = new Set(["china-internet", "compute", "hyperscaler-cloud", "platform"]);
 // Individual tickers pulled in from a category that isn't otherwise in
 // scope (e.g. ASML from Equipment) - added one at a time on request rather
@@ -912,11 +901,12 @@ function _renderRevenueMixImpl(wrap) {
 const CCY_SYMBOL = { USD: "$", HKD: "HK$", CNY: "¥", RMB: "¥", KRW: "₩", SGD: "S$", EUR: "€", TWD: "NT$" };
 function fmtMoney(n, symbol) {
   if (n === null || n === undefined) return null;
+  const sign = n < 0 ? "-" : "";
   const abs = Math.abs(n);
-  if (abs >= 1e12) return symbol + (n / 1e12).toFixed(2) + "T";
-  if (abs >= 1e9) return symbol + (n / 1e9).toFixed(2) + "B";
-  if (abs >= 1e6) return symbol + (n / 1e6).toFixed(1) + "M";
-  return symbol + n.toFixed(0);
+  if (abs >= 1e12) return sign + symbol + (abs / 1e12).toFixed(2) + "T";
+  if (abs >= 1e9) return sign + symbol + (abs / 1e9).toFixed(2) + "B";
+  if (abs >= 1e6) return sign + symbol + (abs / 1e6).toFixed(1) + "M";
+  return sign + symbol + abs.toFixed(0);
 }
 // Yahoo's market_cap comes back in each stock's LOCAL trading currency, not
 // USD - confirmed live on Cambricon (raw value was actually CNY 686.7B, not
@@ -982,7 +972,7 @@ function _renderCompareTableImpl(wrap) {
   const na = `<span class="cmp-na">—</span>`;
   let rows = "";
   for (const [cat, list] of byCat) {
-    rows += `<tr class="cmp-cat-row"><td colspan="12">${esc(cat)}</td></tr>`;
+    rows += `<tr class="cmp-cat-row"><td colspan="11">${esc(cat)}</td></tr>`;
     for (const inst of sortForCategoryTab(list, cat)) {
       const f = inst.fund || {};
       const df = DEEP_FUND && DEEP_FUND[inst.id];
@@ -1025,31 +1015,11 @@ function _renderCompareTableImpl(wrap) {
       } else if (f.total_debt != null) {
         netCashCell = `-${fmtMarketCap(f.total_debt, inst.currency)} <span class="pe-nm">(debt only, no cash figure)</span>`;
       }
-      const offBs = OFF_BS && OFF_BS[inst.id];
-      let offBsCell = na;
-      // Defensive filter: a single malformed research item (missing name or
-      // amount) must never crash the whole table render again - confirmed
-      // live on MSFT, where one bad item ({items_placeholder: null}) threw
-      // on .toLocaleString() and silently emptied the entire Compare tab,
-      // since the exception aborted execution before the final innerHTML
-      // assignment ever ran.
-      const validOffBsItems = (offBs && offBs.items || [])
-        .filter(it => it && it.name && typeof it.amount_usd_m === "number");
-      if (validOffBsItems.length) {
-        offBsCell = `<div class="cmp-seg-list">` + validOffBsItems.map(it =>
-          `<b>${esc(it.name)}</b>: $${it.amount_usd_m.toLocaleString(undefined,{maximumFractionDigits:0})}M`
-        ).join("<br>") + `</div>`;
-      } else if (offBs && offBs.source === null) {
-        offBsCell = `<span class="cmp-src-note">Nothing material disclosed</span>`;
-      }
-
       let guidanceCell = na;
-      if (df && df.capex_guidance && df.capex_guidance.text) {
+      if (df && df.capex_guidance && df.capex_guidance.headline) {
         const cg = df.capex_guidance;
-        const headline = cg.headline
-          ? `<div class="cmp-capex-headline">${esc(cg.headline)}</div>`
-          : `<div class="cmp-src-note">No explicit figure guided</div>`;
-        guidanceCell = headline + `<span class="cmp-capex-text">${esc(cg.text)}</span>`;
+        const tip = [cg.detail, cg.period, cg.source].filter(Boolean).join(" — ");
+        guidanceCell = `<span class="cmp-capex-headline" title="${esc(tip)}">${esc(cg.headline)}</span>`;
       }
       rows += `<tr>
         <td>${companyIdCell(inst)}</td>
@@ -1062,16 +1032,15 @@ function _renderCompareTableImpl(wrap) {
         <td>${ocf}</td>
         <td>${fcf}</td>
         <td>${netCashCell}</td>
-        <td>${offBsCell}</td>
         <td>${guidanceCell}</td>
       </tr>`;
     }
   }
   wrap.innerHTML = `<table class="cmp-table"><thead><tr>
       <th>Company</th><th>Mkt Cap</th><th>Fwd P/E</th><th>GM%</th><th>OM%</th><th>NP%</th>
-      <th>ROIC</th><th>OCF</th><th>FCF</th><th>Net Cash</th><th>Off-BS Liabilities</th><th>Capex Guidance</th>
+      <th>ROIC</th><th>OCF</th><th>FCF</th><th>Net Cash</th><th>Capex Guidance</th>
     </tr></thead><tbody>${rows}</tbody></table>
-    <div class="rev-src" style="margin-top:8px">Mkt cap/net cash/OCF/FCF shown in each stock's native trading currency with a USD-equivalent in parentheses (via current FX rate). GM/OM/NP are company-wide (Yahoo financial data). ROIC is the published TTM figure from a named data provider (GuruFocus, StockAnalysis.com, etc.) — the commonly-cited figure, not computed here, since Yahoo's free API lacks the balance-sheet detail and ROIC has too many competing formula variants for a homegrown version to reliably match what "ROIC" means elsewhere for a given name; hover for source/period. OCF/FCF are trailing twelve-month (Yahoo financial data) — a small number of very recent HK IPOs and secondary listings (e.g. Zhipu AI, MiniMax, Baidu's HK line) don't have this populated yet in Yahoo's free feed even though other fields are present, shown as — rather than guessed. Net Cash is Total Cash − Total Debt, shown with a "-" prefix when the company carries net debt instead. Capex guidance and off-BS liabilities are research-derived from company filings/earnings calls, refreshed periodically (not daily) — see each cell's source period for freshness.</div>`;
+    <div class="rev-src" style="margin-top:8px">Mkt cap/net cash/OCF/FCF shown in each stock's native trading currency with a USD-equivalent in parentheses (via current FX rate). GM/OM/NP are company-wide (Yahoo financial data). ROIC is the published TTM figure from a named data provider (GuruFocus, StockAnalysis.com, etc.) — the commonly-cited figure, not computed here, since Yahoo's free API lacks the balance-sheet detail and ROIC has too many competing formula variants for a homegrown version to reliably match what "ROIC" means elsewhere for a given name; hover for source/period. OCF/FCF are trailing twelve-month (Yahoo financial data) — a small number of very recent HK IPOs and secondary listings (e.g. Zhipu AI, MiniMax, Baidu's HK line) don't have this populated yet in Yahoo's free feed even though other fields are present, shown as — rather than guessed. Net Cash is Total Cash − Total Debt, shown with a "-" prefix when the company carries net debt instead. Capex guidance is a short headline (hover for detail/source/period) — research-derived from company filings/earnings calls, refreshed periodically (not daily), blank when no concrete figure was ever given.</div>`;
 }
 
 // TTM EPS = sum of the last 4 REPORTED (actual, not estimated) quarterly EPS.
@@ -1643,15 +1612,14 @@ function load() {
     fetch("./deep-fundamentals.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./geo-mix.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./fx-rates.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
-    fetch("./off-bs-liabilities.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./historical-pe.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./forward-pe.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./roic.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./nvda-partnerships.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./nvda-debt-financing.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./circular-financing.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
-  ]).then(([data, moves, scmap, earnDates, revMix, deepFund, geoMix, fxRates, offBs, histPe, fwdPe, roic, nvdaPartnerships, nvdaDebt, circFin]) => {
-    DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates; REV_MIX = revMix; DEEP_FUND = deepFund; GEO_MIX = geoMix; FX_RATES = fxRates; OFF_BS = offBs; HIST_PE = histPe; FWD_PE = fwdPe; ROIC = roic; NVDA_PARTNERSHIPS = nvdaPartnerships; NVDA_DEBT = nvdaDebt; CIRC_FIN = circFin;
+  ]).then(([data, moves, scmap, earnDates, revMix, deepFund, geoMix, fxRates, histPe, fwdPe, roic, nvdaPartnerships, nvdaDebt, circFin]) => {
+    DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates; REV_MIX = revMix; DEEP_FUND = deepFund; GEO_MIX = geoMix; FX_RATES = fxRates; HIST_PE = histPe; FWD_PE = fwdPe; ROIC = roic; NVDA_PARTNERSHIPS = nvdaPartnerships; NVDA_DEBT = nvdaDebt; CIRC_FIN = circFin;
     STALE = checkStale(DATA);
     const ideas = DATA.instruments.filter(i => i.idea && i.idea.kind === "enter").length;
     document.getElementById("meta").textContent =
