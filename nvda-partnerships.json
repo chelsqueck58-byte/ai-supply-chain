@@ -1,5 +1,5 @@
 {
-  "fetched": "2026-09-02",
+  "fetched": "2026-09-03",
   "note": "Curated, not exhaustive - the most significant/widely-covered NVDA partnerships announced in calendar year 2026. Manually researched and verified; re-run scripts/nvda_partnerships.py to refresh.",
   "partnerships": [
     {
@@ -49,6 +49,22 @@
       "status": "confirmed",
       "description": "NVentures (NVIDIA's venture arm) stakes across multiple quantum computing startups - individually small, but the same pattern as the ASIC/neocloud bets: early financial alignment with potential future compute paradigms rather than waiting to see who wins.",
       "source": "Tech.eu"
+    },
+    {
+      "partner": "Nscale",
+      "category": "Strategic Investment (Kingmaker)",
+      "date": "2026-06-01",
+      "status": "confirmed",
+      "description": "NVIDIA backed UK neocloud Nscale from its Series B through a $2B Series C (2026), taking it to a $14.6B valuation - Nscale is now preparing a ~$3B US IPO, chasing CoreWeave's playbook. Same pattern as Nebius/IREN: warrant/equity alignment with an emerging GPU-capacity provider before it scales independently.",
+      "source": "Data Center Knowledge / The Information"
+    },
+    {
+      "partner": "Figure AI",
+      "category": "Strategic Investment (Kingmaker)",
+      "date": "2025-09-01",
+      "status": "confirmed",
+      "description": "NVIDIA invested $50M in Figure AI's Series B (Feb 2024, $675M round, $2.6B valuation) and participated again in its Series C (Sept 2025, $1B+ round, $39B valuation) - one of NVIDIA's earliest and largest humanoid-robotics equity bets, distinct from the broader Isaac/Omniverse robotics tooling coalition below.",
+      "source": "CNBC / Foreign Affairs Forum"
     },
     {
       "partner": "Intel",
@@ -117,10 +133,10 @@
     {
       "partner": "Mistral AI",
       "category": "AI Model/Software",
-      "date": "2026-03-01",
+      "date": "2025-09-01",
       "status": "confirmed",
-      "description": "Founding member of NVIDIA's Nemotron Coalition; co-developing open frontier models (Mistral 3), deployed across NVIDIA compute and tooling.",
-      "source": "NVIDIA Blog, GTC Paris"
+      "description": "NVIDIA participated in Mistral's ASML-led $2B Series C (Sept 2025, valuing Mistral at ~$13.8B) - exact NVIDIA-specific amount undisclosed. Also a founding member of NVIDIA's Nemotron Coalition, co-developing open frontier models (Mistral 3), deployed across NVIDIA compute and tooling.",
+      "source": "Dealroom / CNBC, NVIDIA Blog"
     },
     {
       "partner": "Anthropic",

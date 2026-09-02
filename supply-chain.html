@@ -1238,6 +1238,77 @@ function renderNvdaEcosystem() {
 }
 
 const CIRC_FIN_LAB_COLORS = { "OpenAI": "#00a67e", "Anthropic": "#d97757", "CoreWeave": "#58a6ff", "xAI / SpaceX": "#a371f7" };
+const CIRC_FIN_EQUITY_COLOR = "#e3b341";   // gold = money/investment
+const CIRC_FIN_COMPUTE_COLOR = "#58a6ff";  // blue = chips/capacity/services
+
+function circFinHasEquity(r) { return r.equity && !/^no /i.test(r.equity.trim()); }
+function circFinHasCompute(r) { return r.compute_commitment && !/^no /i.test(r.compute_commitment.trim()); }
+
+function buildCircFinMap(byLab) {
+  const cx = 500, cy = 470, ring1R = 165, ring2R = 350;
+  const labs = Array.from(byLab.keys());
+  const total = Array.from(byLab.values()).reduce((s, m) => s + m.length, 0);
+  let angleCursor = -90;
+  const nodes = [{ x: cx, y: cy, label: "NVIDIA", type: "center" }];
+  const lines = []; // {x1,y1,x2,y2,color,dash}
+  for (const lab of labs) {
+    const members = byLab.get(lab);
+    const sectorWidth = 360 * (members.length / total);
+    const labAngle = angleCursor + sectorWidth / 2;
+    const color = CIRC_FIN_LAB_COLORS[lab] || "#7d8590";
+    const labRad = (labAngle * Math.PI) / 180;
+    const labX = cx + ring1R * Math.cos(labRad), labY = cy + ring1R * Math.sin(labRad);
+    nodes.push({ x: labX, y: labY, label: lab, type: "lab", color });
+    // NVIDIA <-> lab hub: draw gold + blue offset lines (every lab group has at least one NVDA-flagged relationship)
+    lines.push({ x1: cx, y1: cy, x2: labX, y2: labY, color: CIRC_FIN_EQUITY_COLOR, offset: -3 });
+    lines.push({ x1: cx, y1: cy, x2: labX, y2: labY, color: CIRC_FIN_COMPUTE_COLOR, offset: 3 });
+
+    members.forEach((r, i) => {
+      const t = members.length > 1 ? (i / (members.length - 1)) - 0.5 : 0;
+      const pAngle = labAngle + t * sectorWidth * 0.85;
+      const pRad = (pAngle * Math.PI) / 180;
+      const px = cx + ring2R * Math.cos(pRad), py = cy + ring2R * Math.sin(pRad);
+      nodes.push({ x: px, y: py, label: nvdaEcoShortLabel(r.counterparty), color, type: "counterparty", title: r.counterparty, nvda: r.nvda });
+      const hasEq = circFinHasEquity(r), hasCo = circFinHasCompute(r);
+      if (hasEq) lines.push({ x1: labX, y1: labY, x2: px, y2: py, color: CIRC_FIN_EQUITY_COLOR, offset: hasCo ? -2.5 : 0 });
+      if (hasCo) lines.push({ x1: labX, y1: labY, x2: px, y2: py, color: CIRC_FIN_COMPUTE_COLOR, offset: hasEq ? 2.5 : 0 });
+    });
+    angleCursor += sectorWidth;
+  }
+  const perp = (x1, y1, x2, y2, off) => {
+    if (!off) return { x1, y1, x2, y2 };
+    const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy) || 1;
+    const nx = -dy / len * off, ny = dx / len * off;
+    return { x1: x1 + nx, y1: y1 + ny, x2: x2 + nx, y2: y2 + ny };
+  };
+  const svgLines = lines.map(l => {
+    const p = perp(l.x1, l.y1, l.x2, l.y2, l.offset);
+    return `<line x1="${p.x1.toFixed(1)}" y1="${p.y1.toFixed(1)}" x2="${p.x2.toFixed(1)}" y2="${p.y2.toFixed(1)}" stroke="${l.color}" stroke-opacity="0.55" stroke-width="1.6"/>`;
+  }).join("");
+  const svgNodes = nodes.map(n => {
+    if (n.type === "center") {
+      return `<circle cx="${n.x}" cy="${n.y}" r="28" fill="#161b22" stroke="#76b900" stroke-width="2.5"/>
+        <text x="${n.x}" y="${n.y + 5}" text-anchor="middle" font-size="14" font-weight="700" fill="#76b900">NVIDIA</text>`;
+    }
+    const r = n.type === "lab" ? 9 : 5;
+    const dy = n.y > cy ? 16 : -10;
+    const dash = n.nvda ? "" : ' stroke-dasharray="1,2"';
+    return `<g>
+      <circle cx="${n.x.toFixed(1)}" cy="${n.y.toFixed(1)}" r="${r}" fill="${n.color}"${dash} stroke="#0d1117" stroke-width="1.5">
+        <title>${esc(n.title || n.label)}</title>
+      </circle>
+      <text x="${n.x.toFixed(1)}" y="${(n.y + dy).toFixed(1)}" text-anchor="middle" font-size="${n.type === "lab" ? 11.5 : 9}" font-weight="${n.type === "lab" ? 700 : 400}" fill="${n.type === "lab" ? n.color : "#c9d1d9"}">${esc(n.label)}${n.nvda === false ? " *" : ""}</text>
+    </g>`;
+  }).join("");
+  return `<svg viewBox="0 0 1000 940" style="width:100%; height:auto; max-height:720px;">
+    ${svgLines}${svgNodes}
+  </svg>
+  <div class="rev-src" style="margin-top:6px">
+    <span style="color:${CIRC_FIN_EQUITY_COLOR}">— Equity / investment</span> &nbsp;
+    <span style="color:${CIRC_FIN_COMPUTE_COLOR}">— Compute / spend commitment</span> &nbsp;
+    * = no direct NVIDIA involvement in this specific relationship
+  </div>`;
+}
 
 function renderCircularFinancing() {
   const wrap = document.getElementById("circ-fin-wrap");
@@ -1254,6 +1325,7 @@ function renderCircularFinancing() {
     if (!byLab.has(r.lab)) byLab.set(r.lab, []);
     byLab.get(r.lab).push(r);
   }
+  const mapHtml = buildCircFinMap(byLab);
   let rows = "";
   for (const [lab, members] of byLab) {
     const color = CIRC_FIN_LAB_COLORS[lab] || "#7d8590";
@@ -1272,7 +1344,8 @@ function renderCircularFinancing() {
   }
   wrap.innerHTML = `<div class="hist-head">AI Industry Circular Financing</div>
     <div class="rev-src" style="margin-bottom:10px">${esc(data.note || "")} ${data.fetched ? `Researched as of ${esc(data.fetched)}.` : ""}</div>
-    <table class="cmp-table"><thead><tr>
+    ${mapHtml}
+    <table class="cmp-table" style="margin-top:18px"><thead><tr>
       <th>Counterparty</th><th>Equity Investment</th><th>Compute/Spend Commitment</th><th>Why It's Circular</th><th>Date / Source</th>
     </tr></thead><tbody>${rows}</tbody></table>`;
 }
