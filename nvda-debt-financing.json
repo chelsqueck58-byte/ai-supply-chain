@@ -1,0 +1,62 @@
+{
+  "fetched": "2026-09-02",
+  "note": "NVIDIA's role in AI-infrastructure debt/private-credit financing, kept separate from the equity partnerships table above since the nature of involvement differs sharply by deal - explicitly labeled Direct (NVIDIA is itself a financing party) vs Indirect (NVIDIA is only the equipment supplier whose GPUs collateralize debt raised by others).",
+  "deals": [
+    {
+      "name": "CoreWeave capacity backstop",
+      "role": "direct",
+      "amount": "$6.3B",
+      "date": "2025-09-09",
+      "description": "NVIDIA committed to buy CoreWeave's unsold cloud capacity through April 2032 - a \"buyer of last resort\" guarantee, not a loan. Sits on top of NVIDIA's separate ~$2B CoreWeave equity stake; CoreWeave itself raised $7.5B of GPU-collateralized debt to buy NVIDIA chips.",
+      "status": "confirmed",
+      "source": "CNBC"
+    },
+    {
+      "name": "OpenAI Ohio data center financing",
+      "role": "direct",
+      "amount": "~$105B",
+      "date": "2026-08-17",
+      "description": "NVIDIA reported to be backing/financing an OpenAI Ohio data center. Exact structure (direct lender vs. guarantor) not confirmed in press coverage - flagged as such rather than overstated.",
+      "status": "unconfirmed structure",
+      "source": "CNBC"
+    },
+    {
+      "name": "Anthropic-Lambda data center lease (Hut 8)",
+      "role": "direct - NVIDIA holds the lease",
+      "amount": "$35B",
+      "date": "2026-08-31",
+      "description": "Anthropic signed a $35B compute deal with Lambda (an NVIDIA-backed cloud provider). NVIDIA itself holds the lease on the Nueces County, TX data center - built by Hut 8 - that houses the capacity, then supplies it to Lambda, which supplies it to Anthropic (also an NVIDIA equity holding). A single deal chains together an NVIDIA-backed customer, an NVIDIA-backed cloud, and an NVIDIA-leased building full of NVIDIA chips - the clearest single example of the circularity Barron's/WSJ have flagged.",
+      "status": "confirmed",
+      "source": "Bloomberg / WSJ"
+    },
+    {
+      "name": "$500B AI infrastructure financing platform",
+      "role": "direct (capital-mobilizing partner, not lender)",
+      "amount": "$500B+",
+      "date": "2026-08-10",
+      "description": "NVIDIA partnered with Apollo, BlackRock, Blackstone, Brookfield, Goldman Sachs and KKR to mobilize $500B+ of THIRD-PARTY capital. NVIDIA is not the lender/guarantor - it makes its compute an \"investable asset\" that these banks/asset managers underwrite and lend against. Huang has said NVIDIA retains an option to backstop up to $125B (~25%) of these deals if needed, a potential (not yet executed) direct role.",
+      "status": "confirmed (deals still subject to definitive agreements)",
+      "source": "NVIDIA Newsroom / SemiAnalysis"
+    },
+    {
+      "name": "Meta Hyperion JV (with Blue Owl)",
+      "role": "indirect - equipment collateral only",
+      "amount": "$27B",
+      "date": "2025-10-21",
+      "description": "SPV for Meta's Louisiana Hyperion campus (2GW+): $27B A+-rated debt plus $2.5B equity, anchored by PIMCO ($18B) and BlackRock ($3B), Blue Owl owns 80%. NVIDIA is the equipment supplier only - no NVIDIA financing role disclosed.",
+      "status": "confirmed",
+      "source": "CNBC"
+    },
+    {
+      "name": "CoreWeave DDTL 4.0",
+      "role": "indirect - equipment collateral only",
+      "amount": "$8.5B",
+      "date": "2026-03-31",
+      "description": "Delayed-draw term loan, the first investment-grade-rated GPU-collateralized debt facility (Moody's A3), priced at SOFR+225bps. NVIDIA GPUs are the collateral; NVIDIA is not a party to the loan.",
+      "status": "confirmed",
+      "source": "Global Data Center Hub"
+    }
+  ],
+  "circular_financing_note": "CFO Colette Kress addressed \"circular financing\" concerns directly on the Q2 FY26 earnings call (Aug 26-27, 2026): \"We recognize the scale of this support, and we know some will call this circular financing. We see it differently... our risk is limited.\" Huang: \"the only regret... is that I didn't invest more and sooner.\" Skeptics remain: Mizuho said the $500B platform \"doesn't quiet\" concerns about underlying end-demand; Bernstein's Rasgon said the OpenAI deal \"will clearly fuel 'circular' concerns.\" Broader context: Oracle/Meta/xAI/CoreWeave have moved ~$120B of AI infrastructure debt off-balance-sheet via SPVs; US datacenter debt issuance roughly doubled to ~$182B in 2025.",
+  "circular_financing_sources": "Fortune / CNBC"
+}

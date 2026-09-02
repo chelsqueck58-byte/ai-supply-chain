@@ -142,7 +142,8 @@
      longest cell in the row, so it wraps into the most lines. A wider column
      here means fewer wrapped lines, which shortens every row's height and
      lets more stocks fit on screen without scrolling. */
-  .cmp-capex-text { white-space:normal; max-width:500px; font-size:9px; color:var(--muted); line-height:1.25; }
+  .cmp-capex-text { white-space:normal; max-width:500px; font-size:9px; color:var(--muted); line-height:1.25;
+    display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
   /* Compare tab only (scoped via #compare-wrap - .cmp-table is shared with
      the P/E History tab, which wasn't part of this request). Company and
      Mkt Cap are the shortest-content columns; narrowing them frees up
@@ -192,7 +193,7 @@
 <script>
 "use strict";
 const TREND_ORDER = { up: 0, flat: 1, down: 2 };
-let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, DEEP_FUND = null, GEO_MIX = null, FX_RATES = null, OFF_BS = null, HIST_PE = null, FWD_PE = null, ROIC = null, NVDA_PARTNERSHIPS = null, STALE = false, OBSERVER = null;
+let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, DEEP_FUND = null, GEO_MIX = null, FX_RATES = null, OFF_BS = null, HIST_PE = null, FWD_PE = null, ROIC = null, NVDA_PARTNERSHIPS = null, NVDA_DEBT = null, STALE = false, OBSERVER = null;
 const REVENUE_TAB_CATEGORIES = new Set(["china-internet", "compute", "hyperscaler-cloud", "platform"]);
 // Individual tickers pulled in from a category that isn't otherwise in
 // scope (e.g. ASML from Equipment) - added one at a time on request rather
@@ -1094,11 +1095,22 @@ function computeTtmEps(hist) {
 
 const NVDA_ECO_CATEGORY_COLORS = {
   "Strategic Investment (Kingmaker)": "#f85149",
+  "Chip Supply Chain": "#58a6ff",
   "Cloud/Hyperscaler": "#3fb950",
   "AI Model/Software": "#f778ba",
   "Enterprise/Vertical": "#a371f7",
   "Sovereign AI/Government": "#ff9800",
   "Telecom/Networking": "#e3b341",
+};
+// Investor-lens rationale per category - the "why", not just the "what".
+const NVDA_ECO_CATEGORY_WHY = {
+  "Strategic Investment (Kingmaker)": "Direct equity in emerging ASIC and neocloud challengers, rather than treating them as pure competitors or customers - buys financial alignment and NVLink Fusion ecosystem lock-in before a rival standard can take hold.",
+  "Chip Supply Chain": "Multiyear supply/technology commitments (not equity) with critical component makers - secures the memory and packaging capacity NVIDIA's own roadmap depends on, at a scale (SK Hynix alone: up to $500B) that dwarfs the equity plays above.",
+  "Cloud/Hyperscaler": "Keeps NVIDIA hardware the default substrate across every major cloud, hedging against any single hyperscaler building a credible in-house alternative (own silicon or a rival GPU supplier gaining share).",
+  "AI Model/Software": "Backing both the model layer (OpenAI, Anthropic, Mistral) and the tooling/hosting layer (Hugging Face) secures NVIDIA's position underneath the entire AI stack - if these labs scale, they scale on NVIDIA compute by design.",
+  "Enterprise/Vertical": "Expands demand beyond the hyperscaler capex cycle into healthcare, automotive, and robotics - proves real-world ROI and creates a second, less-cyclical demand base.",
+  "Sovereign AI/Government": "National AI infrastructure is a new, largely non-cyclical demand category insulated from Big Tech capex swings, and gives NVIDIA standard-setting influence as countries build their AI stacks on its hardware.",
+  "Telecom/Networking": "A long-duration bet that NVIDIA hardware becomes the foundation for 6G infrastructure years before commercial deployment - locks in another massive vertical beyond AI/cloud before it's contested.",
 };
 function nvdaEcoShortLabel(partner) {
   const first = partner.split("/")[0].trim();
@@ -1173,21 +1185,56 @@ function renderNvdaEcosystem() {
     ${svgLines}${svgNodes}${centerNode}
   </svg>`;
 
-  const rows = partnerships.slice().sort((a, b) => (b.date || "").localeCompare(a.date || "")).map(p => `<tr>
-    <td style="max-width:150px; white-space:normal;"><b>${esc(p.partner)}</b></td>
-    <td style="white-space:normal;"><span class="rev-qual" style="background:${NVDA_ECO_CATEGORY_COLORS[p.category] || "#7d8590"}22; color:${NVDA_ECO_CATEGORY_COLORS[p.category] || "#7d8590"}; padding:2px 6px; border-radius:4px; font-size:10px; white-space:nowrap;">${esc(p.category)}</span></td>
-    <td>${esc(p.date || "—")}</td>
-    <td style="white-space:nowrap;">${p.status === "unconfirmed" ? '<span class="pe-nm" title="Reported/rumored, not yet signed">⚠ unconfirmed</span>' : '<span class="pct u">confirmed</span>'}</td>
-    <td style="max-width:420px; white-space:normal;">${esc(p.description || "")}</td>
-    <td class="pe-nm" style="max-width:160px; white-space:normal;">${esc(p.source || "")}</td>
-  </tr>`).join("");
+  const catOrder = Object.keys(NVDA_ECO_CATEGORY_COLORS).filter(c => byCat.has(c));
+  let rows = "";
+  for (const cat of catOrder) {
+    const color = NVDA_ECO_CATEGORY_COLORS[cat] || "#7d8590";
+    rows += `<tr><td colspan="5" style="padding-top:10px;"><div style="font-weight:700; color:${color}; font-size:11px;">${esc(cat)}</div><div class="rev-src" style="white-space:normal; max-width:900px; margin-top:2px;">${esc(NVDA_ECO_CATEGORY_WHY[cat] || "")}</div></td></tr>`;
+    const members = byCat.get(cat).slice().sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+    for (const p of members) {
+      rows += `<tr>
+        <td style="max-width:150px; white-space:normal;"><b>${esc(p.partner)}</b></td>
+        <td>${esc(p.date || "—")}</td>
+        <td style="white-space:nowrap;">${p.status === "unconfirmed" ? '<span class="pe-nm" title="Reported/rumored, not yet signed">⚠ unconfirmed</span>' : '<span class="pct u">confirmed</span>'}</td>
+        <td style="max-width:420px; white-space:normal;">${esc(p.description || "")}</td>
+        <td class="pe-nm" style="max-width:160px; white-space:normal;">${esc(p.source || "")}</td>
+      </tr>`;
+    }
+  }
+
+  const debtData = NVDA_DEBT;
+  let debtHtml = "";
+  if (debtData && debtData.deals && debtData.deals.length) {
+    const deals = debtData.deals.slice().sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+    const debtRows = deals.map(d => {
+      const isDirect = /^direct/.test(d.role || "");
+      const roleBadge = isDirect
+        ? `<span class="pct u" title="${esc(d.role)}">direct</span>`
+        : `<span class="pe-nm" title="${esc(d.role)}">indirect</span>`;
+      return `<tr>
+        <td style="max-width:170px; white-space:normal;"><b>${esc(d.name)}</b></td>
+        <td style="white-space:nowrap;">${esc(d.amount || "—")}</td>
+        <td>${esc(d.date || "—")}</td>
+        <td style="white-space:nowrap;">${roleBadge}</td>
+        <td style="max-width:420px; white-space:normal;">${esc(d.description || "")}</td>
+        <td class="pe-nm" style="max-width:140px; white-space:normal;">${esc(d.source || "")}</td>
+      </tr>`;
+    }).join("");
+    debtHtml = `<div class="hist-head" style="margin-top:26px">NVIDIA's Role in AI Infrastructure Debt Financing</div>
+      <div class="rev-src" style="margin-bottom:10px">${esc(debtData.note || "")} ${debtData.fetched ? `Researched as of ${esc(debtData.fetched)}.` : ""}</div>
+      <table class="cmp-table"><thead><tr>
+        <th>Deal</th><th>Amount</th><th>Date</th><th>Role</th><th>What it is</th><th>Source</th>
+      </tr></thead><tbody>${debtRows}</tbody></table>
+      ${debtData.circular_financing_note ? `<div class="rev-src" style="margin-top:10px; padding:10px; border:1px solid #30363d; border-radius:6px; background:#161b22; white-space:normal;"><b style="color:#e3b341">Circular financing debate:</b> ${esc(debtData.circular_financing_note)} <span class="pe-nm">(${esc(debtData.circular_financing_sources || "")})</span></div>` : ""}`;
+  }
 
   wrap.innerHTML = `<div class="hist-head">NVIDIA's ${new Date().getFullYear()} Partnership Ecosystem</div>
     <div class="rev-src" style="margin-bottom:10px">Curated, not exhaustive - the most significant, widely-covered partnerships NVIDIA announced this year, grouped by category. <b style="color:#f85149">Strategic Investment (Kingmaker)</b> is its own category, not folded into Chip/Hardware or Cloud/Hyperscaler: these are direct equity stakes (MediaTek, Marvell) and neocloud investments (Nebius, CoreWeave) where NVIDIA is financially building up the next generation of ASIC and GPU-cloud challengers rather than treating them as pure competitors or customers - aligning them to NVIDIA's own ecosystem instead. * / dashed node = reported but unconfirmed (not yet signed). ${data.fetched ? `Researched as of ${esc(data.fetched)}.` : ""}</div>
     ${mapHtml}
     <table class="cmp-table" style="margin-top:18px"><thead><tr>
-      <th>Partner</th><th>Category</th><th>Date</th><th>Status</th><th>What it is</th><th>Source</th>
-    </tr></thead><tbody>${rows}</tbody></table>`;
+      <th>Partner</th><th>Date</th><th>Status</th><th>What it is</th><th>Source</th>
+    </tr></thead><tbody>${rows}</tbody></table>
+    ${debtHtml}`;
 }
 
 function renderPeHistory() {
@@ -1477,8 +1524,9 @@ function load() {
     fetch("./forward-pe.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./roic.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./nvda-partnerships.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
-  ]).then(([data, moves, scmap, earnDates, revMix, deepFund, geoMix, fxRates, offBs, histPe, fwdPe, roic, nvdaPartnerships]) => {
-    DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates; REV_MIX = revMix; DEEP_FUND = deepFund; GEO_MIX = geoMix; FX_RATES = fxRates; OFF_BS = offBs; HIST_PE = histPe; FWD_PE = fwdPe; ROIC = roic; NVDA_PARTNERSHIPS = nvdaPartnerships;
+    fetch("./nvda-debt-financing.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
+  ]).then(([data, moves, scmap, earnDates, revMix, deepFund, geoMix, fxRates, offBs, histPe, fwdPe, roic, nvdaPartnerships, nvdaDebt]) => {
+    DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates; REV_MIX = revMix; DEEP_FUND = deepFund; GEO_MIX = geoMix; FX_RATES = fxRates; OFF_BS = offBs; HIST_PE = histPe; FWD_PE = fwdPe; ROIC = roic; NVDA_PARTNERSHIPS = nvdaPartnerships; NVDA_DEBT = nvdaDebt;
     STALE = checkStale(DATA);
     const ideas = DATA.instruments.filter(i => i.idea && i.idea.kind === "enter").length;
     document.getElementById("meta").textContent =

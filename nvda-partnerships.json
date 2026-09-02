@@ -1,5 +1,5 @@
 {
-  "fetched": "2026-09-03",
+  "fetched": "2026-09-02",
   "note": "Curated, not exhaustive - the most significant/widely-covered NVDA partnerships announced in calendar year 2026. Manually researched and verified; re-run scripts/nvda_partnerships.py to refresh.",
   "partnerships": [
     {
@@ -33,6 +33,38 @@
       "status": "confirmed",
       "description": "NVIDIA's largest and longest-running neocloud bet: early pre-IPO investor, ~7% stake at March 2025 IPO, added ~$2B (24.2M shares) in Jan 2026 taking it to ~13%, then increased again in Q1 2026 to 47.2M+ shares (~11%, ~$4.9B) - NVIDIA's second-largest shareholder. CoreWeave commits to deploying future NVIDIA infrastructure (Rubin GPUs, Vera CPUs) for its 5GW-by-2030 buildout.",
       "source": "CNBC / NextPlatform / IndexBox"
+    },
+    {
+      "partner": "IREN",
+      "category": "Strategic Investment (Kingmaker)",
+      "date": "2026-05-01",
+      "status": "confirmed",
+      "description": "5GW AI infrastructure deal; NVIDIA holds a 5-year right to buy up to 30M IREN shares (~$2.1B) - the same warrant-based alignment structure as Nebius, backing another emerging neocloud capacity source.",
+      "source": "NVIDIA Newsroom"
+    },
+    {
+      "partner": "QuEra / Quantinuum / PsiQuantum / Alice & Bob",
+      "category": "Strategic Investment (Kingmaker)",
+      "date": "2026-05-22",
+      "status": "confirmed",
+      "description": "NVentures (NVIDIA's venture arm) stakes across multiple quantum computing startups - individually small, but the same pattern as the ASIC/neocloud bets: early financial alignment with potential future compute paradigms rather than waiting to see who wins.",
+      "source": "Tech.eu"
+    },
+    {
+      "partner": "Intel",
+      "category": "Strategic Investment (Kingmaker)",
+      "date": "2025-09-18",
+      "status": "confirmed",
+      "description": "$5B equity stake (initial purchase price) tied to jointly developing x86 CPUs with NVIDIA NVLink/RTX GPU chiplets for PCs and data centers - not an emerging challenger like the other Kingmaker bets, but buys product co-design influence over the incumbent x86 roadmap. Per NVIDIA's Q2 FY2026 13F, the position had appreciated to ~$30B.",
+      "source": "NVIDIA Newsroom / Yahoo Finance (13F)"
+    },
+    {
+      "partner": "SpaceX",
+      "category": "Strategic Investment (Kingmaker)",
+      "date": "2025-01-01",
+      "status": "confirmed",
+      "description": "~$21B stake per NVIDIA's Q2 FY2026 13F filing - outside the AI-compute ecosystem NVIDIA otherwise builds (space launch/Starlink), read more as a large opportunistic venture return than an ecosystem-lock-in play like the others in this category.",
+      "source": "Fortune / Tom's Hardware (13F)"
     },
     {
       "partner": "AWS",
@@ -89,6 +121,22 @@
       "status": "confirmed",
       "description": "Founding member of NVIDIA's Nemotron Coalition; co-developing open frontier models (Mistral 3), deployed across NVIDIA compute and tooling.",
       "source": "NVIDIA Blog, GTC Paris"
+    },
+    {
+      "partner": "Anthropic",
+      "category": "AI Model/Software",
+      "date": "2026-02-01",
+      "status": "confirmed",
+      "description": "$10B equity stake as part of Anthropic's Series G, alongside Microsoft's $5B - direct capital into a top-3 AI lab, distinct from the Lambda compute deal (Anthropic is also a Lambda customer, separately).",
+      "source": "Tech-Insider / Yahoo Finance"
+    },
+    {
+      "partner": "Perplexity",
+      "category": "AI Model/Software",
+      "date": "2026-08-24",
+      "status": "unconfirmed",
+      "description": "Reported to be in talks for an investment at ~$30B valuation - not yet closed.",
+      "source": "SiliconANGLE"
     },
     {
       "partner": "Eli Lilly",
@@ -161,6 +209,62 @@
       "status": "confirmed",
       "description": "20,000+ Blackwell Ultra GPUs deployed for the IndiaAI Mission; Reliance building a GB300-powered sovereign AI backbone with Omniverse digital twins in Jamnagar.",
       "source": "Computer Weekly / Republic World"
+    },
+    {
+      "partner": "HUMAIN (Saudi Arabia)",
+      "category": "Sovereign AI/Government",
+      "date": "2026-05-01",
+      "status": "confirmed",
+      "description": "Strategic AI-factory partnership - ~$100B committed across 11 data centers/2.2GW, NVIDIA's largest single Gulf sovereign AI commitment.",
+      "source": "NVIDIA Newsroom"
+    },
+    {
+      "partner": "G42 / Stargate UAE (Oracle, OpenAI, Cisco, SoftBank)",
+      "category": "Sovereign AI/Government",
+      "date": "2026-01-01",
+      "status": "confirmed",
+      "description": "Stargate UAE consortium targeting 1GW, plus a separate UAE-US AI Campus with direct NVIDIA hardware commitments - NVIDIA's anchor role in the Gulf's other major sovereign AI push alongside Saudi Arabia.",
+      "source": "RestOfWorld"
+    },
+    {
+      "partner": "Deutsche Telekom (Germany)",
+      "category": "Sovereign AI/Government",
+      "date": "2026-01-01",
+      "status": "confirmed",
+      "description": "Industrial AI Cloud for Germany, up to 10,000 Blackwell GPUs, live Q1 2026 - distinct from Deutsche Telekom's separate role in the 6G Coalition below.",
+      "source": "Deutsche Telekom"
+    },
+    {
+      "partner": "Corning",
+      "category": "Chip Supply Chain",
+      "date": "2026-05-06",
+      "status": "confirmed",
+      "description": "$3.2B warrant deal plus multi-year commercial partnership for optical-connectivity technology (fiber, connectors) - part of NVIDIA's ~$6.5B photonics push (with Coherent/Lumentum) to solve the copper interconnect bottleneck in scale-up AI data centers.",
+      "source": "CNBC / thenextweb"
+    },
+    {
+      "partner": "Coherent / Lumentum",
+      "category": "Chip Supply Chain",
+      "date": "2026-03-02",
+      "status": "confirmed",
+      "description": "$2B equity investment each (Series A Convertible Preferred for Lumentum) - the two leading suppliers of optical transceivers/components NVIDIA's Quantum-X/Spectrum-X co-packaged-optics networking roadmap depends on, secured with capital rather than just purchase orders.",
+      "source": "CNBC"
+    },
+    {
+      "partner": "Synopsys",
+      "category": "Chip Supply Chain",
+      "date": "2026-01-01",
+      "status": "confirmed",
+      "description": "$2B investment plus expanded partnership to accelerate chip design and engineering simulation (EDA) workloads on NVIDIA compute - secures a stake in the tool NVIDIA's own next-gen chips (and its customers') get designed with.",
+      "source": "Synopsys / NVIDIA IR"
+    },
+    {
+      "partner": "SK Hynix",
+      "category": "Chip Supply Chain",
+      "date": "2026-06-01",
+      "status": "confirmed",
+      "description": "Multiyear memory/technology partnership tied to the Vera Rubin/Vera CPU/RTX Spark/Jetson Thor roadmap, reportedly worth up to $500B over multiple years including an SK Telecom-built 2GW AI factory. By dollar value, dwarfs every other single-company deal on this page - but structured as a supply/technology commitment, not an equity stake, so kept in its own category rather than folded into Strategic Investment (Kingmaker).",
+      "source": "NVIDIA Newsroom / CNBC"
     },
     {
       "partner": "Nokia / Ericsson / Cisco / Deutsche Telekom / T-Mobile / SoftBank / SK Telecom / BT Group / Booz Allen / MITRE",
