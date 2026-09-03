@@ -1,5 +1,5 @@
 {
-  "fetched": "2026-09-02",
+  "fetched": "2026-09-03",
   "note": "NVIDIA's role in AI-infrastructure debt/private-credit financing, kept separate from the equity partnerships table above since the nature of involvement differs sharply by deal - explicitly labeled Direct (NVIDIA is itself a financing party) vs Indirect (NVIDIA is only the equipment supplier whose GPUs collateralize debt raised by others).",
   "deals": [
     {
@@ -21,13 +21,13 @@
       "source": "NVIDIA Blog (Jul 1 2026) / WSJ, Benzinga, The Next Web (pause reporting)"
     },
     {
-      "name": "OpenAI Ohio data center financing",
-      "role": "direct",
-      "amount": "~$105B",
+      "name": "OpenAI Ohio data center financing (SB Energy)",
+      "role": "direct - equity + credit-support backstop + exclusive chip supplier",
+      "amount": "$105B backstop cap + $1.5B equity",
       "date": "2026-08-17",
-      "description": "NVIDIA reported to be backing/financing an OpenAI Ohio data center. Exact structure (direct lender vs. guarantor) not confirmed in press coverage - flagged as such rather than overstated.",
-      "status": "unconfirmed structure",
-      "source": "CNBC"
+      "description": "SIGNED 20-year, 10GW lease from OpenAI to SoftBank subsidiary SB Energy (PORTS-Pike Technology Campus, Pike County OH, the former Portsmouth Gaseous Diffusion Plant - broke ground Mar 20 2026). NVIDIA backstops the initial 4.25GW phase (option for +3.75GW), invests $1.5B equity directly in SB Energy, AND is exclusive chip supplier for the first half of the site - three separate financial roles on one project, same pattern as the xAI/SpaceX deal above. NVIDIA's guarantee was cut sharply before signing: $250B originally discussed (Jul 2026) -> revised to under $120B (Aug 14, after investors pushed back on NVIDIA's financing-commitment risk exposure) -> settled at $105B in the signed deal (Aug 17). Separately, Japan is investing $33B in SB Energy's 9.2GW natural-gas power buildout for the site as part of a US-Japan trade deal (revenue-split until Japan's investment is recovered, then 90% to the US) - a second, non-NVIDIA circular-financing layer on the same project.",
+      "status": "confirmed - signed",
+      "source": "WSJ (via CNBC, DataCenterDynamics, SiliconANGLE, Constellation Research)"
     },
     {
       "name": "Anthropic-Lambda data center lease (Hut 8)",
