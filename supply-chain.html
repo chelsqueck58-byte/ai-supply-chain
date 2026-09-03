@@ -146,6 +146,7 @@
   .cmp-mktcap-usd { display:block; color:var(--muted); font-size:8px; }
   /* P/E History tab */
   .pe-current { font-weight:600; color:var(--text); }
+  .pe-fwd1 { font-weight:800; color:var(--text); }
   .pe-nm { color:var(--muted); font-style:italic; font-size:9px; }
   .pe-range-wrap { display:flex; flex-direction:column; gap:3px; min-width:130px; }
   .pe-range-lbl { font-size:9px; color:var(--muted); display:flex; justify-content:space-between; white-space:nowrap; }
@@ -1483,15 +1484,20 @@ function buildHistPeSection() {
         // fall back to left-packing since there's nothing to align against.
         for (let i = 0; i < Math.min(3, fpYears.length); i++) fpSlots[i] = fpYears[i];
       }
-      const fwdCells = fpSlots.map(y => {
+      const fwdCells = fpSlots.map((y, i) => {
         if (!y) return `<td>${na}</td>`;
         const label = esc(y.fy_label || y.period_end || "?");
         const nAnalysts = y.num_analysts != null
           ? ` <span class="pe-nm" title="${y.num_analysts} analysts in consensus">(${y.num_analysts})</span>` : "";
+        // T+1 (nearest forward year) is the single most decision-relevant
+        // number in this table - bolded harder than the rest so it reads
+        // at a glance across every row, not just semi-bold like every
+        // other P/E value.
+        const peClass = i === 0 ? "pe-fwd1" : "pe-current";
         if (y.pe != null) {
           const warn = y.flag ? ` <span class="rev-qual" title="${esc(y.flag)}">⚠</span>` : "";
           const conv = y.converted ? `<span class="rev-qual" title="${esc(y.source || "currency-converted")}">*</span>` : "";
-          return `<td><span class="pe-current">${y.pe}x</span>${conv}${warn}<br><span class="pe-nm">${label}${nAnalysts}</span></td>`;
+          return `<td><span class="${peClass}">${y.pe}x</span>${conv}${warn}<br><span class="pe-nm">${label}${nAnalysts}</span></td>`;
         }
         return `<td><span class="pe-nm" title="${esc(y.flag || y.source || "")}">${y.flag ? "⚠ n/a" : "n/a"}</span><br><span class="pe-nm">${label}</span></td>`;
       }).join("");
