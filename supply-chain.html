@@ -33,6 +33,8 @@
   .card .px { margin-left:auto; font-variant-numeric:tabular-nums; font-weight:600; }
   .pct { font-variant-numeric:tabular-nums; font-size:11px; }
   .pct.u { color:var(--up); } .pct.d { color:var(--down); }
+  .deal-type { font-size:10px; padding:1px 7px; border-radius:3px; background:rgba(63,185,80,.12); color:var(--up); white-space:nowrap; }
+  .deal-type.unsigned { background:none; border:1px dashed var(--muted); color:var(--muted); cursor:help; }
   .badge { font-size:10px; font-weight:600; padding:1px 5px; border-radius:4px; white-space:nowrap; }
   .badge.up { color:var(--up); background:rgba(38,166,65,.14); }
   .badge.down { color:var(--down); background:rgba(248,81,73,.14); }
@@ -1175,7 +1177,7 @@ function renderNvdaEcosystem() {
       rows += `<tr>
         <td style="max-width:150px; white-space:normal;"><b>${esc(p.partner)}</b></td>
         <td>${esc(p.date || "—")}</td>
-        <td style="white-space:nowrap;">${p.status === "unconfirmed" ? '<span class="pe-nm" title="Reported/rumored, not yet signed">⚠ unconfirmed</span>' : '<span class="pct u">confirmed</span>'}</td>
+        <td style="white-space:nowrap;">${p.status === "unconfirmed" ? `<span class="deal-type unsigned" title="Reported/rumored, not yet signed">${esc(p.type || "")} ⚠</span>` : `<span class="deal-type">${esc(p.type || "")}</span>`}</td>
         <td style="max-width:420px; white-space:normal;">${esc(p.description || "")}</td>
         <td class="pe-nm" style="max-width:160px; white-space:normal;">${esc(p.source || "")}</td>
       </tr>`;
@@ -1212,7 +1214,7 @@ function renderNvdaEcosystem() {
     <div class="rev-src" style="margin-bottom:10px">Curated, not exhaustive - the most significant, widely-covered partnerships NVIDIA announced this year, grouped by category. <b style="color:#f85149">Strategic Investment (Kingmaker)</b> is its own category, not folded into Chip/Hardware or Cloud/Hyperscaler: these are direct equity stakes (MediaTek, Marvell) and neocloud investments (Nebius, CoreWeave) where NVIDIA is financially building up the next generation of ASIC and GPU-cloud challengers rather than treating them as pure competitors or customers - aligning them to NVIDIA's own ecosystem instead. * / dashed node = reported but unconfirmed (not yet signed). ${data.fetched ? `Researched as of ${esc(data.fetched)}.` : ""}</div>
     ${mapHtml}
     <table class="cmp-table" style="margin-top:18px"><thead><tr>
-      <th>Partner</th><th>Date</th><th>Status</th><th>What it is</th><th>Source</th>
+      <th>Partner</th><th>Date</th><th>Type</th><th>What it is</th><th>Source</th>
     </tr></thead><tbody>${rows}</tbody></table>
     ${debtHtml}`;
 }

@@ -8,7 +8,8 @@
       "date": "2026-08-31",
       "status": "confirmed",
       "description": "NVIDIA invests $3.5B in MediaTek convertible bonds; MediaTek adopts NVLink Fusion for custom XPUs in NVLink-connected AI factories, co-develops chips for RTX Spark/DGX Spark PCs, continues automotive SoC work. Same playbook as Marvell: direct capital + ecosystem lock-in to a rising ASIC player rather than treating it as a pure GPU competitor.",
-      "source": "NVIDIA IR / CNBC"
+      "source": "NVIDIA IR / CNBC",
+      "type": "Equity"
     },
     {
       "partner": "Marvell (MRVL)",
@@ -16,7 +17,8 @@
       "date": "2026-03-31",
       "status": "confirmed",
       "description": "NVIDIA invests $2B directly in Marvell, bundled with an NVLink Fusion partnership - Marvell builds custom XPUs and NVLink Fusion-compatible scale-up networking interoperable with NVIDIA Vera CPUs, ConnectX NICs, BlueField DPUs and Spectrum-X switches, plus joint silicon-photonics work. A major hyperscaler ASIC design partner (Amazon Trainium, Google TPU) now financially aligned with NVIDIA instead of purely competing with it.",
-      "source": "NVIDIA Newsroom / Marvell IR"
+      "source": "NVIDIA Newsroom / Marvell IR",
+      "type": "Equity"
     },
     {
       "partner": "Nebius (NBIS)",
@@ -24,7 +26,8 @@
       "date": "2026-03-11",
       "status": "confirmed",
       "description": "NVIDIA invests $2B in Nebius (~8-9% stake, plus warrants) - Nebius targets 5GW of NVIDIA chip deployment by 2030 with early access to next-gen Vera Rubin chips and joint rack co-design/fleet-management work. A \"neocloud\" GPU-cloud provider built up as an alternative capacity source to the traditional hyperscalers, financially tied to NVIDIA.",
-      "source": "CNBC"
+      "source": "CNBC",
+      "type": "Equity"
     },
     {
       "partner": "CoreWeave (CRWV)",
@@ -32,7 +35,8 @@
       "date": "2026-01-26",
       "status": "confirmed",
       "description": "NVIDIA's largest and longest-running neocloud bet: early pre-IPO investor, ~7% stake at March 2025 IPO, added ~$2B (24.2M shares) in Jan 2026 taking it to ~13%, then increased again in Q1 2026 to 47.2M+ shares (~11%, ~$4.9B) - NVIDIA's second-largest shareholder. CoreWeave commits to deploying future NVIDIA infrastructure (Rubin GPUs, Vera CPUs) for its 5GW-by-2030 buildout.",
-      "source": "CNBC / NextPlatform / IndexBox"
+      "source": "CNBC / NextPlatform / IndexBox",
+      "type": "Equity"
     },
     {
       "partner": "IREN",
@@ -40,7 +44,8 @@
       "date": "2026-05-01",
       "status": "confirmed",
       "description": "5GW AI infrastructure deal; NVIDIA holds a 5-year right to buy up to 30M IREN shares (~$2.1B) - the same warrant-based alignment structure as Nebius, backing another emerging neocloud capacity source.",
-      "source": "NVIDIA Newsroom"
+      "source": "NVIDIA Newsroom",
+      "type": "Equity"
     },
     {
       "partner": "QuEra / Quantinuum / PsiQuantum / Alice & Bob",
@@ -48,7 +53,8 @@
       "date": "2026-05-22",
       "status": "confirmed",
       "description": "NVentures (NVIDIA's venture arm) stakes across multiple quantum computing startups - individually small, but the same pattern as the ASIC/neocloud bets: early financial alignment with potential future compute paradigms rather than waiting to see who wins.",
-      "source": "Tech.eu"
+      "source": "Tech.eu",
+      "type": "Equity"
     },
     {
       "partner": "SB Energy (SoftBank subsidiary)",
@@ -56,7 +62,8 @@
       "date": "2026-08-17",
       "status": "confirmed",
       "description": "$1.5B equity investment in SB Energy as part of the signed OpenAI Ohio data center deal (20-year, 10GW lease) - bundled with a $105B credit-support backstop and exclusive first-half chip supply rights. See the debt-financing table below for the full backstop-size evolution ($250B -> <$120B -> $105B) and the Japan power-financing angle.",
-      "source": "WSJ / CNBC"
+      "source": "WSJ / CNBC",
+      "type": "Equity"
     },
     {
       "partner": "Nscale",
@@ -64,7 +71,8 @@
       "date": "2026-06-01",
       "status": "confirmed",
       "description": "NVIDIA backed UK neocloud Nscale from its Series B through a $2B Series C (2026), taking it to a $14.6B valuation - Nscale is now preparing a ~$3B US IPO, chasing CoreWeave's playbook. Same pattern as Nebius/IREN: warrant/equity alignment with an emerging GPU-capacity provider before it scales independently.",
-      "source": "Data Center Knowledge / The Information"
+      "source": "Data Center Knowledge / The Information",
+      "type": "Equity"
     },
     {
       "partner": "Figure AI",
@@ -72,7 +80,8 @@
       "date": "2025-09-01",
       "status": "confirmed",
       "description": "NVIDIA invested $50M in Figure AI's Series B (Feb 2024, $675M round, $2.6B valuation) and participated again in its Series C (Sept 2025, $1B+ round, $39B valuation) - one of NVIDIA's earliest and largest humanoid-robotics equity bets, distinct from the broader Isaac/Omniverse robotics tooling coalition below.",
-      "source": "CNBC / Foreign Affairs Forum"
+      "source": "CNBC / Foreign Affairs Forum",
+      "type": "Equity"
     },
     {
       "partner": "Intel",
@@ -80,7 +89,8 @@
       "date": "2025-09-18",
       "status": "confirmed",
       "description": "$5B equity stake (initial purchase price) tied to jointly developing x86 CPUs with NVIDIA NVLink/RTX GPU chiplets for PCs and data centers - not an emerging challenger like the other Kingmaker bets, but buys product co-design influence over the incumbent x86 roadmap. Per NVIDIA's Q2 FY2026 13F, the position had appreciated to ~$30B.",
-      "source": "NVIDIA Newsroom / Yahoo Finance (13F)"
+      "source": "NVIDIA Newsroom / Yahoo Finance (13F)",
+      "type": "Equity"
     },
     {
       "partner": "SpaceX",
@@ -88,7 +98,8 @@
       "date": "2025-01-01",
       "status": "confirmed",
       "description": "~$21B stake per NVIDIA's Q2 FY2026 13F filing - outside the AI-compute ecosystem NVIDIA otherwise builds (space launch/Starlink), read more as a large opportunistic venture return than an ecosystem-lock-in play like the others in this category.",
-      "source": "Fortune / Tom's Hardware (13F)"
+      "source": "Fortune / Tom's Hardware (13F)",
+      "type": "Equity"
     },
     {
       "partner": "AWS",
@@ -96,7 +107,8 @@
       "date": "2026-03-20",
       "status": "confirmed",
       "description": "Deploying 1M+ NVIDIA GPUs (Blackwell GB200 NVL72, moving to Rubin) across AWS regions.",
-      "source": "Virtualization Review, GTC 2026"
+      "source": "Virtualization Review, GTC 2026",
+      "type": "Supply Agreement"
     },
     {
       "partner": "Microsoft Azure",
@@ -104,7 +116,8 @@
       "date": "2026-03-20",
       "status": "confirmed",
       "description": "Among first clouds offering Grace Blackwell GB200 + Quantum-X800 InfiniBand across Azure/Fabric/365.",
-      "source": "GTC 2026"
+      "source": "GTC 2026",
+      "type": "Supply Agreement"
     },
     {
       "partner": "Google Cloud",
@@ -112,7 +125,8 @@
       "date": "2026-03-20",
       "status": "confirmed",
       "description": "Adopting the Grace Blackwell platform plus NVIDIA DGX Cloud service.",
-      "source": "GTC 2026"
+      "source": "GTC 2026",
+      "type": "Supply Agreement"
     },
     {
       "partner": "Lambda",
@@ -120,15 +134,17 @@
       "date": "2026-08-31",
       "status": "confirmed",
       "description": "Anthropic signed a $35B compute deal with NVIDIA-backed cloud provider Lambda; NVIDIA holds the lease on the Nueces County, TX data center (built by Hut 8) powering it.",
-      "source": "Bloomberg"
+      "source": "Bloomberg",
+      "type": "Lease"
     },
     {
       "partner": "Hugging Face",
       "category": "AI Model/Software",
-      "date": "2026-08-26",
-      "status": "unconfirmed",
-      "description": "Reported $12.9-13B acquisition talks, NOT yet signed - would be NVIDIA's largest deal ever, extending an investor relationship since 2023.",
-      "source": "TechCrunch / Forbes"
+      "date": "2026-09-03",
+      "status": "confirmed",
+      "description": "NVIDIA to acquire Hugging Face for $12.9B, confirmed via SEC 8-K filing Sept 3 2026 - includes a $1B employee retention package. Hugging Face's CEO says the company approached Huang about a deal over the summer; expected to close H1 2027. Hugging Face stays an open platform for the whole AI ecosystem, not NVIDIA-exclusive. Extends an investor relationship dating to 2023 into NVIDIA's largest acquisition ever.",
+      "source": "NVIDIA Blog / SEC 8-K / Bloomberg / CNBC (Sept 3 2026)",
+      "type": "Acquisition"
     },
     {
       "partner": "OpenAI",
@@ -136,7 +152,8 @@
       "date": "2026-02-27",
       "status": "confirmed",
       "description": "NVIDIA finalized a $30B equity stake in OpenAI's $110B funding round - a scaled-down cut of the original $100B/10GW commitment disclosed in 2025.",
-      "source": "Barchart"
+      "source": "Barchart",
+      "type": "Equity"
     },
     {
       "partner": "Mistral AI",
@@ -144,7 +161,8 @@
       "date": "2025-09-01",
       "status": "confirmed",
       "description": "NVIDIA participated in Mistral's ASML-led $2B Series C (Sept 2025, valuing Mistral at ~$13.8B) - exact NVIDIA-specific amount undisclosed. Also a founding member of NVIDIA's Nemotron Coalition, co-developing open frontier models (Mistral 3), deployed across NVIDIA compute and tooling.",
-      "source": "Dealroom / CNBC, NVIDIA Blog"
+      "source": "Dealroom / CNBC, NVIDIA Blog",
+      "type": "Equity"
     },
     {
       "partner": "Anthropic",
@@ -152,7 +170,8 @@
       "date": "2026-02-01",
       "status": "confirmed",
       "description": "$10B equity stake as part of Anthropic's Series G, alongside Microsoft's $5B - direct capital into a top-3 AI lab, distinct from the Lambda compute deal (Anthropic is also a Lambda customer, separately).",
-      "source": "Tech-Insider / Yahoo Finance"
+      "source": "Tech-Insider / Yahoo Finance",
+      "type": "Equity"
     },
     {
       "partner": "Perplexity",
@@ -160,7 +179,8 @@
       "date": "2026-08-24",
       "status": "unconfirmed",
       "description": "Reported to be in talks for an investment at ~$30B valuation - not yet closed.",
-      "source": "SiliconANGLE"
+      "source": "SiliconANGLE",
+      "type": "Equity"
     },
     {
       "partner": "Eli Lilly",
@@ -168,7 +188,8 @@
       "date": "2026-01-12",
       "status": "confirmed",
       "description": "5-year, $1B strategic partnership for AI-driven drug discovery.",
-      "source": "Bio-IT World, JPM Healthcare Conference"
+      "source": "Bio-IT World, JPM Healthcare Conference",
+      "type": "Partnership"
     },
     {
       "partner": "Mayo Clinic / IQVIA / Illumina / Arc Institute",
@@ -176,7 +197,8 @@
       "date": "2026-03-20",
       "status": "confirmed",
       "description": "Mayo deploying DGX Blackwell + MONAI imaging platform; IQVIA/Illumina/Arc on genomics, clinical-trial AI agents, expanded BioNeMo platform.",
-      "source": "NVIDIA Newsroom, GTC 2026"
+      "source": "NVIDIA Newsroom, GTC 2026",
+      "type": "Partnership"
     },
     {
       "partner": "Toyota",
@@ -184,7 +206,8 @@
       "date": "2026-03-20",
       "status": "confirmed",
       "description": "Expanded partnership into AI factories, smart cities, traffic intelligence, and manufacturing, beyond existing DRIVE work.",
-      "source": "Yahoo Finance, GTC 2026"
+      "source": "Yahoo Finance, GTC 2026",
+      "type": "Partnership"
     },
     {
       "partner": "Mercedes-Benz",
@@ -192,7 +215,8 @@
       "date": "2026-01-01",
       "status": "confirmed",
       "description": "New CLA uses NVIDIA DRIVE AV software for enhanced Level 2 driver assistance.",
-      "source": "NVIDIA"
+      "source": "NVIDIA",
+      "type": "Partnership"
     },
     {
       "partner": "BYD / Hyundai / Nissan / Geely",
@@ -200,7 +224,8 @@
       "date": "2026-01-01",
       "status": "confirmed",
       "description": "New automaker adopters of NVIDIA's robotaxi-ready compute/software stack.",
-      "source": "NVIDIA"
+      "source": "NVIDIA",
+      "type": "Partnership"
     },
     {
       "partner": "ABB / Universal Robots / KUKA / Boston Dynamics / Figure / 1X / Agility / AGIBOT / NEURA / Skild AI",
@@ -208,7 +233,8 @@
       "date": "2026-03-20",
       "status": "confirmed",
       "description": "Robotics coalition integrating NVIDIA Isaac/Omniverse physical-AI models for humanoid and industrial robots.",
-      "source": "NVIDIA IR, GTC 2026"
+      "source": "NVIDIA IR, GTC 2026",
+      "type": "Partnership"
     },
     {
       "partner": "Palantir",
@@ -216,7 +242,8 @@
       "date": "2026-07-01",
       "status": "confirmed",
       "description": "Sovereign AI stack (AIOS-RA on 8x Blackwell Ultra + Spectrum-X); expanded mid-2026 to give US federal agencies/critical-infrastructure operators customizable models (via NVIDIA Nemotron) inside air-gapped/classified networks.",
-      "source": "SDxCentral"
+      "source": "SDxCentral",
+      "type": "Partnership"
     },
     {
       "partner": "NAVER (South Korea)",
@@ -224,7 +251,8 @@
       "date": "2026-01-01",
       "status": "confirmed",
       "description": "South Korea sovereign AI factory, starting at 55MW at GAK Sejong.",
-      "source": "NVIDIA"
+      "source": "NVIDIA",
+      "type": "Supply Agreement"
     },
     {
       "partner": "Reliance / Yotta / E2E Networks / L&T (India)",
@@ -232,7 +260,8 @@
       "date": "2026-06-19",
       "status": "confirmed",
       "description": "20,000+ Blackwell Ultra GPUs deployed for the IndiaAI Mission; Reliance building a GB300-powered sovereign AI backbone with Omniverse digital twins in Jamnagar.",
-      "source": "Computer Weekly / Republic World"
+      "source": "Computer Weekly / Republic World",
+      "type": "Supply Agreement"
     },
     {
       "partner": "HUMAIN (Saudi Arabia)",
@@ -240,7 +269,8 @@
       "date": "2026-05-01",
       "status": "confirmed",
       "description": "Strategic AI-factory partnership - ~$100B committed across 11 data centers/2.2GW, NVIDIA's largest single Gulf sovereign AI commitment.",
-      "source": "NVIDIA Newsroom"
+      "source": "NVIDIA Newsroom",
+      "type": "Partnership"
     },
     {
       "partner": "G42 / Stargate UAE (Oracle, OpenAI, Cisco, SoftBank)",
@@ -248,7 +278,8 @@
       "date": "2026-01-01",
       "status": "confirmed",
       "description": "Stargate UAE consortium targeting 1GW, plus a separate UAE-US AI Campus with direct NVIDIA hardware commitments - NVIDIA's anchor role in the Gulf's other major sovereign AI push alongside Saudi Arabia.",
-      "source": "RestOfWorld"
+      "source": "RestOfWorld",
+      "type": "Partnership"
     },
     {
       "partner": "Deutsche Telekom (Germany)",
@@ -256,7 +287,8 @@
       "date": "2026-01-01",
       "status": "confirmed",
       "description": "Industrial AI Cloud for Germany, up to 10,000 Blackwell GPUs, live Q1 2026 - distinct from Deutsche Telekom's separate role in the 6G Coalition below.",
-      "source": "Deutsche Telekom"
+      "source": "Deutsche Telekom",
+      "type": "Supply Agreement"
     },
     {
       "partner": "Corning",
@@ -264,7 +296,8 @@
       "date": "2026-05-06",
       "status": "confirmed",
       "description": "$3.2B warrant deal plus multi-year commercial partnership for optical-connectivity technology (fiber, connectors) - part of NVIDIA's ~$6.5B photonics push (with Coherent/Lumentum) to solve the copper interconnect bottleneck in scale-up AI data centers.",
-      "source": "CNBC / thenextweb"
+      "source": "CNBC / thenextweb",
+      "type": "Equity"
     },
     {
       "partner": "Coherent / Lumentum",
@@ -272,7 +305,8 @@
       "date": "2026-03-02",
       "status": "confirmed",
       "description": "$2B equity investment each (Series A Convertible Preferred for Lumentum) - the two leading suppliers of optical transceivers/components NVIDIA's Quantum-X/Spectrum-X co-packaged-optics networking roadmap depends on, secured with capital rather than just purchase orders.",
-      "source": "CNBC"
+      "source": "CNBC",
+      "type": "Equity"
     },
     {
       "partner": "Synopsys",
@@ -280,7 +314,8 @@
       "date": "2026-01-01",
       "status": "confirmed",
       "description": "$2B investment plus expanded partnership to accelerate chip design and engineering simulation (EDA) workloads on NVIDIA compute - secures a stake in the tool NVIDIA's own next-gen chips (and its customers') get designed with.",
-      "source": "Synopsys / NVIDIA IR"
+      "source": "Synopsys / NVIDIA IR",
+      "type": "Equity"
     },
     {
       "partner": "SK Hynix",
@@ -288,7 +323,8 @@
       "date": "2026-06-01",
       "status": "confirmed",
       "description": "Multiyear memory/technology partnership tied to the Vera Rubin/Vera CPU/RTX Spark/Jetson Thor roadmap, reportedly worth up to $500B over multiple years including an SK Telecom-built 2GW AI factory. By dollar value, dwarfs every other single-company deal on this page - but structured as a supply/technology commitment, not an equity stake, so kept in its own category rather than folded into Strategic Investment (Kingmaker).",
-      "source": "NVIDIA Newsroom / CNBC"
+      "source": "NVIDIA Newsroom / CNBC",
+      "type": "Supply Agreement"
     },
     {
       "partner": "Nokia / Ericsson / Cisco / Deutsche Telekom / T-Mobile / SoftBank / SK Telecom / BT Group / Booz Allen / MITRE",
@@ -296,7 +332,8 @@
       "date": "2026-03-20",
       "status": "confirmed",
       "description": "6G Coalition - multi-party commitment to build AI-native, open 6G platforms; trials from 2028, commercial ~2030.",
-      "source": "NVIDIA IR, GTC 2026"
+      "source": "NVIDIA IR, GTC 2026",
+      "type": "Partnership"
     }
   ]
 }
