@@ -186,7 +186,7 @@
 <script>
 "use strict";
 const TREND_ORDER = { up: 0, flat: 1, down: 2 };
-let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, DEEP_FUND = null, GEO_MIX = null, FX_RATES = null, HIST_PE = null, FWD_PE = null, ROIC = null, NVDA_PARTNERSHIPS = null, NVDA_DEBT = null, CIRC_FIN = null, STALE = false, OBSERVER = null;
+let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, DEEP_FUND = null, GEO_MIX = null, FX_RATES = null, HIST_PE = null, FWD_PE = null, ROIC = null, NVDA_PARTNERSHIPS = null, NVDA_DEBT = null, CIRC_FIN = null, DEEP_FIN = null, STALE = false, OBSERVER = null;
 const REVENUE_TAB_CATEGORIES = new Set(["china-internet", "compute", "hyperscaler-cloud", "platform"]);
 // Individual tickers pulled in from a category that isn't otherwise in
 // scope (e.g. ASML from Equipment) - added one at a time on request rather
@@ -1333,6 +1333,98 @@ function renderCircularFinancing() {
     </tr></thead><tbody>${rows}</tbody></table>`;
 }
 
+const DEEP_FIN_ORDER = ["META", "NVDA", "9988", "6181"];
+const DEEP_FIN_METRICS = [
+  { key: "revenue_m", label: "Revenue", money: true },
+  { key: "gross_margin_pct", label: "Gross Margin", pct: true },
+  { key: "net_margin_pct", label: "Net Profit Margin", pct: true },
+  { key: "eps_diluted", label: "Diluted EPS", raw: true },
+  { key: "ocf_m", label: "Operating Cash Flow", money: true },
+  { key: "capex_m", label: "Capex", money: true },
+  { key: "fcf_m", label: "Free Cash Flow", money: true },
+  { key: "ebitda_m", label: "EBITDA", money: true, basisKey: "ebitda_basis" },
+];
+
+function deepFinCellVal(period, m, symbol) {
+  if (!period) return null;
+  const v = period[m.key];
+  if (v == null) return null;
+  if (m.money) return fmtMoney(v * 1e6, symbol);
+  if (m.pct) return v.toFixed(1) + "%";
+  return v.toFixed(2);
+}
+
+function renderDeepFinancials() {
+  const wrap = document.getElementById("deep-fin-wrap");
+  if (wrap.dataset.rendered) return;
+  wrap.dataset.rendered = "1";
+  const data = DEEP_FIN;
+  if (!data || !Object.keys(data).length) {
+    wrap.innerHTML = `<div class="rev-none">No deep financials data available.</div>`;
+    return;
+  }
+  const na = `<span class="cmp-na">—</span>`;
+  const tids = DEEP_FIN_ORDER.filter(t => data[t]);
+  let html = `<div class="hist-head">Deep Financials — Meta, NVIDIA, Alibaba, Laopu Gold</div>
+    <div class="rev-src" style="margin-bottom:14px">Curated watchlist, not the full cohort. Company-wide metrics plus a per-segment view showing revenue and whichever specific metric investors actually watch for that segment (e.g. Alibaba Cloud's own disclosed Adjusted EBITDA margin, Meta's Reality Labs operating loss) rather than a uniform metric forced onto every segment. Last 2 fiscal years + trailing 8 quarters, from filings only — blank where a company doesn't disclose something rather than estimated.</div>`;
+
+  for (const tid of tids) {
+    const d = data[tid];
+    const label = (SC_MAP && SC_MAP[tid] && SC_MAP[tid].name) || tid;
+    const symbol = CCY_SYMBOL[d.currency] || ((d.currency || "") + " ");
+    const periods = [...(d.fiscal_years || []), ...(d.quarters || [])];
+    const periodLabel = p => p.fy_label || p.quarter_label || p.period_end || "?";
+
+    if (!periods.length) {
+      html += `<div class="hist-head" style="margin-top:20px; font-size:13px;">${esc(label)} (${esc(tid)})</div>
+        <div class="rev-none">No data yet.</div>`;
+      continue;
+    }
+
+    const cwRows = DEEP_FIN_METRICS.map(m => {
+      const cells = periods.map(p => {
+        const val = deepFinCellVal(p, m, symbol);
+        if (val == null) return `<td>${na}</td>`;
+        const basis = m.basisKey && p[m.basisKey] ? ` <span class="pe-nm" title="${esc(p[m.basisKey])}">ⓘ</span>` : "";
+        return `<td><span class="pe-current">${val}</span>${basis}</td>`;
+      }).join("");
+      return `<tr><td><b>${esc(m.label)}</b></td>${cells}</tr>`;
+    }).join("");
+
+    const headCells = periods.map(p => `<th>${esc(periodLabel(p))}<br><span class="pe-nm">${esc(p.source || "")}</span></th>`).join("");
+
+    let segHtml = "";
+    if ((d.segments || []).length) {
+      segHtml = d.segments.map(seg => {
+        const segPeriods = [...(seg.fiscal_years || []), ...(seg.quarters || [])];
+        const revRow = segPeriods.map(p => {
+          const val = p.revenue_m != null ? fmtMoney(p.revenue_m * 1e6, symbol) : null;
+          return `<td>${val ? `<span class="pe-current">${val}</span>` : na}</td>`;
+        }).join("");
+        const hasHeadline = segPeriods.some(p => p.headline_metric_value);
+        const headlineName = (segPeriods.find(p => p.headline_metric_name) || {}).headline_metric_name;
+        const headlineRow = hasHeadline ? `<tr><td><b>${esc(headlineName || "Headline Metric")}</b></td>${
+          segPeriods.map(p => {
+            if (!p.headline_metric_value) return `<td>${na}</td>`;
+            const noteIcon = p.note ? ` <span class="pe-nm" title="${esc(p.note)}">ⓘ</span>` : "";
+            return `<td><span class="pe-current">${esc(p.headline_metric_value)}</span>${noteIcon}</td>`;
+          }).join("")
+        }</tr>` : "";
+        return `<div style="margin-top:10px; font-weight:700; color:#9fd0ff; font-size:11px;">${esc(seg.name)}</div>
+          <table class="cmp-table"><thead><tr><th>Metric</th>${segPeriods.map(p => `<th>${esc(periodLabel(p))}</th>`).join("")}</tr></thead>
+          <tbody><tr><td>Revenue</td>${revRow}</tr>${headlineRow}</tbody></table>`;
+      }).join("");
+    }
+
+    html += `<div class="hist-head" style="margin-top:26px; font-size:14px;">${esc(label)} <span class="cmp-id">${esc(tid)}</span></div>
+      <div class="rev-src" style="margin-bottom:6px">${d.fetched ? `Researched as of ${esc(d.fetched)}.` : ""} ${d.fiscal_year_end ? `Fiscal year end: ${esc(d.fiscal_year_end)}.` : ""}</div>
+      <table class="cmp-table"><thead><tr><th>Metric</th>${headCells}</tr></thead><tbody>${cwRows}</tbody></table>
+      ${segHtml ? `<div style="margin-top:6px; font-weight:700; font-size:12px; color:var(--muted);">By Segment</div>${segHtml}` : ""}`;
+  }
+
+  wrap.innerHTML = html;
+}
+
 function renderPeHistory() {
   const wrap = document.getElementById("pe-wrap");
   if (wrap.dataset.rendered) return;
@@ -1531,6 +1623,8 @@ window.showTab = function (tabKey) {
   document.getElementById("nvda-eco-wrap").style.display = tabKey === "nvda-eco" ? "" : "none";
   document.getElementById("tab-circ-fin").classList.toggle("active", tabKey === "circ-fin");
   document.getElementById("circ-fin-wrap").style.display = tabKey === "circ-fin" ? "" : "none";
+  document.getElementById("tab-deep-fin").classList.toggle("active", tabKey === "deep-fin");
+  document.getElementById("deep-fin-wrap").style.display = tabKey === "deep-fin" ? "" : "none";
   for (const c of CATEGORIES) {
     document.getElementById("tab-" + c.key).classList.toggle("active", tabKey === c.key);
     const show = tabKey === c.key;
@@ -1541,7 +1635,7 @@ window.showTab = function (tabKey) {
   // sections. Those divs are fixed top-level elements shared across every
   // tab, so without this they'd keep showing stale content from whichever
   // tab was active before switching here.
-  const showIdeas = tabKey !== "revenue" && tabKey !== "compare" && tabKey !== "pe" && tabKey !== "nvda-eco" && tabKey !== "circ-fin";
+  const showIdeas = tabKey !== "revenue" && tabKey !== "compare" && tabKey !== "pe" && tabKey !== "nvda-eco" && tabKey !== "circ-fin" && tabKey !== "deep-fin";
   document.getElementById("ideas").style.display = showIdeas ? "" : "none";
   document.getElementById("catalysts30").style.display = showIdeas ? "" : "none";
   document.getElementById("pastCatalysts").style.display = showIdeas ? "" : "none";
@@ -1563,6 +1657,10 @@ window.showTab = function (tabKey) {
   }
   if (tabKey === "circ-fin") {
     if (DATA) renderCircularFinancing();
+    return;
+  }
+  if (tabKey === "deep-fin") {
+    if (DATA) renderDeepFinancials();
     return;
   }
   const category = tabKey === "summary" ? null : tabKey;
@@ -1617,6 +1715,11 @@ function buildShell() {
   const circFinWrap = document.createElement("div");
   circFinWrap.id = "circ-fin-wrap"; circFinWrap.className = "cmp-wrap"; circFinWrap.style.display = "none";
   grids.appendChild(circFinWrap);
+
+  mk("deep-fin", "Deep Financials");
+  const deepFinWrap = document.createElement("div");
+  deepFinWrap.id = "deep-fin-wrap"; deepFinWrap.className = "cmp-wrap"; deepFinWrap.style.display = "none";
+  grids.appendChild(deepFinWrap);
 }
 
 function load() {
@@ -1637,8 +1740,9 @@ function load() {
     fetch("./nvda-partnerships.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./nvda-debt-financing.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./circular-financing.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
-  ]).then(([data, moves, scmap, earnDates, revMix, deepFund, geoMix, fxRates, histPe, fwdPe, roic, nvdaPartnerships, nvdaDebt, circFin]) => {
-    DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates; REV_MIX = revMix; DEEP_FUND = deepFund; GEO_MIX = geoMix; FX_RATES = fxRates; HIST_PE = histPe; FWD_PE = fwdPe; ROIC = roic; NVDA_PARTNERSHIPS = nvdaPartnerships; NVDA_DEBT = nvdaDebt; CIRC_FIN = circFin;
+    fetch("./deep-financials.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
+  ]).then(([data, moves, scmap, earnDates, revMix, deepFund, geoMix, fxRates, histPe, fwdPe, roic, nvdaPartnerships, nvdaDebt, circFin, deepFin]) => {
+    DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates; REV_MIX = revMix; DEEP_FUND = deepFund; GEO_MIX = geoMix; FX_RATES = fxRates; HIST_PE = histPe; FWD_PE = fwdPe; ROIC = roic; NVDA_PARTNERSHIPS = nvdaPartnerships; NVDA_DEBT = nvdaDebt; CIRC_FIN = circFin; DEEP_FIN = deepFin;
     STALE = checkStale(DATA);
     const ideas = DATA.instruments.filter(i => i.idea && i.idea.kind === "enter").length;
     document.getElementById("meta").textContent =
