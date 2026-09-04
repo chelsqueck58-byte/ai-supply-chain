@@ -132,6 +132,13 @@
     font-size:9px; letter-spacing:.3px; border-bottom:1px solid var(--border); white-space:normal; }
   .cmp-name { font-weight:600; color:var(--text); }
   .cmp-id { color:var(--muted); font-size:9px; margin-left:4px; }
+  /* Deep Financials tab: fixed small column count (4 quarters + 1 FY) -
+     no min-width, so it fits one view with no horizontal scroll, unlike
+     the wide multi-year cohort tables. */
+  .deep-fin-table { min-width:0; max-width:640px; }
+  .deep-fin-table th, .deep-fin-table td { white-space:nowrap; }
+  .deep-fin-fy-col { border-left:1px solid var(--border); background:rgba(63,185,80,.05); }
+  .deep-fin-fy { font-weight:800; color:var(--up); }
   .cmp-na { color:var(--muted); }
   .cmp-src-note { color:var(--muted); font-size:8px; font-style:italic; white-space:normal; max-width:200px; }
   .cmp-capex-headline { cursor:help; white-space:normal; max-width:220px; }
@@ -1354,6 +1361,32 @@ function deepFinCellVal(period, m, symbol) {
   return v.toFixed(2);
 }
 
+// Short period label: "Q2 FY2026 (Sep 2025)" -> "Q2'26", "H1 2023 (interim, ...)"
+// -> "H1'23", "Q3 2024" -> "Q3'24". Research responses are inconsistent about
+// including a parenthetical explanation or an "FY" prefix - strip both down
+// to a compact Q#/H#'YY token so a straddled fiscal-year boundary doesn't
+// force a full sentence into the header.
+function deepFinShortQ(label) {
+  const clean = (label || "").split("(")[0].trim();
+  const m = /^([QH]\d)\D*?(\d{2,4})$/.exec(clean);
+  if (!m) return clean || label || "?";
+  return `${m[1]}'${m[2].slice(-2)}`;
+}
+
+function deepFinPeriods(fiscalYears, quarters) {
+  const q4 = (quarters || []).slice(-4);
+  const fy1 = (fiscalYears || []).slice(-1);
+  return q4.map(p => ({ ...p, isFy: false })).concat(fy1.map(p => ({ ...p, isFy: true })));
+}
+
+function deepFinHeadCell(p, periodLabel) {
+  if (p.isFy) return `<th class="deep-fin-fy-col"><b>FY</b></th>`;
+  const short = periodLabel(p);
+  const full = p.quarter_label || "";
+  const tip = full && full !== short ? ` title="${esc(full)}"` : "";
+  return `<th${tip}>${esc(short)}</th>`;
+}
+
 function renderDeepFinancials() {
   const wrap = document.getElementById("deep-fin-wrap");
   if (wrap.dataset.rendered) return;
@@ -1366,14 +1399,14 @@ function renderDeepFinancials() {
   const na = `<span class="cmp-na">—</span>`;
   const tids = DEEP_FIN_ORDER.filter(t => data[t]);
   let html = `<div class="hist-head">Deep Financials — Meta, NVIDIA, Alibaba, Laopu Gold</div>
-    <div class="rev-src" style="margin-bottom:14px">Curated watchlist, not the full cohort. Company-wide metrics plus a per-segment view showing revenue and whichever specific metric investors actually watch for that segment (e.g. Alibaba Cloud's own disclosed Adjusted EBITDA margin, Meta's Reality Labs operating loss) rather than a uniform metric forced onto every segment. Last 2 fiscal years + trailing 8 quarters, from filings only — blank where a company doesn't disclose something rather than estimated.</div>`;
+    <div class="rev-src" style="margin-bottom:14px">Curated watchlist. Last 4 quarters + latest fiscal year (bolded), company-wide and by segment. Hover ⓘ for source/detail.</div>`;
 
   for (const tid of tids) {
     const d = data[tid];
     const label = (SC_MAP && SC_MAP[tid] && SC_MAP[tid].name) || tid;
     const symbol = CCY_SYMBOL[d.currency] || ((d.currency || "") + " ");
-    const periods = [...(d.fiscal_years || []), ...(d.quarters || [])];
-    const periodLabel = p => p.fy_label || p.quarter_label || p.period_end || "?";
+    const periods = deepFinPeriods(d.fiscal_years, d.quarters);
+    const periodLabel = p => p.isFy ? "FY" : deepFinShortQ(p.quarter_label);
 
     if (!periods.length) {
       html += `<div class="hist-head" style="margin-top:20px; font-size:13px;">${esc(label)} (${esc(tid)})</div>
@@ -1384,41 +1417,45 @@ function renderDeepFinancials() {
     const cwRows = DEEP_FIN_METRICS.map(m => {
       const cells = periods.map(p => {
         const val = deepFinCellVal(p, m, symbol);
-        if (val == null) return `<td>${na}</td>`;
-        const basis = m.basisKey && p[m.basisKey] ? ` <span class="pe-nm" title="${esc(p[m.basisKey])}">ⓘ</span>` : "";
-        return `<td><span class="pe-current">${val}</span>${basis}</td>`;
+        const cls = p.isFy ? "deep-fin-fy" : "pe-current";
+        if (val == null) return `<td class="${p.isFy ? "deep-fin-fy-col" : ""}">${na}</td>`;
+        const tip = [m.basisKey && p[m.basisKey], p.source].filter(Boolean).join(" — ");
+        const info = tip ? ` <span class="pe-nm" title="${esc(tip)}">ⓘ</span>` : "";
+        return `<td class="${p.isFy ? "deep-fin-fy-col" : ""}"><span class="${cls}">${val}</span>${info}</td>`;
       }).join("");
       return `<tr><td><b>${esc(m.label)}</b></td>${cells}</tr>`;
     }).join("");
 
-    const headCells = periods.map(p => `<th>${esc(periodLabel(p))}<br><span class="pe-nm">${esc(p.source || "")}</span></th>`).join("");
+    const headCells = periods.map(p => deepFinHeadCell(p, periodLabel)).join("");
 
     let segHtml = "";
     if ((d.segments || []).length) {
       segHtml = d.segments.map(seg => {
-        const segPeriods = [...(seg.fiscal_years || []), ...(seg.quarters || [])];
+        const segPeriods = deepFinPeriods(seg.fiscal_years, seg.quarters);
+        const segHeadCells = segPeriods.map(p => deepFinHeadCell(p, periodLabel)).join("");
         const revRow = segPeriods.map(p => {
           const val = p.revenue_m != null ? fmtMoney(p.revenue_m * 1e6, symbol) : null;
-          return `<td>${val ? `<span class="pe-current">${val}</span>` : na}</td>`;
+          const cls = p.isFy ? "deep-fin-fy" : "pe-current";
+          return `<td class="${p.isFy ? "deep-fin-fy-col" : ""}">${val ? `<span class="${cls}">${val}</span>` : na}</td>`;
         }).join("");
         const hasHeadline = segPeriods.some(p => p.headline_metric_value);
         const headlineName = (segPeriods.find(p => p.headline_metric_name) || {}).headline_metric_name;
         const headlineRow = hasHeadline ? `<tr><td><b>${esc(headlineName || "Headline Metric")}</b></td>${
           segPeriods.map(p => {
-            if (!p.headline_metric_value) return `<td>${na}</td>`;
+            const cls = p.isFy ? "deep-fin-fy" : "pe-current";
+            if (!p.headline_metric_value) return `<td class="${p.isFy ? "deep-fin-fy-col" : ""}">${na}</td>`;
             const noteIcon = p.note ? ` <span class="pe-nm" title="${esc(p.note)}">ⓘ</span>` : "";
-            return `<td><span class="pe-current">${esc(p.headline_metric_value)}</span>${noteIcon}</td>`;
+            return `<td class="${p.isFy ? "deep-fin-fy-col" : ""}"><span class="${cls}">${esc(p.headline_metric_value)}</span>${noteIcon}</td>`;
           }).join("")
         }</tr>` : "";
         return `<div style="margin-top:10px; font-weight:700; color:#9fd0ff; font-size:11px;">${esc(seg.name)}</div>
-          <table class="cmp-table"><thead><tr><th>Metric</th>${segPeriods.map(p => `<th>${esc(periodLabel(p))}</th>`).join("")}</tr></thead>
+          <table class="cmp-table deep-fin-table"><thead><tr><th>Metric</th>${segHeadCells}</tr></thead>
           <tbody><tr><td>Revenue</td>${revRow}</tr>${headlineRow}</tbody></table>`;
       }).join("");
     }
 
     html += `<div class="hist-head" style="margin-top:26px; font-size:14px;">${esc(label)} <span class="cmp-id">${esc(tid)}</span></div>
-      <div class="rev-src" style="margin-bottom:6px">${d.fetched ? `Researched as of ${esc(d.fetched)}.` : ""} ${d.fiscal_year_end ? `Fiscal year end: ${esc(d.fiscal_year_end)}.` : ""}</div>
-      <table class="cmp-table"><thead><tr><th>Metric</th>${headCells}</tr></thead><tbody>${cwRows}</tbody></table>
+      <table class="cmp-table deep-fin-table"><thead><tr><th>Metric</th>${headCells}</tr></thead><tbody>${cwRows}</tbody></table>
       ${segHtml ? `<div style="margin-top:6px; font-weight:700; font-size:12px; color:var(--muted);">By Segment</div>${segHtml}` : ""}`;
   }
 
