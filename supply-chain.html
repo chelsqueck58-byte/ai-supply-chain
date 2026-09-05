@@ -211,7 +211,7 @@
 <script>
 "use strict";
 const TREND_ORDER = { up: 0, flat: 1, down: 2 };
-let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, DEEP_FUND = null, GEO_MIX = null, FX_RATES = null, HIST_PE = null, FWD_PE = null, ROIC = null, NVDA_PARTNERSHIPS = null, NVDA_DEBT = null, CIRC_FIN = null, DEEP_FIN = null, CAL = null, PAGE_EXTRAS = null, STALE = false, OBSERVER = null;
+let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, DEEP_FUND = null, GEO_MIX = null, FX_RATES = null, HIST_PE = null, FWD_PE = null, ROIC = null, NVDA_PARTNERSHIPS = null, NVDA_DEBT = null, CIRC_FIN = null, DEEP_FIN = null, CAL = null, PAGE_EXTRAS = null, DELIVERY = null, STALE = false, OBSERVER = null;
 const REVENUE_TAB_CATEGORIES = new Set(["china-internet", "compute", "hyperscaler-cloud", "platform"]);
 // Individual tickers pulled in from a category that isn't otherwise in
 // scope (e.g. ASML from Equipment) - added one at a time on request rather
@@ -1726,7 +1726,8 @@ function buildHistPeSection() {
 // history/forward + re-rating narrative + guidance revisions.
 const STOCK_PAGES = ["META", "NVDA", "AAPL", "MSFT", "GOOGL", "AMZN",
                      "AMD", "AVGO", "INTC", "TSM", "ASML", "MU", "MRVL",
-                     "9988", "0700", "6181"];
+                     "9988", "0700", "3690", "9618", "6181"];
+const DELIVERY_WAR_TIDS = new Set(["9988", "3690", "9618"]);
 let PAGE_SEL = "META";
 
 function pageDeepFinHtml(tid) {
@@ -1871,6 +1872,25 @@ function renderStockPage(tid) {
   // key metrics + segments
   html += pageSecHead("📐 Key metrics (last 4 quarters + FY)");
   html += pageDeepFinHtml(tid);
+
+  // delivery-war loss tracker (Meituan / Alibaba / JD pages only)
+  if (DELIVERY_WAR_TIDS.has(tid) && DELIVERY && (DELIVERY.companies || []).length) {
+    html += pageSecHead("🍜 Delivery war — losses narrowing?");
+    const badge = n => n === "yes" ? `<span class="pct u">narrowing</span>`
+      : n === "no" ? `<span class="pct d">not narrowing</span>`
+      : `<span style="color:var(--accent)">mixed</span>`;
+    html += DELIVERY.companies.map(c => {
+      const own = c.tid === tid;
+      const cells = (c.periods || []).map(p =>
+        `<td><div class="muted" style="font-size:9px">${esc(p.q)}</div><span class="${own ? "pe-fwd1" : "pe-current"}">${esc(p.value)}</span></td>`).join("");
+      return `<div style="margin-top:8px;${own ? "" : "opacity:.85"}">
+        <b>${esc(c.label)}</b> <span class="muted" style="font-size:11px">${esc(c.metric_name || "")}</span> ${badge(c.narrowing)}
+        <span class="pe-nm" title="${esc(c.metric_basis || "")}">ⓘ</span>
+        <table class="cmp-table deep-fin-table" style="margin-top:3px"><tbody><tr>${cells || "<td>—</td>"}</tr></tbody></table>
+        <div class="rev-src">${esc(c.latest_signal || "")}</div></div>`;
+    }).join("");
+    if (DELIVERY.war_summary) html += `<div class="deep-fin-note" style="margin-top:8px">${esc(DELIVERY.war_summary)}</div>`;
+  }
 
   // guidance revisions
   if ((x.guidance_revisions || []).length) {
@@ -2121,8 +2141,9 @@ function load() {
     fetch("./deep-financials.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./catalyst-calendar.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./stock-page-extras.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
-  ]).then(([data, moves, scmap, earnDates, revMix, deepFund, geoMix, fxRates, histPe, fwdPe, roic, nvdaPartnerships, nvdaDebt, circFin, deepFin, cal, pageExtras]) => {
-    DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates; REV_MIX = revMix; DEEP_FUND = deepFund; GEO_MIX = geoMix; FX_RATES = fxRates; HIST_PE = histPe; FWD_PE = fwdPe; ROIC = roic; NVDA_PARTNERSHIPS = nvdaPartnerships; NVDA_DEBT = nvdaDebt; CIRC_FIN = circFin; DEEP_FIN = deepFin; CAL = cal; PAGE_EXTRAS = pageExtras;
+    fetch("./delivery-war.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
+  ]).then(([data, moves, scmap, earnDates, revMix, deepFund, geoMix, fxRates, histPe, fwdPe, roic, nvdaPartnerships, nvdaDebt, circFin, deepFin, cal, pageExtras, delivery]) => {
+    DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates; REV_MIX = revMix; DEEP_FUND = deepFund; GEO_MIX = geoMix; FX_RATES = fxRates; HIST_PE = histPe; FWD_PE = fwdPe; ROIC = roic; NVDA_PARTNERSHIPS = nvdaPartnerships; NVDA_DEBT = nvdaDebt; CIRC_FIN = circFin; DEEP_FIN = deepFin; CAL = cal; PAGE_EXTRAS = pageExtras; DELIVERY = delivery;
     STALE = checkStale(DATA);
     const ideas = DATA.instruments.filter(i => i.idea && i.idea.kind === "enter").length;
     document.getElementById("meta").textContent =
