@@ -80,8 +80,25 @@
   .ct-type { font-size:10px; font-weight:600; padding:1px 7px; border-radius:3px;
     border:1px solid; white-space:nowrap; }
   .deep-fin-note { background:#12161c; border:1px solid var(--border); border-radius:6px;
-    padding:10px 12px; font-size:12.5px; line-height:1.6; max-width:720px; }
+    padding:10px 12px; font-size:12px; line-height:1.55; max-width:720px; }
   #page-chips button.active { background:var(--panel); color:var(--text); }
+  /* Stock Pages v2: uniform 12px body, wrapping tables, no horizontal scroll */
+  #page-body { max-width:820px; }
+  #page-body .ct-table { font-size:12px; max-width:820px; }
+  #page-body .ct-table td { font-size:12px; }
+  .pg-mv-m { white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .pg-mv-why td { border-bottom:1px solid #1b2027; color:var(--muted); font-size:11.5px;
+    padding-top:0; padding-bottom:7px; }
+  .pg-mv-row td { border-bottom:none; padding-bottom:2px; }
+  .pg-why { font-size:11.5px; }
+  .pg-metrics-wrap { display:flex; gap:18px; flex-wrap:wrap; align-items:flex-start; }
+  .pg-guide { border:1px solid var(--border); border-radius:6px; padding:10px 12px;
+    max-width:300px; font-size:11.5px; background:#12161c; }
+  .pg-guide-head { font-size:10px; letter-spacing:.1em; color:var(--accent); font-weight:700; margin-bottom:6px; }
+  .pg-guide-row { margin:5px 0; line-height:1.45; }
+  .pg-mix { max-width:680px; }
+  .pg-mix-row { margin:7px 0; font-size:12.5px; }
+  .pg-mix-expl { color:var(--muted); font-size:11.5px; margin:2px 0 0 12px; }
   .sb-chip { font-size:11px; padding:0 5px; border-radius:3px; white-space:nowrap; cursor:help;
     font-variant-numeric:tabular-nums; display:inline-block; margin:1px 2px 1px 0; }
   .sb-chip.u { color:var(--up); background:rgba(63,185,80,.12); }
@@ -1445,9 +1462,29 @@ function deepFinShortQ(label) {
 }
 
 function deepFinPeriods(fiscalYears, quarters) {
-  const q4 = (quarters || []).slice(-4);
-  const fy1 = (fiscalYears || []).slice(-1);
+  // research returns periods in inconsistent order per ticker (some newest-
+  // first, some oldest-first) - sort by period_end so slice(-4) is always the
+  // LATEST four (AVGO's page showed FY2024 quarters before this)
+  const byEnd = (a, b) => String(a.period_end || "").localeCompare(String(b.period_end || ""));
+  const q4 = (quarters || []).slice().sort(byEnd).slice(-4);
+  const fy1 = (fiscalYears || []).slice().sort(byEnd).slice(-1);
   return q4.map(p => ({ ...p, isFy: false })).concat(fy1.map(p => ({ ...p, isFy: true })));
+}
+// close-to-close move from a date: next trading bar vs prior close; span=1 for
+// 1-day, span=5 for the slow-reaction window
+function moveFrom(inst, date, span) {
+  const bars = (inst && inst.bars) || [];
+  for (let i = 1; i < bars.length; i++) {
+    if (bars[i].d >= date) {
+      const j = Math.min(i + span - 1, bars.length - 1);
+      return Math.round((bars[j].c / bars[i - 1].c - 1) * 1000) / 10;
+    }
+  }
+  return null;
+}
+function mvCellHtml(v) {
+  return v == null ? `<span class="cmp-na">—</span>`
+    : `<span class="pct ${v >= 0 ? "u" : "d"}">${v >= 0 ? "+" : ""}${v}%</span>`;
 }
 
 function deepFinHeadCell(p, periodLabel) {
@@ -1828,20 +1865,37 @@ function renderStockPage(tid) {
     html += `<table class="ct-table"><tbody>${rows}</tbody></table>`;
   } else html += `<div class="rev-none">No researched calendar entries.</div>`;
 
-  // past events with computed reactions
-  html += pageSecHead("↩ Past events & what actually moved it (last ~6 months)");
-  if ((x.past_events || []).length) {
-    const rows = x.past_events.map(e => {
-      const mv = e.move_pct;
-      const shrug = mv != null && Math.abs(mv) < 1.5;
-      const mvCell = mv == null ? `<span class="cmp-na">—</span>`
-        : `<span class="pct ${mv >= 0 ? "u" : "d"}">${mv >= 0 ? "+" : ""}${mv}%</span>${shrug ? ` <span class="muted" style="font-size:10px">shrugged ○</span>` : ""}`;
-      return `<tr><td class="ct-dt">${esc(e.date)}</td><td style="white-space:nowrap">${mvCell}</td>
-        <td>${esc(e.title)} <span class="pe-nm" title="${esc(e.why || "")}">ⓘ</span>${e.src ? ` <span class="msrc">[${esc(e.src)}]</span>` : ""}</td></tr>`;
-    }).join("");
-    html += `<table class="ct-table"><tbody>${rows}</tbody></table>
-      <div class="rev-src">Move = next-trading-day close-to-close from own price data (objective). "shrugged ○" = |move| &lt; 1.5% — the market had it priced.</div>`;
-  } else html += `<div class="rev-none">Event research pending.</div>`;
+  // key movements & non-movers: researched moves (moves.json, vetted reasons)
+  // merged with researched events that DIDN'T move it (extras) - dedup by date
+  html += pageSecHead("↩ Key movements & non-movers (last ~6 months)");
+  {
+    const cutoff = new Date(Date.now() - 185 * 86400000).toISOString().slice(0, 10);
+    const rows = [];
+    const moveDates = [];
+    for (const mv of ((MOVES && MOVES[tid]) || {}).moves || []) {
+      if (mv.d < cutoff || !mv.reason) continue;
+      moveDates.push(mv.d);
+      rows.push({ date: mv.d, d1: mv.pct, d5: moveFrom(inst, mv.d, 5),
+                  title: null, why: mv.reason, src: mv.source, kind: "move" });
+    }
+    for (const e of x.past_events || []) {
+      if (e.date < cutoff) continue;
+      if (moveDates.some(d => Math.abs(new Date(d) - new Date(e.date)) < 3 * 86400000)) continue;
+      rows.push({ date: e.date, d1: moveFrom(inst, e.date, 1), d5: moveFrom(inst, e.date, 5),
+                  title: e.title, why: e.why, src: e.src, kind: "event" });
+    }
+    rows.sort((a, b) => b.date.localeCompare(a.date));
+    if (rows.length) {
+      html += `<table class="ct-table pg-mv"><tbody>` + rows.map(r => {
+        const shrug = r.kind === "event" && r.d1 != null && Math.abs(r.d1) < 1.5;
+        return `<tr class="pg-mv-row"><td class="ct-dt">${esc(r.date)}</td>
+          <td class="pg-mv-m">${mvCellHtml(r.d1)} <span class="muted">1d</span> · ${mvCellHtml(r.d5)} <span class="muted">5d</span></td>
+          <td>${r.title ? esc(r.title) : "<i class='muted'>price move</i>"}${shrug ? ` <span class="muted">shrugged ○</span>` : ""}${r.src ? ` <span class="msrc">[${esc(r.src)}]</span>` : ""}</td></tr>
+          <tr class="pg-mv-why"><td></td><td colspan="2">• ${esc(r.why || "")}</td></tr>`;
+      }).join("") + `</tbody></table>
+      <div class="rev-src">1d/5d = close-to-close from own price data (5d catches slow reactions). Movement reasons from the vetted move-research pipeline; "shrugged ○" = an event the market had priced (|1d| &lt; 1.5%).</div>`;
+    } else html += `<div class="rev-none">No researched movements in window.</div>`;
+  }
 
   // earnings preview
   html += pageSecHead("🔎 Upcoming earnings focus");
@@ -1853,26 +1907,65 @@ function renderStockPage(tid) {
     html += `<div class="deep-fin-note">${esc(inst.earn.split(/\s*Sources?:/i)[0])}</div>`;
   } else html += `<div class="rev-none">Preview research pending.</div>`;
 
-  // last 4 prints
+  // last 4 prints: one row per print - EPS vs est joined to the nearest
+  // researched reaction, 1d/5d computed from bars at the reaction date
   html += pageSecHead("📊 Last 4 prints");
-  const hist = f.earnings_history || [];
-  if (hist.length) {
-    html += `<table class="ct-table"><thead><tr><th>Quarter end</th><th>EPS act vs est</th><th>Surprise</th></tr></thead><tbody>` +
-      hist.slice(-4).reverse().map(hq => {
-        const s = hq.surprise;
-        const sCell = s == null ? "—" : (Math.abs(s) > 60 ? `<span class="muted" title="near-zero EPS base makes % meaningless">n/m</span>` : `<span class="pct ${s >= 0 ? "u" : "d"}">${s >= 0 ? "+" : ""}${s}%</span>`);
-        return `<tr><td class="ct-dt">${esc(hq.q)}</td><td class="mono">${hq.actual} vs ${hq.est != null ? Number(hq.est).toFixed(2) : "—"}</td><td>${sCell}</td></tr>`;
-      }).join("") + `</tbody></table>`;
-  }
-  if ((inst.prev_earnings || []).length) {
-    html += `<div style="margin-top:6px">` + inst.prev_earnings.slice(0, 4).map(p =>
-      `<div class="ct-prev">↩ <span class="pct ${p.pct >= 0 ? "u" : "d"}">${p.pct >= 0 ? "+" : ""}${p.pct}%</span> ${esc(p.date)}: ${esc(p.reason)}${p.source ? ` <span class="msrc">[${esc(p.source)}]</span>` : ""}</div>`).join("") + `</div>
-      <div class="rev-src">Reactions are researched moves around prints — may include follow-through days, hover dates.</div>`;
+  {
+    const hist = (f.earnings_history || []).slice(-4).reverse();
+    const reacts = inst.prev_earnings || [];
+    if (hist.length || reacts.length) {
+      const rows = (hist.length ? hist : reacts.slice(0, 4)).map(hq => {
+        let r = null;
+        if (hist.length) {
+          // reaction reported within ~40 days after quarter end
+          r = reacts.find(p => p.date > hq.q &&
+            (new Date(p.date) - new Date(hq.q)) < 40 * 86400000) || null;
+        } else r = hq;
+        const epsCell = hist.length
+          ? `${hq.actual} vs ${hq.est != null ? Number(hq.est).toFixed(2) : "—"}`
+          : "—";
+        const s = hist.length ? hq.surprise : null;
+        const sTxt = s == null ? "" : (Math.abs(s) > 60 ? ` <span class="muted" title="near-zero EPS base">n/m</span>` : ` <span class="pct ${s >= 0 ? "u" : "d"}">(${s >= 0 ? "+" : ""}${s}%)</span>`);
+        const d1 = r ? (r.pct != null ? r.pct : moveFrom(inst, r.date, 1)) : null;
+        const d5 = r ? moveFrom(inst, r.date, 5) : null;
+        return `<tr><td class="ct-dt">${esc(hist.length ? hq.q : hq.date)}</td>
+          <td class="mono" style="white-space:nowrap">${epsCell}${sTxt}</td>
+          <td class="pg-mv-m">${mvCellHtml(d1)} <span class="muted">1d</span> · ${mvCellHtml(d5)} <span class="muted">5d</span></td>
+          <td class="pg-why">${r && r.reason ? esc(r.reason) : "<span class='cmp-na'>—</span>"}${r && r.source ? ` <span class="msrc">[${esc(r.source)}]</span>` : ""}</td></tr>`;
+      }).join("");
+      html += `<table class="ct-table pg-prints"><thead><tr><th>Quarter</th><th>EPS vs est</th><th>Reaction</th><th>Why</th></tr></thead><tbody>${rows}</tbody></table>`;
+    }
   }
 
-  // key metrics + segments
-  html += pageSecHead("📐 Key metrics (last 4 quarters + FY)");
-  html += pageDeepFinHtml(tid);
+  // key metrics with guidance beside them
+  html += pageSecHead("📐 Key metrics (last 4 quarters + FY) & current guidance");
+  html += `<div class="pg-metrics-wrap"><div>${pageDeepFinHtml(tid)}</div>`;
+  if ((x.guidance_revisions || []).length) {
+    html += `<div class="pg-guide"><div class="pg-guide-head">GUIDANCE Δ <span class="muted">(print-over-print)</span></div>` +
+      x.guidance_revisions.map(g => {
+        const raised = /rais|up from|increas|higher|boost/i.test(g.change || "");
+        const cut = /cut|lower|reduc|down from|trim/i.test(g.change || "");
+        const arrow = raised ? `<span class="pct u">↑</span>` : cut ? `<span class="pct d">↓</span>` : "·";
+        return `<div class="pg-guide-row">${arrow} <b>${esc(g.when)}</b> — ${esc(g.change)}${g.src ? ` <span class="msrc">[${esc(g.src)}]</span>` : ""}</div>`;
+      }).join("") + `</div>`;
+  }
+  html += `</div>`;
+
+  // revenue mix + what each segment sells
+  const rm = REV_MIX && REV_MIX[tid];
+  if (rm && (rm.segments || []).length) {
+    html += pageSecHead("🧩 Revenue mix — what each segment sells");
+    const expl = {};
+    for (const s of x.segment_explainers || []) expl[(s.segment || "").toLowerCase()] = s.sells;
+    html += `<div class="pg-mix">` + rm.segments.map(s => {
+      const key = (s.name || "").toLowerCase();
+      const e = expl[key] ||
+        (Object.entries(expl).find(([k]) => k && (key.includes(k) || k.includes(key))) || [])[1];
+      return `<div class="pg-mix-row"><b>${esc(s.name)}</b> <span class="mono">${s.pct != null ? Number(s.pct).toFixed(1) + "%" : ""}</span>
+        ${e ? `<div class="pg-mix-expl">• ${esc(e)}</div>` : ""}</div>`;
+    }).join("") + `</div>
+    <div class="rev-src">Mix as of ${esc(rm.fiscal_period || "latest reported")}${rm.source ? " — " + esc(rm.source) : ""}. Segment explainers researched; blank where refresh pending.</div>`;
+  }
 
   // model launch history (AI model-builder pages only)
   if (AI_MODEL_TIDS.has(tid) && MODELS && MODELS.tickers && MODELS.tickers[tid]) {
@@ -1881,16 +1974,14 @@ function renderStockPage(tid) {
     const vBadge = v => v === "success" ? `<span class="pct u">success</span>`
       : v === "flop" ? `<span class="pct d">flop</span>`
       : `<span style="color:var(--accent)">mixed</span>`;
-    html += `<table class="ct-table"><thead><tr><th>Date</th><th>Model</th><th>Verdict</th><th>Move</th><th>Why</th></tr></thead><tbody>` +
+    html += `<table class="ct-table"><thead><tr><th>Date</th><th>Model</th><th>Verdict</th><th>Reaction</th><th>Why</th></tr></thead><tbody>` +
       ml.launches.map(l => {
-        const mv = l.move_pct;
-        const mvCell = mv == null ? `<span class="cmp-na">—</span>`
-          : `<span class="pct ${mv >= 0 ? "u" : "d"}">${mv >= 0 ? "+" : ""}${mv}%</span>`;
         return `<tr><td class="ct-dt">${esc(l.date)}</td><td><b>${esc(l.model)}</b> <span class="pe-nm" title="Claimed: ${esc(l.claim || "")}">ⓘ</span></td>
-          <td>${vBadge(l.verdict)}</td><td>${mvCell}</td>
-          <td>${esc(l.why || "")}${l.src ? ` <span class="msrc">[${esc(l.src)}]</span>` : ""}</td></tr>`;
+          <td>${vBadge(l.verdict)}</td>
+          <td class="pg-mv-m">${mvCellHtml(l.move_pct)} <span class="muted">1d</span> · ${mvCellHtml(moveFrom(inst, l.date, 5))} <span class="muted">5d</span></td>
+          <td class="pg-why">${esc(l.why || "")}${l.src ? ` <span class="msrc">[${esc(l.src)}]</span>` : ""}</td></tr>`;
       }).join("") + `</tbody></table>
-      <div class="rev-src">Verdict = contemporaneous market/developer judgment (researched). Move = next-trading-day close-to-close from own price data — note launches rarely move megacaps alone; the verdict column is the durable signal.</div>`;
+      <div class="rev-src">Verdict = contemporaneous market/developer judgment (researched). 1d/5d = close-to-close from own price data — launches rarely move megacaps alone; the verdict column is the durable signal.</div>`;
     const eco = (MODELS.ecosystem || {}).events || [];
     if (eco.length) {
       html += `<div style="margin-top:10px; font-weight:700; font-size:12px; color:var(--muted);">Ecosystem shocks (private-lab launches that moved public names)</div>
@@ -1920,13 +2011,6 @@ function renderStockPage(tid) {
         <div class="rev-src">${esc(c.latest_signal || "")}</div></div>`;
     }).join("");
     if (DELIVERY.war_summary) html += `<div class="deep-fin-note" style="margin-top:8px">${esc(DELIVERY.war_summary)}</div>`;
-  }
-
-  // guidance revisions
-  if ((x.guidance_revisions || []).length) {
-    html += pageSecHead("🧭 Guidance revisions (company's own, print-over-print)");
-    html += `<table class="ct-table"><tbody>` + x.guidance_revisions.map(g =>
-      `<tr><td class="ct-dt" style="width:150px">${esc(g.when)}</td><td>${esc(g.change)}${g.src ? ` <span class="msrc">[${esc(g.src)}]</span>` : ""}</td></tr>`).join("") + `</tbody></table>`;
   }
 
   // P/E
