@@ -99,6 +99,8 @@
   .pg-mix { max-width:680px; }
   .pg-mix-row { margin:7px 0; font-size:12.5px; }
   .pg-mix-expl { color:var(--muted); font-size:11.5px; margin:2px 0 0 12px; }
+  /* full 2-year Q1..Q4+FY chronology needs the width cap lifted (10 cols) */
+  #page-body .deep-fin-table { max-width:none; }
   .sb-chip { font-size:11px; padding:0 5px; border-radius:3px; white-space:nowrap; cursor:help;
     font-variant-numeric:tabular-nums; display:inline-block; margin:1px 2px 1px 0; }
   .sb-chip.u { color:var(--up); background:rgba(63,185,80,.12); }
@@ -1768,14 +1770,41 @@ const DELIVERY_WAR_TIDS = new Set(["9988", "3690", "9618"]);
 const AI_MODEL_TIDS = new Set(["META", "GOOGL", "MSFT", "AMZN", "9988", "0700"]);
 let PAGE_SEL = "META";
 
+// Stock Pages chronology: Q1..Q4 then that year's FY, then the next year's
+// quarters, FY - the full 2-year runway rather than Deep Financials' compact
+// 4Q+FY view.
+function pageFinPeriods(container) {
+  const byEnd = (a, b) => String(a.period_end || "").localeCompare(String(b.period_end || ""));
+  const qs = (container.quarters || []).slice().sort(byEnd);
+  const fys = (container.fiscal_years || []).slice().sort(byEnd);
+  const seq = [];
+  let qi = 0;
+  for (const fy of fys) {
+    while (qi < qs.length && String(qs[qi].period_end || "") <= String(fy.period_end || "")) {
+      seq.push({ ...qs[qi], isFy: false }); qi++;
+    }
+    seq.push({ ...fy, isFy: true });
+  }
+  while (qi < qs.length) { seq.push({ ...qs[qi], isFy: false }); qi++; }
+  return seq;
+}
+function pageFinHeadCell(p) {
+  if (p.isFy) {
+    const short = (p.fy_label || "FY").replace(/^FY(20)?/, "FY");
+    return `<th class="deep-fin-fy-col"><b>${esc(short)}</b></th>`;
+  }
+  const short = deepFinShortQ(p.quarter_label);
+  const full = p.quarter_label || "";
+  return `<th${full && full !== short ? ` title="${esc(full)}"` : ""}>${esc(short)}</th>`;
+}
+
 function pageDeepFinHtml(tid) {
   const d = DEEP_FIN && DEEP_FIN[tid];
   const na = `<span class="cmp-na">—</span>`;
   if (!d || (!(d.fiscal_years || []).length && !(d.quarters || []).length))
     return `<div class="rev-none">Segment financials research pending for this name — refreshes automatically as chunks complete.</div>`;
   const symbol = CCY_SYMBOL[d.currency] || ((d.currency || "") + " ");
-  const periods = deepFinPeriods(d.fiscal_years, d.quarters);
-  const periodLabel = p => p.isFy ? "FY" : deepFinShortQ(p.quarter_label);
+  const periods = pageFinPeriods(d);
   const metrics = [];
   for (const m of DEEP_FIN_METRICS) {
     metrics.push(m);
@@ -1797,12 +1826,12 @@ function pageDeepFinHtml(tid) {
     }).join("");
     return `<tr><td><b>${esc(m.label)}</b></td>${cells}</tr>`;
   }).join("");
-  const headCells = periods.map(p => deepFinHeadCell(p, periodLabel)).join("");
+  const headCells = periods.map(pageFinHeadCell).join("");
   let segHtml = "";
   for (const seg of d.segments || []) {
-    const segPeriods = deepFinPeriods(seg.fiscal_years, seg.quarters);
+    const segPeriods = pageFinPeriods(seg);
     if (!segPeriods.length) continue;
-    const segHead = segPeriods.map(p => deepFinHeadCell(p, periodLabel)).join("");
+    const segHead = segPeriods.map(pageFinHeadCell).join("");
     const revRow = segPeriods.map(p => {
       const val = p.revenue_m != null ? fmtMoney(p.revenue_m * 1e6, symbol) : null;
       const cls = p.isFy ? "deep-fin-fy" : "pe-current";
@@ -1856,6 +1885,7 @@ function renderStockPage(tid) {
   html += pageSecHead("📅 Upcoming catalysts");
   if (cal && (cal.events || []).length) {
     const rows = cal.events.filter(e => { const d = daysTo(e.date); return d != null && d >= 0; })
+      .sort((a, b) => daysTo(a.date) - daysTo(b.date))
       .map(e => {
         const c = CAL_TYPE_COLOR[e.type] || "var(--muted)";
         return `<tr><td class="ct-dt">${calDateLabel({ ...e, days: daysTo(e.date) })}</td>
@@ -1938,7 +1968,7 @@ function renderStockPage(tid) {
   }
 
   // key metrics with guidance beside them
-  html += pageSecHead("📐 Key metrics (last 4 quarters + FY) & current guidance");
+  html += pageSecHead("📐 Key metrics — 2-year runway (Q1..Q4 → FY, latest right) & current guidance");
   html += `<div class="pg-metrics-wrap"><div>${pageDeepFinHtml(tid)}</div>`;
   if ((x.guidance_revisions || []).length) {
     html += `<div class="pg-guide"><div class="pg-guide-head">GUIDANCE Δ <span class="muted">(print-over-print)</span></div>` +
@@ -2040,6 +2070,26 @@ function renderStockPages() {
   renderStockPage(PAGE_SEL);
 }
 
+// ---- Macro Events tab: the shared gamma - Fed/CPI/policy + industry
+// conferences relevant to the whole AI complex, nearest first ----
+function renderMacroEvents() {
+  const el = document.getElementById("macro-ev-wrap");
+  const events = ((CAL && CAL.macro) || {}).events || [];
+  const rows = events
+    .map(e => ({ ...e, days: daysTo(e.date) }))
+    .filter(e => e.days != null && e.days >= -1)
+    .sort((a, b) => a.days - b.days)
+    .map(e => {
+      const c = CAL_TYPE_COLOR[e.type === "Macro" ? "Macro" : "Industry"];
+      return `<tr><td class="ct-dt">${calDateLabel(e)}</td>
+        <td><span class="ct-type" style="color:${c};border-color:${c}">${esc(e.type)}</span></td>
+        <td>${esc(e.title)}${e.source ? ` <span class="msrc">[${esc(e.source)}]</span>` : ""}</td></tr>`;
+    }).join("");
+  el.innerHTML = `<div class="hist-head">Key Macro &amp; Industry Events — AI complex</div>
+    <div class="rev-src" style="margin-bottom:10px">Fed/CPI/policy dates from official calendars; conference dates and policy windows from bank calendars and press — sources in brackets. Nearest first.</div>
+    <table class="ct-table" style="max-width:820px"><tbody>${rows || "<tr><td>No upcoming events.</td></tr>"}</tbody></table>`;
+}
+
 // Semis Board - data-only catalyst desk view for the key semiconductor names:
 // next researched catalyst, next earnings, last earnings reactions (with a
 // typical-move average as the implied-move stand-in - there's no options/IV
@@ -2119,6 +2169,8 @@ window.showTab = function (tabKey) {
   document.getElementById("semis-wrap").style.display = tabKey === "semis" ? "" : "none";
   document.getElementById("tab-pages").classList.toggle("active", tabKey === "pages");
   document.getElementById("pages-wrap").style.display = tabKey === "pages" ? "" : "none";
+  document.getElementById("tab-macro-ev").classList.toggle("active", tabKey === "macro-ev");
+  document.getElementById("macro-ev-wrap").style.display = tabKey === "macro-ev" ? "" : "none";
   for (const c of CATEGORIES) {
     document.getElementById("tab-" + c.key).classList.toggle("active", tabKey === c.key);
     const show = tabKey === c.key;
@@ -2129,7 +2181,7 @@ window.showTab = function (tabKey) {
   // sections. Those divs are fixed top-level elements shared across every
   // tab, so without this they'd keep showing stale content from whichever
   // tab was active before switching here.
-  const showIdeas = tabKey !== "revenue" && tabKey !== "compare" && tabKey !== "pe" && tabKey !== "nvda-eco" && tabKey !== "circ-fin" && tabKey !== "deep-fin" && tabKey !== "semis" && tabKey !== "pages";
+  const showIdeas = tabKey !== "revenue" && tabKey !== "compare" && tabKey !== "pe" && tabKey !== "nvda-eco" && tabKey !== "circ-fin" && tabKey !== "deep-fin" && tabKey !== "semis" && tabKey !== "pages" && tabKey !== "macro-ev";
   document.getElementById("ideas").style.display = showIdeas ? "" : "none";
   document.getElementById("catalysts30").style.display = showIdeas ? "" : "none";
   document.getElementById("pastCatalysts").style.display = showIdeas ? "" : "none";
@@ -2163,6 +2215,10 @@ window.showTab = function (tabKey) {
   }
   if (tabKey === "pages") {
     if (DATA) renderStockPages();
+    return;
+  }
+  if (tabKey === "macro-ev") {
+    if (DATA) renderMacroEvents();
     return;
   }
   const category = tabKey === "summary" ? null : tabKey;
@@ -2232,6 +2288,11 @@ function buildShell() {
   const pagesWrap = document.createElement("div");
   pagesWrap.id = "pages-wrap"; pagesWrap.className = "cmp-wrap"; pagesWrap.style.display = "none";
   grids.appendChild(pagesWrap);
+
+  mk("macro-ev", "Macro Events");
+  const macroWrap = document.createElement("div");
+  macroWrap.id = "macro-ev-wrap"; macroWrap.className = "cmp-wrap"; macroWrap.style.display = "none";
+  grids.appendChild(macroWrap);
 }
 
 function load() {
