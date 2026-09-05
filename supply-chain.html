@@ -1763,10 +1763,10 @@ function renderSemisBoard() {
   el.innerHTML = `<div class="hist-head">Semis Board — catalysts &amp; earnings desk view (sorted by next earnings)</div>
     <table class="cmp-table"><thead><tr>
       <th>Name</th><th>Next Earnings</th><th>Next Catalyst (non-earnings)</th>
-      <th>Last Earnings Reactions</th><th>Typical Move</th><th>EPS Beats</th>
+      <th>Moves Around Prints</th><th>Avg |Move|</th><th>EPS Beats</th>
       <th>Fwd P/E</th><th>PEG</th>
     </tr></thead><tbody>${trs}</tbody></table>
-    <div class="rev-src" style="margin-top:8px">Reactions = researched 1-day moves around past earnings (hover for the why); newest first. Typical Move = average |reaction| — a stand-in for implied move, NOT options-implied (no IV feed here). EPS Beats = last ~4 quarters vs consensus (Yahoo). Fwd P/E = today's price ÷ researched consensus EPS for the next unreported fiscal year. PEG = fwd P/E ÷ fwd EPS growth. Catalysts from the researched 3-month calendar.</div>`;
+    <div class="rev-src" style="margin-top:8px">Moves Around Prints = researched 1-day moves in the days around past earnings, newest first (hover for the why) — includes post-earnings follow-through and occasional sector-sympathy moves, NOT strictly print-day reactions. Avg |Move| = average of those; a rough volatility feel, NOT options-implied (no IV feed here). EPS Beats = last ~4 quarters vs consensus (Yahoo); avg surprise suppressed when a near-zero EPS base makes the % meaningless. Fwd P/E = today's price ÷ researched consensus EPS for the next unreported fiscal year, (Yahoo) marks Yahoo's own fwd P/E where research coverage is missing. PEG = fwd P/E ÷ fwd EPS growth. Catalysts from the researched 3-month calendar.</div>`;
 }
 
 window.showTab = function (tabKey) {
