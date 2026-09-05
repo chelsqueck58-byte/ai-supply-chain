@@ -77,6 +77,8 @@
   .ct-table tr:hover td { background:rgba(88,166,255,.06); }
   .ct-tk { white-space:nowrap; }
   .ct-dt { white-space:nowrap; font-variant-numeric:tabular-nums; color:var(--text); }
+  .ct-type { font-size:10px; font-weight:600; padding:1px 7px; border-radius:3px;
+    border:1px solid; white-space:nowrap; }
   .ct-tx b.e { color:#9fd0ff; }
   .ideas-head { font-size:11px; font-weight:700; letter-spacing:.5px; text-transform:uppercase;
     color:#f5c518; margin:2px 0 6px; }
@@ -193,7 +195,7 @@
 <script>
 "use strict";
 const TREND_ORDER = { up: 0, flat: 1, down: 2 };
-let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, DEEP_FUND = null, GEO_MIX = null, FX_RATES = null, HIST_PE = null, FWD_PE = null, ROIC = null, NVDA_PARTNERSHIPS = null, NVDA_DEBT = null, CIRC_FIN = null, DEEP_FIN = null, STALE = false, OBSERVER = null;
+let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, DEEP_FUND = null, GEO_MIX = null, FX_RATES = null, HIST_PE = null, FWD_PE = null, ROIC = null, NVDA_PARTNERSHIPS = null, NVDA_DEBT = null, CIRC_FIN = null, DEEP_FIN = null, CAL = null, STALE = false, OBSERVER = null;
 const REVENUE_TAB_CATEGORIES = new Set(["china-internet", "compute", "hyperscaler-cloud", "platform"]);
 // Individual tickers pulled in from a category that isn't otherwise in
 // scope (e.g. ASML from Equipment) - added one at a time on request rather
@@ -409,36 +411,84 @@ function prevPerfBlock(prev, label) {
   };
   return list.map(p => line(p)).join("");
 }
+// Date-sorted catalyst calendar (next ~3 months). Researched typed events
+// (catalyst-calendar.json, key names only) merged with: earnings dates from
+// data.json for names the calendar doesn't cover, legacy inst.events for
+// non-calendar names, and macro events (researched list, falling back to
+// DATA.macro_events) on Summary only.
+const CAL_HORIZON_DAYS = 95;
+const CAL_TYPE_COLOR = { Earnings: "#58a6ff", Product: "#3fb950", Regulatory: "#f85149",
+                         Mgmt: "#d29922", Industry: "#bc8cff", Macro: "#f5c518" };
+function calFocus(inst) {
+  return inst.earn ? inst.earn.split(/\s*Sources?:/i)[0].replace(/\((https?:[^)]+)\)/g, "").trim() : "";
+}
+function calDateLabel(r) {
+  const d = new Date(r.date + "T00:00:00");
+  const mon = d.toLocaleString("en", { month: "short" });
+  const yr = d.getFullYear() !== new Date().getFullYear() ? ` '${String(d.getFullYear()).slice(-2)}` : "";
+  if (r.precision === "month") return `~${mon}${yr}`;
+  return `${mon} ${d.getDate()}${yr} <span class="muted">(${r.days}d)</span>`;
+}
 function catalystRows(category) {
   const rows = [];
   const insts = filterByCategory(DATA.instruments, category);
+  const inCal = new Set();
   for (const inst of insts) {
+    const cal = CAL && CAL.tickers && CAL.tickers[inst.id];
+    if (!cal || !(cal.events || []).length) continue;
+    inCal.add(inst.id);
+    let hasEarn = false;
+    for (const e of cal.events) {
+      const d = daysTo(e.date);
+      if (d == null || d < 0 || d > CAL_HORIZON_DAYS) continue;
+      const earn = e.type === "Earnings";
+      if (earn) hasEarn = true;
+      rows.push({ id: inst.id, label: inst.label, date: e.date, days: d,
+        precision: e.precision, type: e.type, event: e.title, source: e.source,
+        focus: earn ? calFocus(inst) : "",
+        prev: earn ? inst.prev_earnings : null, prevLabel: "Last earnings", earn });
+    }
+    // researched calendar missed the earnings date but data.json has one
+    const f = inst.fund || {};
+    if (!hasEarn && f.next_earnings) {
+      const d = daysTo(f.next_earnings);
+      if (d != null && d >= 0 && d <= CAL_HORIZON_DAYS)
+        rows.push({ id: inst.id, label: inst.label, date: f.next_earnings, days: d,
+          precision: "day", type: "Earnings", event: "Earnings", source: null,
+          focus: calFocus(inst), prev: inst.prev_earnings, prevLabel: "Last earnings", earn: true });
+    }
+  }
+  // names without researched calendar coverage: earnings + legacy events
+  for (const inst of insts) {
+    if (inCal.has(inst.id)) continue;
     const f = inst.fund || {};
     if (f.next_earnings) {
       const d = daysTo(f.next_earnings);
-      if (d != null && d >= 0 && d <= 30) {
-        const focus = inst.earn ? inst.earn.split(/\s*Sources?:/i)[0].replace(/\((https?:[^)]+)\)/g, "").trim() : "";
+      if (d != null && d >= 0 && d <= CAL_HORIZON_DAYS)
         rows.push({ id: inst.id, label: inst.label, date: f.next_earnings, days: d,
-          event: "Earnings", focus, prev: inst.prev_earnings, prevLabel: "Last earnings", earn: true });
-      }
+          precision: "day", type: "Earnings", event: "Earnings", source: null,
+          focus: calFocus(inst), prev: inst.prev_earnings, prevLabel: "Last earnings", earn: true });
     }
     (inst.events || []).forEach(e => {
       const d = daysTo(e.date);
-      if (d != null && d >= 0 && d <= 30) {
+      if (d != null && d >= 0 && d <= CAL_HORIZON_DAYS)
         rows.push({ id: inst.id, label: inst.label, date: e.date, days: d,
-          event: e.event, focus: "", prev: e.prev_reaction, prevLabel: "Last time", earn: false });
-      }
+          precision: "day", type: "Industry", event: e.event, source: null,
+          focus: "", prev: e.prev_reaction, prevLabel: "Last time", earn: false });
     });
   }
-  // Key macro events (Fed/FOMC, CPI, PPI, NFP, ISM...) - Summary tab only
-  // (category === null); category tabs stay scoped to their own tickers.
+  // Macro events - Summary tab only (category === null); category tabs stay
+  // scoped to their own tickers.
   if (!category) {
-    (DATA.macro_events || []).forEach(e => {
+    const macro = (CAL && CAL.macro && (CAL.macro.events || []).length)
+      ? CAL.macro.events
+      : (DATA.macro_events || []).map(e => ({ date: e.date, precision: "day", type: "Macro", title: e.event, source: e.source }));
+    macro.forEach(e => {
       const d = daysTo(e.date);
-      if (d != null && d >= 0 && d <= 30) {
-        rows.push({ id: "MACRO", label: e.source || "", date: e.date, days: d,
-          event: e.event, focus: "", prev: null, prevLabel: "", earn: false, macro: true });
-      }
+      if (d != null && d >= 0 && d <= CAL_HORIZON_DAYS)
+        rows.push({ id: "MACRO", label: "", date: e.date, days: d,
+          precision: e.precision || "day", type: e.type === "Industry" ? "Industry" : "Macro",
+          event: e.title, source: e.source, focus: "", prev: null, prevLabel: "", earn: false, macro: true });
     });
   }
   rows.sort((a, b) => a.days - b.days || a.id.localeCompare(b.id));
@@ -449,17 +499,22 @@ function renderCatalystsTable(category) {
   if (STALE) { el.innerHTML = ""; return; }
   const rows = catalystRows(category);
   if (!rows.length) { el.innerHTML = ""; return; }
+  const typeBadge = (t) => {
+    const c = CAL_TYPE_COLOR[t] || "var(--muted)";
+    return `<span class="ct-type" style="color:${c};border-color:${c}">${esc(t)}</span>`;
+  };
   const trs = rows.map(r => `<tr ${r.macro ? "" : `onclick="goTo('${r.id}')"`}>
-    <td class="ct-tk">${r.macro ? `🌐 <b style="color:#f5c518">MACRO</b>` : `<b>${r.id}</b>`} <span class="muted">${r.label}</span></td>
-    <td class="ct-dt">${r.date ? `${r.date} <span class="muted">(${r.days}d)</span>` : '<span class="muted">—</span>'}</td>
+    <td class="ct-dt">${calDateLabel(r)}</td>
+    <td class="ct-tk">${r.macro ? `🌐 <b style="color:#f5c518">MACRO</b>` : `<b>${r.id}</b> <span class="muted">${r.label}</span>`}</td>
+    <td>${typeBadge(r.type)}</td>
     <td class="ct-tx">
-      <div class="ct-event">${r.earn ? `<b class="e">${esc(r.event)}</b>` : (r.macro ? `<b style="color:#f5c518">${esc(r.event)}</b>` : esc(r.event))}</div>
+      <div class="ct-event">${r.earn ? `<b class="e">${esc(r.event)}</b>` : esc(r.event)}${r.source ? ` <span class="msrc">[${esc(r.source)}]</span>` : ""}</div>
       ${r.focus ? `<div class="ct-focus">🎯 ${esc(r.focus)}</div>` : ""}
       ${prevPerfBlock(r.prev, r.prevLabel)}
     </td>
   </tr>`).join("");
-  el.innerHTML = `<div class="ct-head">📅 Catalysts — next 30 days (event · investor focus · prev performance & why)</div>
-    <table class="ct-table"><thead><tr><th>Ticker</th><th>Date</th><th>Event / Focus / Prev Performance</th></tr></thead><tbody>${trs}</tbody></table>`;
+  el.innerHTML = `<div class="ct-head">📅 Catalysts — next 3 months (earnings · product/events · regulatory · macro)</div>
+    <table class="ct-table"><thead><tr><th>Date</th><th>Ticker</th><th>Type</th><th>Catalyst</th></tr></thead><tbody>${trs}</tbody></table>`;
 }
 
 // Earnings detection for researched moves: explicit tag, or a quarter ref /
@@ -1778,8 +1833,9 @@ function load() {
     fetch("./nvda-debt-financing.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./circular-financing.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./deep-financials.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
-  ]).then(([data, moves, scmap, earnDates, revMix, deepFund, geoMix, fxRates, histPe, fwdPe, roic, nvdaPartnerships, nvdaDebt, circFin, deepFin]) => {
-    DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates; REV_MIX = revMix; DEEP_FUND = deepFund; GEO_MIX = geoMix; FX_RATES = fxRates; HIST_PE = histPe; FWD_PE = fwdPe; ROIC = roic; NVDA_PARTNERSHIPS = nvdaPartnerships; NVDA_DEBT = nvdaDebt; CIRC_FIN = circFin; DEEP_FIN = deepFin;
+    fetch("./catalyst-calendar.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
+  ]).then(([data, moves, scmap, earnDates, revMix, deepFund, geoMix, fxRates, histPe, fwdPe, roic, nvdaPartnerships, nvdaDebt, circFin, deepFin, cal]) => {
+    DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates; REV_MIX = revMix; DEEP_FUND = deepFund; GEO_MIX = geoMix; FX_RATES = fxRates; HIST_PE = histPe; FWD_PE = fwdPe; ROIC = roic; NVDA_PARTNERSHIPS = nvdaPartnerships; NVDA_DEBT = nvdaDebt; CIRC_FIN = circFin; DEEP_FIN = deepFin; CAL = cal;
     STALE = checkStale(DATA);
     const ideas = DATA.instruments.filter(i => i.idea && i.idea.kind === "enter").length;
     document.getElementById("meta").textContent =
