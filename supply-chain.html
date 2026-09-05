@@ -79,6 +79,9 @@
   .ct-dt { white-space:nowrap; font-variant-numeric:tabular-nums; color:var(--text); }
   .ct-type { font-size:10px; font-weight:600; padding:1px 7px; border-radius:3px;
     border:1px solid; white-space:nowrap; }
+  .deep-fin-note { background:#12161c; border:1px solid var(--border); border-radius:6px;
+    padding:10px 12px; font-size:12.5px; line-height:1.6; max-width:720px; }
+  #page-chips button.active { background:var(--panel); color:var(--text); }
   .sb-chip { font-size:11px; padding:0 5px; border-radius:3px; white-space:nowrap; cursor:help;
     font-variant-numeric:tabular-nums; display:inline-block; margin:1px 2px 1px 0; }
   .sb-chip.u { color:var(--up); background:rgba(63,185,80,.12); }
@@ -208,7 +211,7 @@
 <script>
 "use strict";
 const TREND_ORDER = { up: 0, flat: 1, down: 2 };
-let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, DEEP_FUND = null, GEO_MIX = null, FX_RATES = null, HIST_PE = null, FWD_PE = null, ROIC = null, NVDA_PARTNERSHIPS = null, NVDA_DEBT = null, CIRC_FIN = null, DEEP_FIN = null, CAL = null, STALE = false, OBSERVER = null;
+let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, DEEP_FUND = null, GEO_MIX = null, FX_RATES = null, HIST_PE = null, FWD_PE = null, ROIC = null, NVDA_PARTNERSHIPS = null, NVDA_DEBT = null, CIRC_FIN = null, DEEP_FIN = null, CAL = null, PAGE_EXTRAS = null, STALE = false, OBSERVER = null;
 const REVENUE_TAB_CATEGORIES = new Set(["china-internet", "compute", "hyperscaler-cloud", "platform"]);
 // Individual tickers pulled in from a category that isn't otherwise in
 // scope (e.g. ASML from Equipment) - added one at a time on request rather
@@ -1716,6 +1719,193 @@ function buildHistPeSection() {
     <div class="rev-src" style="margin-top:8px">Historical (T-4..T) = fiscal year-end closing price ÷ that fiscal year's actual GAAP diluted EPS, research-derived from filings. Forward (T+1..T+3) = TODAY's price ÷ analyst consensus EPS estimate. T+1 and T+2 are real sourced Yahoo Finance consensus (analyst count shown in parentheses) when Yahoo has coverage; T+3 always, and T+1/T+2 when Yahoo has no coverage, require a named multi-analyst consensus aggregator (Zacks, TipRanks, MarketScreener, etc.) — most names genuinely have no such coverage that far out, shown as n/a rather than a guess, not a research gap. Columns are relative to each company's own fiscal calendar (T = most recent completed fiscal year), not calendar year — the actual FY label and analyst count are shown under each value. Companies reporting in a different currency than their traded shares are converted using the relevant historical or spot FX rate, marked * — hover for detail. ⚠ flags a P/E outside a plausible range (a real failure mode: Yahoo's own consensus data has been wrong for at least one name in this cohort — PDD's trailing AND forward EPS were both ~8-10x inflated on Yahoo's feed, caught by this check and excluded). This data is LLM/API-researched, not a Bloomberg/FactSet-grade feed — treat as a first pass, not verified truth.</div>`;
 }
 
+// ---- Stock Pages: one page per Mag6/key-semi name -----------------------
+// Sections: header - upcoming catalysts (chatter) - past events w/ computed
+// reactions (incl. shrugged-off = priced-in evidence) - earnings preview -
+// last 4 prints - key metrics + segments (deep-financials research) - P/E
+// history/forward + re-rating narrative + guidance revisions.
+const STOCK_PAGES = ["META", "NVDA", "AAPL", "MSFT", "GOOGL", "AMZN",
+                     "AMD", "AVGO", "INTC", "TSM", "ASML", "MU", "MRVL",
+                     "9988", "0700", "6181"];
+let PAGE_SEL = "META";
+
+function pageDeepFinHtml(tid) {
+  const d = DEEP_FIN && DEEP_FIN[tid];
+  const na = `<span class="cmp-na">—</span>`;
+  if (!d || (!(d.fiscal_years || []).length && !(d.quarters || []).length))
+    return `<div class="rev-none">Segment financials research pending for this name — refreshes automatically as chunks complete.</div>`;
+  const symbol = CCY_SYMBOL[d.currency] || ((d.currency || "") + " ");
+  const periods = deepFinPeriods(d.fiscal_years, d.quarters);
+  const periodLabel = p => p.isFy ? "FY" : deepFinShortQ(p.quarter_label);
+  const metrics = [];
+  for (const m of DEEP_FIN_METRICS) {
+    metrics.push(m);
+    if (m.key === "net_margin_pct") metrics.push({ key: "__np", label: "Net Profit (derived)", derived: true });
+  }
+  const cwRows = metrics.map(m => {
+    const cells = periods.map(p => {
+      let val;
+      if (m.derived) {
+        val = (p.revenue_m != null && p.net_margin_pct != null)
+          ? fmtMoney(p.revenue_m * 1e6 * p.net_margin_pct / 100, symbol) : null;
+      } else val = deepFinCellVal(p, m, symbol);
+      const cls = p.isFy ? "deep-fin-fy" : "pe-current";
+      if (val == null) return `<td class="${p.isFy ? "deep-fin-fy-col" : ""}">${na}</td>`;
+      const tip = m.derived ? "revenue × net margin (derived, not filed)"
+        : [m.basisKey && p[m.basisKey], p.source].filter(Boolean).join(" — ");
+      const info = tip ? ` <span class="pe-nm" title="${esc(tip)}">ⓘ</span>` : "";
+      return `<td class="${p.isFy ? "deep-fin-fy-col" : ""}"><span class="${cls}">${val}</span>${info}</td>`;
+    }).join("");
+    return `<tr><td><b>${esc(m.label)}</b></td>${cells}</tr>`;
+  }).join("");
+  const headCells = periods.map(p => deepFinHeadCell(p, periodLabel)).join("");
+  let segHtml = "";
+  for (const seg of d.segments || []) {
+    const segPeriods = deepFinPeriods(seg.fiscal_years, seg.quarters);
+    if (!segPeriods.length) continue;
+    const segHead = segPeriods.map(p => deepFinHeadCell(p, periodLabel)).join("");
+    const revRow = segPeriods.map(p => {
+      const val = p.revenue_m != null ? fmtMoney(p.revenue_m * 1e6, symbol) : null;
+      const cls = p.isFy ? "deep-fin-fy" : "pe-current";
+      return `<td class="${p.isFy ? "deep-fin-fy-col" : ""}">${val ? `<span class="${cls}">${val}</span>` : na}</td>`;
+    }).join("");
+    const headlineName = (segPeriods.find(p => p.headline_metric_name) || {}).headline_metric_name;
+    const headlineRow = headlineName ? `<tr><td><b>${esc(headlineName)}</b></td>${segPeriods.map(p => {
+      const cls = p.isFy ? "deep-fin-fy" : "pe-current";
+      if (!p.headline_metric_value) return `<td class="${p.isFy ? "deep-fin-fy-col" : ""}">${na}</td>`;
+      const noteIcon = p.note ? ` <span class="pe-nm" title="${esc(p.note)}">ⓘ</span>` : "";
+      return `<td class="${p.isFy ? "deep-fin-fy-col" : ""}"><span class="${cls}">${esc(p.headline_metric_value)}</span>${noteIcon}</td>`;
+    }).join("")}</tr>` : "";
+    segHtml += `<div style="margin-top:10px; font-weight:700; color:#9fd0ff; font-size:11px;">${esc(seg.name)}</div>
+      <table class="cmp-table deep-fin-table"><thead><tr><th>Metric</th>${segHead}</tr></thead>
+      <tbody><tr><td>Revenue</td>${revRow}</tr>${headlineRow}</tbody></table>`;
+  }
+  return `<table class="cmp-table deep-fin-table"><thead><tr><th>Metric</th>${headCells}</tr></thead><tbody>${cwRows}</tbody></table>
+    ${segHtml ? `<div style="margin-top:8px; font-weight:700; font-size:12px; color:var(--muted);">By Segment</div>${segHtml}` : ""}`;
+}
+
+function pagePeHtml(tid) {
+  const h = (HIST_PE && HIST_PE[tid] && HIST_PE[tid].years) || [];
+  const f = (FWD_PE && FWD_PE[tid] && FWD_PE[tid].years) || [];
+  const hist = h.filter(y => y.pe != null).sort((a, b) => (a.period_end || "").localeCompare(b.period_end || "")).slice(-5);
+  const fwd = f.filter(y => y.pe != null).slice(0, 2);
+  if (!hist.length && !fwd.length) return `<div class="rev-none">No P/E research for this name.</div>`;
+  const cell = (y, isFwd, i) => `<td><span class="${isFwd && i === 0 ? "pe-fwd1" : "pe-current"}">${y.pe}x</span><div class="muted" style="font-size:9px">${esc(y.fy_label || "")}${isFwd ? " est." : ""}</div></td>`;
+  return `<table class="cmp-table deep-fin-table"><thead><tr>${hist.map(y => `<th>${esc(y.fy_label)}</th>`).join("")}${fwd.map(y => `<th>${esc(y.fy_label)} (fwd)</th>`).join("")}</tr></thead>
+    <tbody><tr>${hist.map((y, i) => cell(y, false, i)).join("")}${fwd.map((y, i) => cell(y, true, i)).join("")}</tr></tbody></table>
+    <div class="rev-src">Historical = FY-end close ÷ actual filed diluted EPS. Forward = today's price ÷ consensus EPS (bold = nearest).</div>`;
+}
+
+function pageSecHead(t) {
+  return `<div class="ct-head" style="margin-top:18px">${t}</div>`;
+}
+
+function renderStockPage(tid) {
+  const el = document.getElementById("page-body");
+  const inst = DATA.instruments.find(i => i.id === tid);
+  if (!inst) { el.innerHTML = `<div class="rev-none">No data for ${esc(tid)}.</div>`; return; }
+  const f = inst.fund || {};
+  const x = (typeof PAGE_EXTRAS === "object" && PAGE_EXTRAS && PAGE_EXTRAS[tid]) || {};
+  const earnD = f.next_earnings ? daysTo(f.next_earnings) : null;
+  let html = `<div style="padding:6px 0 2px"><b style="font-size:16px">${esc(inst.label)}</b> <span class="muted">${esc(tid)}</span>
+    <span class="mono" style="margin-left:12px;color:var(--muted);font-size:12px">
+    ${inst.last_close != null ? esc(String(inst.last_close)) : ""} · YTD ${inst.ytd_pct != null ? (inst.ytd_pct >= 0 ? "+" : "") + inst.ytd_pct.toFixed(1) + "%" : "—"}
+    ${f.next_earnings ? ` · earnings ${esc(f.next_earnings)}${earnD != null ? ` (${earnD}d)` : ""}` : ""}</span></div>`;
+
+  // upcoming catalysts
+  const cal = CAL && CAL.tickers && CAL.tickers[tid];
+  html += pageSecHead("📅 Upcoming catalysts");
+  if (cal && (cal.events || []).length) {
+    const rows = cal.events.filter(e => { const d = daysTo(e.date); return d != null && d >= 0; })
+      .map(e => {
+        const c = CAL_TYPE_COLOR[e.type] || "var(--muted)";
+        return `<tr><td class="ct-dt">${calDateLabel({ ...e, days: daysTo(e.date) })}</td>
+          <td><span class="ct-type" style="color:${c};border-color:${c}">${esc(e.type)}</span></td>
+          <td>${esc(e.title)}${e.source ? ` <span class="msrc">[${esc(e.source)}]</span>` : ""}</td></tr>`;
+      }).join("");
+    html += `<table class="ct-table"><tbody>${rows}</tbody></table>`;
+  } else html += `<div class="rev-none">No researched calendar entries.</div>`;
+
+  // past events with computed reactions
+  html += pageSecHead("↩ Past events & what actually moved it (last ~6 months)");
+  if ((x.past_events || []).length) {
+    const rows = x.past_events.map(e => {
+      const mv = e.move_pct;
+      const shrug = mv != null && Math.abs(mv) < 1.5;
+      const mvCell = mv == null ? `<span class="cmp-na">—</span>`
+        : `<span class="pct ${mv >= 0 ? "u" : "d"}">${mv >= 0 ? "+" : ""}${mv}%</span>${shrug ? ` <span class="muted" style="font-size:10px">shrugged ○</span>` : ""}`;
+      return `<tr><td class="ct-dt">${esc(e.date)}</td><td style="white-space:nowrap">${mvCell}</td>
+        <td>${esc(e.title)} <span class="pe-nm" title="${esc(e.why || "")}">ⓘ</span>${e.src ? ` <span class="msrc">[${esc(e.src)}]</span>` : ""}</td></tr>`;
+    }).join("");
+    html += `<table class="ct-table"><tbody>${rows}</tbody></table>
+      <div class="rev-src">Move = next-trading-day close-to-close from own price data (objective). "shrugged ○" = |move| &lt; 1.5% — the market had it priced.</div>`;
+  } else html += `<div class="rev-none">Event research pending.</div>`;
+
+  // earnings preview
+  html += pageSecHead("🔎 Upcoming earnings focus");
+  if (x.preview && x.preview.expects) {
+    html += `<div class="deep-fin-note"><b style="color:#9fd0ff">Expects:</b> ${esc(x.preview.expects)}<br>
+      <b style="color:#9fd0ff">Watch:</b> ${(x.preview.watch || []).map(esc).join(" · ")}<br>
+      <b style="color:#9fd0ff">Read:</b> ${esc(x.preview.read || "")}</div>`;
+  } else if (inst.earn) {
+    html += `<div class="deep-fin-note">${esc(inst.earn.split(/\s*Sources?:/i)[0])}</div>`;
+  } else html += `<div class="rev-none">Preview research pending.</div>`;
+
+  // last 4 prints
+  html += pageSecHead("📊 Last 4 prints");
+  const hist = f.earnings_history || [];
+  if (hist.length) {
+    html += `<table class="ct-table"><thead><tr><th>Quarter end</th><th>EPS act vs est</th><th>Surprise</th></tr></thead><tbody>` +
+      hist.slice(-4).reverse().map(hq => {
+        const s = hq.surprise;
+        const sCell = s == null ? "—" : (Math.abs(s) > 60 ? `<span class="muted" title="near-zero EPS base makes % meaningless">n/m</span>` : `<span class="pct ${s >= 0 ? "u" : "d"}">${s >= 0 ? "+" : ""}${s}%</span>`);
+        return `<tr><td class="ct-dt">${esc(hq.q)}</td><td class="mono">${hq.actual} vs ${hq.est != null ? Number(hq.est).toFixed(2) : "—"}</td><td>${sCell}</td></tr>`;
+      }).join("") + `</tbody></table>`;
+  }
+  if ((inst.prev_earnings || []).length) {
+    html += `<div style="margin-top:6px">` + inst.prev_earnings.slice(0, 4).map(p =>
+      `<div class="ct-prev">↩ <span class="pct ${p.pct >= 0 ? "u" : "d"}">${p.pct >= 0 ? "+" : ""}${p.pct}%</span> ${esc(p.date)}: ${esc(p.reason)}${p.source ? ` <span class="msrc">[${esc(p.source)}]</span>` : ""}</div>`).join("") + `</div>
+      <div class="rev-src">Reactions are researched moves around prints — may include follow-through days, hover dates.</div>`;
+  }
+
+  // key metrics + segments
+  html += pageSecHead("📐 Key metrics (last 4 quarters + FY)");
+  html += pageDeepFinHtml(tid);
+
+  // guidance revisions
+  if ((x.guidance_revisions || []).length) {
+    html += pageSecHead("🧭 Guidance revisions (company's own, print-over-print)");
+    html += `<table class="ct-table"><tbody>` + x.guidance_revisions.map(g =>
+      `<tr><td class="ct-dt" style="width:150px">${esc(g.when)}</td><td>${esc(g.change)}${g.src ? ` <span class="msrc">[${esc(g.src)}]</span>` : ""}</td></tr>`).join("") + `</tbody></table>`;
+  }
+
+  // P/E
+  html += pageSecHead("⚖ P/E — history, forward, and why it re-rated");
+  html += pagePeHtml(tid);
+  if (x.pe_narrative) html += `<div class="deep-fin-note" style="margin-top:6px"><b style="color:#9fd0ff">Re-rating narrative</b> <span class="muted">(interpretive, from analyst/press commentary)</span>: ${esc(x.pe_narrative)}</div>`;
+
+  el.innerHTML = html;
+}
+
+function renderStockPages() {
+  const wrap = document.getElementById("pages-wrap");
+  if (!wrap.dataset.built) {
+    wrap.dataset.built = "1";
+    wrap.innerHTML = `<div class="hist-head">Stock Pages</div><div id="page-chips" class="tabs" style="margin:6px 0 10px"></div><div id="page-body"></div>`;
+    const chips = document.getElementById("page-chips");
+    for (const tid of STOCK_PAGES) {
+      const b = document.createElement("button");
+      b.id = "pchip-" + tid; b.textContent = tid;
+      b.onclick = () => { PAGE_SEL = tid;
+        chips.querySelectorAll("button").forEach(c => c.classList.toggle("active", c.id === "pchip-" + tid));
+        renderStockPage(tid); };
+      chips.appendChild(b);
+    }
+  }
+  document.querySelectorAll("#page-chips button").forEach(c => c.classList.toggle("active", c.id === "pchip-" + PAGE_SEL));
+  renderStockPage(PAGE_SEL);
+}
+
 // Semis Board - data-only catalyst desk view for the key semiconductor names:
 // next researched catalyst, next earnings, last earnings reactions (with a
 // typical-move average as the implied-move stand-in - there's no options/IV
@@ -1793,6 +1983,8 @@ window.showTab = function (tabKey) {
   document.getElementById("deep-fin-wrap").style.display = tabKey === "deep-fin" ? "" : "none";
   document.getElementById("tab-semis").classList.toggle("active", tabKey === "semis");
   document.getElementById("semis-wrap").style.display = tabKey === "semis" ? "" : "none";
+  document.getElementById("tab-pages").classList.toggle("active", tabKey === "pages");
+  document.getElementById("pages-wrap").style.display = tabKey === "pages" ? "" : "none";
   for (const c of CATEGORIES) {
     document.getElementById("tab-" + c.key).classList.toggle("active", tabKey === c.key);
     const show = tabKey === c.key;
@@ -1803,7 +1995,7 @@ window.showTab = function (tabKey) {
   // sections. Those divs are fixed top-level elements shared across every
   // tab, so without this they'd keep showing stale content from whichever
   // tab was active before switching here.
-  const showIdeas = tabKey !== "revenue" && tabKey !== "compare" && tabKey !== "pe" && tabKey !== "nvda-eco" && tabKey !== "circ-fin" && tabKey !== "deep-fin" && tabKey !== "semis";
+  const showIdeas = tabKey !== "revenue" && tabKey !== "compare" && tabKey !== "pe" && tabKey !== "nvda-eco" && tabKey !== "circ-fin" && tabKey !== "deep-fin" && tabKey !== "semis" && tabKey !== "pages";
   document.getElementById("ideas").style.display = showIdeas ? "" : "none";
   document.getElementById("catalysts30").style.display = showIdeas ? "" : "none";
   document.getElementById("pastCatalysts").style.display = showIdeas ? "" : "none";
@@ -1833,6 +2025,10 @@ window.showTab = function (tabKey) {
   }
   if (tabKey === "semis") {
     if (DATA) renderSemisBoard();
+    return;
+  }
+  if (tabKey === "pages") {
+    if (DATA) renderStockPages();
     return;
   }
   const category = tabKey === "summary" ? null : tabKey;
@@ -1897,6 +2093,11 @@ function buildShell() {
   const semisWrap = document.createElement("div");
   semisWrap.id = "semis-wrap"; semisWrap.className = "cmp-wrap"; semisWrap.style.display = "none";
   grids.appendChild(semisWrap);
+
+  mk("pages", "Stock Pages");
+  const pagesWrap = document.createElement("div");
+  pagesWrap.id = "pages-wrap"; pagesWrap.className = "cmp-wrap"; pagesWrap.style.display = "none";
+  grids.appendChild(pagesWrap);
 }
 
 function load() {
@@ -1919,8 +2120,9 @@ function load() {
     fetch("./circular-financing.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./deep-financials.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./catalyst-calendar.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
-  ]).then(([data, moves, scmap, earnDates, revMix, deepFund, geoMix, fxRates, histPe, fwdPe, roic, nvdaPartnerships, nvdaDebt, circFin, deepFin, cal]) => {
-    DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates; REV_MIX = revMix; DEEP_FUND = deepFund; GEO_MIX = geoMix; FX_RATES = fxRates; HIST_PE = histPe; FWD_PE = fwdPe; ROIC = roic; NVDA_PARTNERSHIPS = nvdaPartnerships; NVDA_DEBT = nvdaDebt; CIRC_FIN = circFin; DEEP_FIN = deepFin; CAL = cal;
+    fetch("./stock-page-extras.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
+  ]).then(([data, moves, scmap, earnDates, revMix, deepFund, geoMix, fxRates, histPe, fwdPe, roic, nvdaPartnerships, nvdaDebt, circFin, deepFin, cal, pageExtras]) => {
+    DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates; REV_MIX = revMix; DEEP_FUND = deepFund; GEO_MIX = geoMix; FX_RATES = fxRates; HIST_PE = histPe; FWD_PE = fwdPe; ROIC = roic; NVDA_PARTNERSHIPS = nvdaPartnerships; NVDA_DEBT = nvdaDebt; CIRC_FIN = circFin; DEEP_FIN = deepFin; CAL = cal; PAGE_EXTRAS = pageExtras;
     STALE = checkStale(DATA);
     const ideas = DATA.instruments.filter(i => i.idea && i.idea.kind === "enter").length;
     document.getElementById("meta").textContent =

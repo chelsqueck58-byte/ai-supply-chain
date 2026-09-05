@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Chain Catalysts</title>
+<style>
+  :root { --bg:#0d1117; --panel:#161b22; --border:#30363d; --text:#e6edf3;
+    --muted:#7d8590; --up:#26a641; --down:#f85149; --accent:#f5c518; --blue:#58a6ff; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text);
+    font:14px/1.5 -apple-system, "Segoe UI", system-ui, sans-serif; }
+  .mono { font-family:ui-monospace, "SF Mono", Menlo, monospace; font-variant-numeric:tabular-nums; }
+  header { padding:18px 20px 0; max-width:1080px; margin:0 auto; }
+  h1 { font-size:20px; margin:0; }
+  h1 a { color:var(--muted); font-size:12px; font-weight:400; text-decoration:none; margin-left:12px; }
+  h1 a:hover { color:var(--blue); }
+  #meta { color:var(--muted); font-size:12px; margin-top:2px; }
+  .chips { display:flex; gap:6px; flex-wrap:wrap; margin:14px 0 0; }
+  .chips button { background:transparent; border:1px solid var(--border); color:var(--muted);
+    font:12px -apple-system, system-ui, sans-serif; padding:4px 12px; border-radius:14px; cursor:pointer; }
+  .chips button.on { background:var(--panel); color:var(--text); border-color:var(--muted); }
+  main { max-width:1080px; margin:0 auto; padding:8px 20px 80px; }
+  .sec { font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--accent); margin:28px 0 8px; }
+  .sec .n { color:var(--muted); font-weight:400; letter-spacing:0; text-transform:none; }
+  table { width:100%; border-collapse:collapse; }
+  td { padding:7px 10px 7px 0; border-bottom:1px solid #1b2027; vertical-align:top; font-size:13px; }
+  tr.ev { cursor:pointer; }
+  tr.ev:hover td { background:rgba(88,166,255,.05); }
+  .dt { white-space:nowrap; font-family:ui-monospace, Menlo, monospace; font-variant-numeric:tabular-nums; width:110px; }
+  .dt .days { color:var(--muted); }
+  .tk { white-space:nowrap; width:150px; }
+  .tk b { font-size:13px; }
+  .tk .lbl { color:var(--muted); font-size:11px; }
+  .stage { font-size:9.5px; letter-spacing:.06em; padding:1px 6px; border-radius:3px;
+    border:1px solid var(--border); color:var(--muted); white-space:nowrap; vertical-align:1px; }
+  .type { font-size:10px; font-weight:600; padding:1px 7px; border-radius:3px; border:1px solid;
+    white-space:nowrap; width:78px; display:inline-block; text-align:center; }
+  .sig { width:26px; text-align:center; font-size:13px; }
+  .sig.high { color:var(--accent); } .sig.med { color:var(--muted); } .sig.noise { color:#4d5761; }
+  .spill { color:var(--muted); font-size:11px; white-space:nowrap; }
+  .spill b { color:var(--blue); font-weight:600; }
+  .title-cell { min-width:220px; }
+  .noise-title { color:var(--muted); }
+  .detail { display:none; }
+  .detail.open { display:table-row; }
+  .detail td { background:#12161c; padding:12px 16px 14px; border-left:2px solid var(--border); }
+  .detail .why { color:var(--muted); font-size:12.5px; }
+  .prev { display:grid; grid-template-columns:92px 1fr; gap:5px 12px; margin-top:10px; font-size:13px; }
+  .prev dt { color:var(--accent); font-family:ui-monospace, Menlo, monospace; font-size:10.5px;
+    letter-spacing:.08em; text-transform:uppercase; padding-top:2px; }
+  .prev dd { margin:0; }
+  .prev ul { margin:0; padding-left:16px; }
+  .prev li { margin:2px 0; }
+  .rx { color:#c9a5f0; }
+  .empty { color:var(--muted); padding:16px 0; font-size:13px; }
+  .legend { color:var(--muted); font-size:11.5px; margin-top:26px; border-top:1px solid var(--border); padding-top:10px; }
+  .legend .sig { width:auto; }
+  @media (max-width:760px) { .tk { width:auto; } .spill { display:none; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>AI Chain Catalysts <a href="supply-chain.html">← full monitor</a></h1>
+  <div id="meta">loading…</div>
+  <div class="chips" id="chips"></div>
+</header>
+<main id="main"></main>
+<script>
+"use strict";
+let DATA = null, CAL = null, DEEP = null, FILTER = "all";
+
+const STAGES = [
+  ["demand",  "Demand / Mag6", ["AAPL","MSFT","GOOGL","AMZN","META","TSLA"]],
+  ["compute", "Compute",       ["NVDA","AMD","AVGO","MRVL","INTC","2454","688256","ARMUSD"]],
+  ["foundry", "Foundry",       ["TSM","SMI","GFS"]],
+  ["memory",  "Memory",        ["MU","000660","005930","WDC"]],
+  ["equip",   "Equipment",     ["ASML","AMAT","LRCX","KLAC","TEL","ACMR","NINOY"]],
+  ["infra",   "Infra",         ["SMCI","COHR","LITE","CRDO","CIEN","FN","AAOI","MPWR","VICR","GLW","IFNNY"]],
+  ["chinanet","China Net",     ["9988","0700","3690","PDD","1810","9888","6181"]],
+];
+const STAGE_OF = {}; const STAGE_LABEL = {};
+for (const [key, label, ids] of STAGES) { STAGE_LABEL[key] = label; ids.forEach(id => { STAGE_OF[id] = key; }); }
+const CHINA = new Set(["SMI","688256","9988","0700","3690","PDD","1810","9888","6181","2513","0100","9618","002867"]);
+const TYPE_COLOR = { Earnings:"#58a6ff", Product:"#3fb950", Regulatory:"#f85149",
+                     Mgmt:"#d29922", Industry:"#bc8cff", Macro:"#f5c518" };
+const SIG_DOT = { high:"●", med:"◐", noise:"○" };
+
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const daysTo = iso => { const d = new Date(iso + "T00:00:00"); return isNaN(d) ? null : Math.round((d - new Date(new Date().toDateString())) / 86400000); };
+function evKey(tid, e) {
+  const slug = (e.title || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 40).replace(/^-+|-+$/g, "");
+  return `${tid}|${e.date}|${slug}`;
+}
+function dtLabel(e, days) {
+  const d = new Date(e.date + "T00:00:00");
+  const mon = d.toLocaleString("en", { month: "short" });
+  if (e.precision === "month") return `~${mon}`;
+  return `${mon} ${d.getDate()} <span class="days">(${days}d)</span>`;
+}
+
+function collectEvents() {
+  const rows = [];
+  const instById = {}; (DATA.instruments || []).forEach(i => { instById[i.id] = i; });
+  const seenEarn = new Set();
+  for (const [tid, block] of Object.entries((CAL && CAL.tickers) || {})) {
+    const inst = instById[tid];
+    for (const e of block.events || []) {
+      const days = daysTo(e.date);
+      if (days == null || days < 0 || days > 95) continue;
+      if (e.type === "Earnings") seenEarn.add(tid);
+      rows.push({ tid, label: inst ? inst.label : tid, e, days,
+                  stage: STAGE_OF[tid] || null, enrich: DEEP && DEEP.enrich && DEEP.enrich[evKey(tid, e)],
+                  inst });
+    }
+    const f = (instById[tid] || {}).fund || {};
+    if (!seenEarn.has(tid) && f.next_earnings) {
+      const days = daysTo(f.next_earnings);
+      if (days != null && days >= 0 && days <= 95)
+        rows.push({ tid, label: instById[tid].label, days, stage: STAGE_OF[tid] || null,
+                    e: { date: f.next_earnings, precision: "day", type: "Earnings", title: "Earnings" },
+                    enrich: null, inst: instById[tid] });
+    }
+  }
+  for (const e of ((CAL && CAL.macro) || {}).events || []) {
+    const days = daysTo(e.date);
+    if (days == null || days < 0 || days > 95) continue;
+    rows.push({ tid: "MACRO", label: "", e, days, stage: "macro",
+                enrich: DEEP && DEEP.enrich && DEEP.enrich[evKey("MACRO", e)], inst: null });
+  }
+  rows.sort((a, b) => a.days - b.days || a.tid.localeCompare(b.tid));
+  return rows;
+}
+
+function passFilter(r) {
+  if (FILTER === "all") return true;
+  if (FILTER === "macro") return r.tid === "MACRO";
+  if (FILTER === "china") return CHINA.has(r.tid);
+  return r.stage === FILTER;
+}
+
+function rowHtml(r, idx) {
+  const sig = r.enrich ? r.enrich.signal : null;
+  const tc = TYPE_COLOR[r.e.type] || "var(--muted)";
+  const spill = r.enrich && r.enrich.spillover && r.enrich.spillover.length
+    ? `<span class="spill">→ ${r.enrich.spillover.map(t => `<b>${esc(t)}</b>`).join(" ")}</span>` : "";
+  const preview = r.e.type === "Earnings" && DEEP && DEEP.previews && DEEP.previews[r.tid];
+  const hasDetail = !!(r.enrich || preview);
+  const stageTag = r.tid === "MACRO"
+    ? `<b style="color:var(--accent)">🌐 MACRO</b>`
+    : `<b>${esc(r.tid)}</b> <span class="lbl">${esc(r.label)}</span>${r.stage ? ` <span class="stage">${esc(STAGE_LABEL[r.stage] || r.stage)}</span>` : ""}`;
+  let detail = "";
+  if (hasDetail) {
+    let inner = "";
+    if (r.enrich) inner += `<div class="why">${SIG_DOT[sig] || ""} <b>${esc(sig)}</b> — ${esc(r.enrich.why || "")}${spill ? " · moves " + r.enrich.spillover.join(", ") : ""}</div>`;
+    if (preview) {
+      const rx = (r.inst && r.inst.prev_earnings || []).slice(0, 4)
+        .map(p => `<span class="rx" title="${esc(p.reason || "")}">${p.pct >= 0 ? "+" : ""}${p.pct}%</span>`).join(" · ");
+      inner += `<dl class="prev">
+        <dt>Expects</dt><dd>${esc(preview.expects)}</dd>
+        <dt>Watch</dt><dd><ul>${(preview.watch || []).map(w => `<li>${esc(w)}</li>`).join("")}</ul></dd>
+        <dt>Prior</dt><dd>${esc(preview.prior_pattern)}${rx ? ` <span class="mono">· ${rx}</span>` : ""}</dd>
+        <dt>Read</dt><dd>${esc(preview.read)}</dd>
+      </dl>`;
+    }
+    detail = `<tr class="detail" id="d${idx}"><td colspan="6">${inner}</td></tr>`;
+  }
+  return `<tr class="ev" ${hasDetail ? `onclick="document.getElementById('d${idx}').classList.toggle('open')"` : ""}>
+    <td class="dt">${dtLabel(r.e, r.days)}</td>
+    <td class="tk">${stageTag}</td>
+    <td><span class="type" style="color:${tc};border-color:${tc}">${esc(r.e.type)}</span></td>
+    <td class="sig ${sig || ""}" title="${sig ? esc(sig) : "unrated"}">${sig ? SIG_DOT[sig] : ""}</td>
+    <td class="title-cell ${sig === "noise" ? "noise-title" : ""}">${esc(r.e.title)}${r.e.source ? ` <span style="color:var(--muted);font-size:10px">[${esc(r.e.source)}]</span>` : ""}${hasDetail ? ' <span style="color:var(--muted)">▸</span>' : ""}</td>
+    <td>${spill}</td>
+  </tr>${detail}`;
+}
+
+function render() {
+  const rows = collectEvents().filter(passFilter);
+  const main = document.getElementById("main");
+  if (!rows.length) { main.innerHTML = `<div class="empty">No events for this filter in the next 3 months.</div>`; return; }
+  let idx = 0;
+  const section = (title, list) => list.length
+    ? `<div class="sec">${title} <span class="n">· ${list.length}</span></div>
+       <table><tbody>${list.map(r => rowHtml(r, idx++)).join("")}</tbody></table>` : "";
+  const earn = rows.filter(r => r.e.type === "Earnings");
+  const week = rows.filter(r => r.days <= 7 && r.e.type !== "Earnings");
+  const soon = rows.filter(r => r.days > 7 && r.days <= 30 && r.e.type !== "Earnings");
+  const later = rows.filter(r => r.days > 30 && r.e.type !== "Earnings");
+  main.innerHTML =
+    section("Earnings runway", earn) +
+    section("This week", week) +
+    section("Next 30 days", soon) +
+    section("Beyond", later) +
+    `<div class="legend">Signal: <span class="sig high">●</span> high — historically moves the stock/chain &gt;2% · <span class="sig med">◐</span> med — matters, rarely a big single-day mover · <span class="sig noise">○</span> noise — headline theater, rarely prints. → chips = spillover: other names the event moves through the value chain. Click a row for the why; earnings rows expand to expects / watch / prior pattern / read. Research-generated (web-search grounded, source-cited) — first pass, not verified truth.</div>`;
+}
+
+function buildChips() {
+  const chips = document.getElementById("chips");
+  const mk = (key, label) => {
+    const b = document.createElement("button");
+    b.textContent = label; b.id = "chip-" + key;
+    b.className = key === FILTER ? "on" : "";
+    b.onclick = () => { FILTER = key;
+      chips.querySelectorAll("button").forEach(x => x.classList.toggle("on", x.id === "chip-" + key));
+      render(); };
+    chips.appendChild(b);
+  };
+  mk("all", "All");
+  for (const [key, label] of STAGES.map(s => [s[0], s[1]])) mk(key, label);
+  mk("china", "China");
+  mk("macro", "Macro");
+}
+
+Promise.all([
+  fetch("./data.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()),
+  fetch("./catalyst-calendar.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
+  fetch("./catalyst-deep.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
+]).then(([data, cal, deep]) => {
+  DATA = data; CAL = cal; DEEP = deep;
+  const n = Object.values(cal.tickers || {}).reduce((a, b) => a + (b.events || []).length, 0);
+  document.getElementById("meta").textContent =
+    `${n} researched events · ${(cal.macro && cal.macro.events || []).length} macro · previews for ${Object.keys(deep.previews || {}).length} names · data ${new Date(data.generated_at).toLocaleDateString()}`;
+  buildChips();
+  render();
+}).catch(err => {
+  document.getElementById("meta").textContent = "ERROR: " + err.message;
+});
+</script>
+</body>
+</html>
