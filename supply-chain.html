@@ -101,6 +101,12 @@
   .pg-mix-expl { color:var(--muted); font-size:11.5px; margin:2px 0 0 12px; }
   /* full 2-year Q1..Q4+FY chronology needs the width cap lifted (10 cols) */
   #page-body .deep-fin-table { max-width:none; }
+  /* Deal Map: card wall sized to fit one screen */
+  .dm-wall { display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:8px; }
+  .dm-card { border:1px solid var(--border); border-radius:6px; padding:8px 10px; background:var(--panel); }
+  .dm-head { border-bottom:1px solid var(--border); padding-bottom:4px; margin-bottom:5px; font-size:13px; }
+  .dm-row { font-size:11.5px; line-height:1.5; margin:2px 0; }
+  .dm-rep { color:var(--accent); cursor:help; }
   .sb-chip { font-size:11px; padding:0 5px; border-radius:3px; white-space:nowrap; cursor:help;
     font-variant-numeric:tabular-nums; display:inline-block; margin:1px 2px 1px 0; }
   .sb-chip.u { color:var(--up); background:rgba(63,185,80,.12); }
@@ -230,7 +236,7 @@
 <script>
 "use strict";
 const TREND_ORDER = { up: 0, flat: 1, down: 2 };
-let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, DEEP_FUND = null, GEO_MIX = null, FX_RATES = null, HIST_PE = null, FWD_PE = null, ROIC = null, NVDA_PARTNERSHIPS = null, NVDA_DEBT = null, CIRC_FIN = null, DEEP_FIN = null, CAL = null, PAGE_EXTRAS = null, DELIVERY = null, MODELS = null, STALE = false, OBSERVER = null;
+let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, DEEP_FUND = null, GEO_MIX = null, FX_RATES = null, HIST_PE = null, FWD_PE = null, ROIC = null, NVDA_PARTNERSHIPS = null, NVDA_DEBT = null, CIRC_FIN = null, DEEP_FIN = null, CAL = null, PAGE_EXTRAS = null, DELIVERY = null, MODELS = null, DEALS = null, STALE = false, OBSERVER = null;
 const REVENUE_TAB_CATEGORIES = new Set(["china-internet", "compute", "hyperscaler-cloud", "platform"]);
 // Individual tickers pulled in from a category that isn't otherwise in
 // scope (e.g. ASML from Equipment) - added one at a time on request rather
@@ -1802,7 +1808,7 @@ function pageDeepFinHtml(tid) {
   const d = DEEP_FIN && DEEP_FIN[tid];
   const na = `<span class="cmp-na">—</span>`;
   if (!d || (!(d.fiscal_years || []).length && !(d.quarters || []).length))
-    return `<div class="rev-none">Segment financials research pending for this name — refreshes automatically as chunks complete.</div>`;
+    return { cw: `<div class="rev-none">Segment financials research pending for this name — refreshes automatically as chunks complete.</div>`, seg: "" };
   const symbol = CCY_SYMBOL[d.currency] || ((d.currency || "") + " ");
   const periods = pageFinPeriods(d);
   const metrics = [];
@@ -1848,8 +1854,42 @@ function pageDeepFinHtml(tid) {
       <table class="cmp-table deep-fin-table"><thead><tr><th>Metric</th>${segHead}</tr></thead>
       <tbody><tr><td>Revenue</td>${revRow}</tr>${headlineRow}</tbody></table>`;
   }
-  return `<table class="cmp-table deep-fin-table"><thead><tr><th>Metric</th>${headCells}</tr></thead><tbody>${cwRows}</tbody></table>
-    ${segHtml ? `<div style="margin-top:8px; font-weight:700; font-size:12px; color:var(--muted);">By Segment</div>${segHtml}` : ""}`;
+  return {
+    cw: `<table class="cmp-table deep-fin-table"><thead><tr><th>Metric</th>${headCells}</tr></thead><tbody>${cwRows}</tbody></table>`,
+    seg: segHtml ? `<div style="margin-top:8px; font-weight:700; font-size:12px; color:var(--muted);">By Segment</div>${segHtml}` : "",
+  };
+}
+
+// guidance tracked across earnings calls, same table style as key metrics -
+// sits between the company-wide table and By Segment
+function pageGuidanceHtml(x) {
+  const num = s => { const m = String(s || "").replace(/,/g, "").match(/-?\d+(\.\d+)?/); return m ? parseFloat(m[0]) : null; };
+  const gt = x.guidance_table;
+  if (gt && (gt.calls || []).length && (gt.rows || []).length) {
+    const head = gt.calls.map(c => `<th>${esc(c)}</th>`).join("");
+    const rows = gt.rows.map(r => {
+      let prev = null;
+      const cells = (r.values || []).map(v => {
+        if (!v || v === "-" || v === "—") { return `<td><span class="cmp-na">—</span></td>`; }
+        const n = num(v); let mark = "";
+        if (prev != null && n != null && n !== prev)
+          mark = n > prev ? ` <span class="pct u" title="raised vs prior call">↑</span>`
+                          : ` <span class="pct d" title="cut vs prior call">↓</span>`;
+        if (n != null) prev = n;
+        return `<td><span class="pe-current">${esc(v)}</span>${mark}</td>`;
+      }).join("");
+      return `<tr><td><b>${esc(r.metric)}</b>${r.src ? ` <span class="pe-nm" title="${esc(r.src)}">ⓘ</span>` : ""}</td>${cells}</tr>`;
+    }).join("");
+    return `<div style="margin-top:10px; font-weight:700; font-size:12px; color:var(--accent);">Guidance (per earnings call · ↑↓ vs prior)</div>
+      <table class="cmp-table deep-fin-table"><thead><tr><th>Guide</th>${head}</tr></thead><tbody>${rows}</tbody></table>`;
+  }
+  if ((x.guidance_revisions || []).length) {
+    return `<div style="margin-top:10px; font-weight:700; font-size:12px; color:var(--accent);">Guidance (per call · structured table on next refresh)</div>
+      <table class="ct-table" style="max-width:720px"><tbody>` + x.guidance_revisions.map(g =>
+        `<tr><td class="ct-dt" style="width:150px">${esc(g.when)}</td><td>${esc(g.change)}${g.src ? ` <span class="msrc">[${esc(g.src)}]</span>` : ""}</td></tr>`).join("") +
+      `</tbody></table>`;
+  }
+  return "";
 }
 
 function pagePeHtml(tid) {
@@ -1912,18 +1952,35 @@ function renderStockPage(tid) {
       if (e.date < cutoff) continue;
       if (moveDates.some(d => Math.abs(new Date(d) - new Date(e.date)) < 3 * 86400000)) continue;
       rows.push({ date: e.date, d1: moveFrom(inst, e.date, 1), d5: moveFrom(inst, e.date, 5),
-                  title: e.title, why: e.why, src: e.src, kind: "event" });
+                  title: e.title, why: e.why, src: e.src, impact: e.impact, kind: "event" });
     }
     rows.sort((a, b) => b.date.localeCompare(a.date));
-    if (rows.length) {
-      html += `<table class="ct-table pg-mv"><tbody>` + rows.map(r => {
-        const shrug = r.kind === "event" && r.d1 != null && Math.abs(r.d1) < 1.5;
-        return `<tr class="pg-mv-row"><td class="ct-dt">${esc(r.date)}</td>
-          <td class="pg-mv-m">${mvCellHtml(r.d1)} <span class="muted">1d</span> · ${mvCellHtml(r.d5)} <span class="muted">5d</span></td>
-          <td>${r.title ? esc(r.title) : "<i class='muted'>price move</i>"}${shrug ? ` <span class="muted">shrugged ○</span>` : ""}${r.src ? ` <span class="msrc">[${esc(r.src)}]</span>` : ""}</td></tr>
-          <tr class="pg-mv-why"><td></td><td colspan="2">• ${esc(r.why || "")}</td></tr>`;
-      }).join("") + `</tbody></table>
-      <div class="rev-src">1d/5d = close-to-close from own price data (5d catches slow reactions). Movement reasons from the vetted move-research pipeline; "shrugged ○" = an event the market had priced (|1d| &lt; 1.5%).</div>`;
+    // one move per row, cause always explained; rows with no researched cause dropped
+    const shown = rows.filter(r => r.why).map(r => {
+      if (r.kind === "move") {
+        return { ...r, mv: r.d1, tag: "", head: r.why,
+                 bullet: `same-day researched move${r.src ? ` [${r.src}]` : ""}` };
+      }
+      const d1 = r.d1, d5 = r.d5;
+      const dir = r.impact === "pos" ? 1 : r.impact === "neg" ? -1 : 0;
+      const a1 = d1 != null && Math.abs(d1) >= 1.5 && (dir === 0 || Math.sign(d1) === dir);
+      const a5 = d5 != null && Math.abs(d5) >= 3 && (dir === 0 || Math.sign(d5) === dir);
+      let mv = d1, tag = "", verdict;
+      if (a1) verdict = "news aligned — same-day move";
+      else if (a5) { mv = d5; tag = " (5d)"; verdict = "1d muted — market slow to react, repriced over the week"; }
+      else if (d1 != null && Math.abs(d1) < 1.5 && (d5 == null || Math.abs(d5) < 3)) verdict = "shrugged — already priced in";
+      else verdict = "moved against the news — other flows dominated or it was pre-priced";
+      return { ...r, mv, tag, head: r.title,
+               bullet: `${r.why} — ${verdict}${r.src ? ` [${r.src}]` : ""}` };
+    });
+    if (shown.length) {
+      html += `<table class="ct-table pg-mv"><tbody>` + shown.map(r =>
+        `<tr class="pg-mv-row"><td class="ct-dt">${esc(r.date)}</td>
+          <td class="pg-mv-m">${mvCellHtml(r.mv)}${r.tag ? ` <span class="muted">${r.tag}</span>` : ""}</td>
+          <td>${esc(r.head || "")}</td></tr>
+          <tr class="pg-mv-why"><td></td><td colspan="2">• ${esc(r.bullet)}</td></tr>`
+      ).join("") + `</tbody></table>
+      <div class="rev-src">One move per row (close-to-close, own price data; "(5d)" = the week's move when the market reacted slowly). Every row's cause explained in the bullet; events with no researched cause are dropped.</div>`;
     } else html += `<div class="rev-none">No researched movements in window.</div>`;
   }
 
@@ -1967,34 +2024,29 @@ function renderStockPage(tid) {
     }
   }
 
-  // key metrics with guidance beside them
-  html += pageSecHead("📐 Key metrics — 2-year runway (Q1..Q4 → FY, latest right) & current guidance");
-  html += `<div class="pg-metrics-wrap"><div>${pageDeepFinHtml(tid)}</div>`;
-  if ((x.guidance_revisions || []).length) {
-    html += `<div class="pg-guide"><div class="pg-guide-head">GUIDANCE Δ <span class="muted">(print-over-print)</span></div>` +
-      x.guidance_revisions.map(g => {
-        const raised = /rais|up from|increas|higher|boost/i.test(g.change || "");
-        const cut = /cut|lower|reduc|down from|trim/i.test(g.change || "");
-        const arrow = raised ? `<span class="pct u">↑</span>` : cut ? `<span class="pct d">↓</span>` : "·";
-        return `<div class="pg-guide-row">${arrow} <b>${esc(g.when)}</b> — ${esc(g.change)}${g.src ? ` <span class="msrc">[${esc(g.src)}]</span>` : ""}</div>`;
-      }).join("") + `</div>`;
-  }
-  html += `</div>`;
+  // key metrics -> guidance table -> segments
+  html += pageSecHead("📐 Key metrics — 2-year runway (Q1..Q4 → FY, latest right)");
+  const fin = pageDeepFinHtml(tid);
+  html += fin.cw;
+  html += pageGuidanceHtml(x);
+  html += fin.seg;
 
-  // revenue mix + what each segment sells
+  // revenue mix table + what each segment sells
   const rm = REV_MIX && REV_MIX[tid];
   if (rm && (rm.segments || []).length) {
     html += pageSecHead("🧩 Revenue mix — what each segment sells");
     const expl = {};
     for (const s of x.segment_explainers || []) expl[(s.segment || "").toLowerCase()] = s.sells;
-    html += `<div class="pg-mix">` + rm.segments.map(s => {
-      const key = (s.name || "").toLowerCase();
-      const e = expl[key] ||
-        (Object.entries(expl).find(([k]) => k && (key.includes(k) || k.includes(key))) || [])[1];
-      return `<div class="pg-mix-row"><b>${esc(s.name)}</b> <span class="mono">${s.pct != null ? Number(s.pct).toFixed(1) + "%" : ""}</span>
-        ${e ? `<div class="pg-mix-expl">• ${esc(e)}</div>` : ""}</div>`;
-    }).join("") + `</div>
-    <div class="rev-src">Mix as of ${esc(rm.fiscal_period || "latest reported")}${rm.source ? " — " + esc(rm.source) : ""}. Segment explainers researched; blank where refresh pending.</div>`;
+    html += `<table class="ct-table" style="max-width:780px"><thead><tr><th>Segment</th><th>% of rev</th><th>What it sells</th></tr></thead><tbody>` +
+      rm.segments.map(s => {
+        const key = (s.name || "").toLowerCase();
+        const e = expl[key] ||
+          (Object.entries(expl).find(([k]) => k && (key.includes(k) || k.includes(key))) || [])[1];
+        return `<tr><td style="white-space:nowrap"><b>${esc(s.name)}</b></td>
+          <td class="mono">${s.pct != null ? Number(s.pct).toFixed(1) + "%" : "—"}</td>
+          <td class="pg-why">${e ? esc(e) : "<span class='cmp-na'>—</span>"}</td></tr>`;
+      }).join("") + `</tbody></table>
+    <div class="rev-src">Mix as of ${esc(rm.fiscal_period || "latest reported")}${rm.source ? " — " + esc(rm.source) : ""}.</div>`;
   }
 
   // model launch history (AI model-builder pages only)
@@ -2068,6 +2120,22 @@ function renderStockPages() {
   }
   document.querySelectorAll("#page-chips button").forEach(c => c.classList.toggle("active", c.id === "pchip-" + PAGE_SEL));
   renderStockPage(PAGE_SEL);
+}
+
+// ---- Deal Map tab: per-supplier customer cards - who buys what ----
+function renderDealMap() {
+  const el = document.getElementById("deal-map-wrap");
+  const sup = (DEALS && DEALS.suppliers) || [];
+  if (!sup.length) {
+    el.innerHTML = `<div class="rev-none">Deal map research pending.</div>`;
+    return;
+  }
+  const cards = sup.map(s => `<div class="dm-card"><div class="dm-head"><b>${esc(s.tid)}</b> <span class="muted">${esc(s.label || "")}</span></div>
+    ${(s.customers || []).map(c => `<div class="dm-row"><b>${esc(c.name)}</b> · ${esc(c.deal)}${c.status === "reported" ? ` <span class="dm-rep" title="reported, not confirmed by the companies${c.src ? " — " + esc(c.src) : ""}">⚠</span>` : `<span class="pe-nm" title="${esc(c.src || "confirmed")}">ⓘ</span>`}</div>`).join("")}
+  </div>`).join("");
+  el.innerHTML = `<div class="hist-head">Deal Map — each AI name's customers</div>
+    <div class="rev-src" style="margin-bottom:8px">Signed/disclosed deals (hover ⓘ for source) · ⚠ = reported, not company-confirmed. Researched ${esc(DEALS.fetched || "")}, weekly refresh.</div>
+    <div class="dm-wall">${cards}</div>`;
 }
 
 // ---- Macro Events tab: the shared gamma - Fed/CPI/policy + industry
@@ -2171,6 +2239,8 @@ window.showTab = function (tabKey) {
   document.getElementById("pages-wrap").style.display = tabKey === "pages" ? "" : "none";
   document.getElementById("tab-macro-ev").classList.toggle("active", tabKey === "macro-ev");
   document.getElementById("macro-ev-wrap").style.display = tabKey === "macro-ev" ? "" : "none";
+  document.getElementById("tab-deal-map").classList.toggle("active", tabKey === "deal-map");
+  document.getElementById("deal-map-wrap").style.display = tabKey === "deal-map" ? "" : "none";
   for (const c of CATEGORIES) {
     document.getElementById("tab-" + c.key).classList.toggle("active", tabKey === c.key);
     const show = tabKey === c.key;
@@ -2181,7 +2251,7 @@ window.showTab = function (tabKey) {
   // sections. Those divs are fixed top-level elements shared across every
   // tab, so without this they'd keep showing stale content from whichever
   // tab was active before switching here.
-  const showIdeas = tabKey !== "revenue" && tabKey !== "compare" && tabKey !== "pe" && tabKey !== "nvda-eco" && tabKey !== "circ-fin" && tabKey !== "deep-fin" && tabKey !== "semis" && tabKey !== "pages" && tabKey !== "macro-ev";
+  const showIdeas = tabKey !== "revenue" && tabKey !== "compare" && tabKey !== "pe" && tabKey !== "nvda-eco" && tabKey !== "circ-fin" && tabKey !== "deep-fin" && tabKey !== "semis" && tabKey !== "pages" && tabKey !== "macro-ev" && tabKey !== "deal-map";
   document.getElementById("ideas").style.display = showIdeas ? "" : "none";
   document.getElementById("catalysts30").style.display = showIdeas ? "" : "none";
   document.getElementById("pastCatalysts").style.display = showIdeas ? "" : "none";
@@ -2219,6 +2289,10 @@ window.showTab = function (tabKey) {
   }
   if (tabKey === "macro-ev") {
     if (DATA) renderMacroEvents();
+    return;
+  }
+  if (tabKey === "deal-map") {
+    if (DATA) renderDealMap();
     return;
   }
   const category = tabKey === "summary" ? null : tabKey;
@@ -2293,6 +2367,11 @@ function buildShell() {
   const macroWrap = document.createElement("div");
   macroWrap.id = "macro-ev-wrap"; macroWrap.className = "cmp-wrap"; macroWrap.style.display = "none";
   grids.appendChild(macroWrap);
+
+  mk("deal-map", "Deal Map");
+  const dealWrap = document.createElement("div");
+  dealWrap.id = "deal-map-wrap"; dealWrap.className = "cmp-wrap"; dealWrap.style.display = "none";
+  grids.appendChild(dealWrap);
 }
 
 function load() {
@@ -2318,8 +2397,9 @@ function load() {
     fetch("./stock-page-extras.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./delivery-war.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./model-launches.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
-  ]).then(([data, moves, scmap, earnDates, revMix, deepFund, geoMix, fxRates, histPe, fwdPe, roic, nvdaPartnerships, nvdaDebt, circFin, deepFin, cal, pageExtras, delivery, models]) => {
-    DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates; REV_MIX = revMix; DEEP_FUND = deepFund; GEO_MIX = geoMix; FX_RATES = fxRates; HIST_PE = histPe; FWD_PE = fwdPe; ROIC = roic; NVDA_PARTNERSHIPS = nvdaPartnerships; NVDA_DEBT = nvdaDebt; CIRC_FIN = circFin; DEEP_FIN = deepFin; CAL = cal; PAGE_EXTRAS = pageExtras; DELIVERY = delivery; MODELS = models;
+    fetch("./deal-map.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
+  ]).then(([data, moves, scmap, earnDates, revMix, deepFund, geoMix, fxRates, histPe, fwdPe, roic, nvdaPartnerships, nvdaDebt, circFin, deepFin, cal, pageExtras, delivery, models, deals]) => {
+    DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates; REV_MIX = revMix; DEEP_FUND = deepFund; GEO_MIX = geoMix; FX_RATES = fxRates; HIST_PE = histPe; FWD_PE = fwdPe; ROIC = roic; NVDA_PARTNERSHIPS = nvdaPartnerships; NVDA_DEBT = nvdaDebt; CIRC_FIN = circFin; DEEP_FIN = deepFin; CAL = cal; PAGE_EXTRAS = pageExtras; DELIVERY = delivery; MODELS = models; DEALS = deals;
     STALE = checkStale(DATA);
     const ideas = DATA.instruments.filter(i => i.idea && i.idea.kind === "enter").length;
     document.getElementById("meta").textContent =
