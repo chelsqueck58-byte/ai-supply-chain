@@ -80,10 +80,18 @@
   .ct-type { font-size:10px; font-weight:600; padding:1px 7px; border-radius:3px;
     border:1px solid; white-space:nowrap; }
   .sb-chip { font-size:11px; padding:0 5px; border-radius:3px; white-space:nowrap; cursor:help;
-    font-variant-numeric:tabular-nums; }
+    font-variant-numeric:tabular-nums; display:inline-block; margin:1px 2px 1px 0; }
   .sb-chip.u { color:var(--up); background:rgba(63,185,80,.12); }
   .sb-chip.d { color:var(--down); background:rgba(248,81,73,.12); }
-  .sb-cat { max-width:340px; }
+  /* Semis Board shares .cmp-table but needs wrapping text, not the Compare
+     tab's nowrap data cells - long catalyst titles were overflowing into the
+     moves column before these scoped overrides. */
+  #semis-wrap .cmp-table { min-width:0; font-size:12px; }
+  #semis-wrap .cmp-table th { font-size:10px; }
+  #semis-wrap .cmp-table td { white-space:normal; padding:6px 10px 6px 0; }
+  #semis-wrap .cmp-table td:nth-child(1),
+  #semis-wrap .cmp-table td:nth-child(2) { white-space:nowrap; }
+  #semis-wrap .sb-cat { max-width:300px; min-width:180px; }
   .ct-tx b.e { color:#9fd0ff; }
   .ideas-head { font-size:11px; font-weight:700; letter-spacing:.5px; text-transform:uppercase;
     color:#f5c518; margin:2px 0 6px; }
