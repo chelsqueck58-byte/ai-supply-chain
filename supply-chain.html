@@ -79,6 +79,11 @@
   .ct-dt { white-space:nowrap; font-variant-numeric:tabular-nums; color:var(--text); }
   .ct-type { font-size:10px; font-weight:600; padding:1px 7px; border-radius:3px;
     border:1px solid; white-space:nowrap; }
+  .sb-chip { font-size:11px; padding:0 5px; border-radius:3px; white-space:nowrap; cursor:help;
+    font-variant-numeric:tabular-nums; }
+  .sb-chip.u { color:var(--up); background:rgba(63,185,80,.12); }
+  .sb-chip.d { color:var(--down); background:rgba(248,81,73,.12); }
+  .sb-cat { max-width:340px; }
   .ct-tx b.e { color:#9fd0ff; }
   .ideas-head { font-size:11px; font-weight:700; letter-spacing:.5px; text-transform:uppercase;
     color:#f5c518; margin:2px 0 6px; }
@@ -1703,6 +1708,67 @@ function buildHistPeSection() {
     <div class="rev-src" style="margin-top:8px">Historical (T-4..T) = fiscal year-end closing price ÷ that fiscal year's actual GAAP diluted EPS, research-derived from filings. Forward (T+1..T+3) = TODAY's price ÷ analyst consensus EPS estimate. T+1 and T+2 are real sourced Yahoo Finance consensus (analyst count shown in parentheses) when Yahoo has coverage; T+3 always, and T+1/T+2 when Yahoo has no coverage, require a named multi-analyst consensus aggregator (Zacks, TipRanks, MarketScreener, etc.) — most names genuinely have no such coverage that far out, shown as n/a rather than a guess, not a research gap. Columns are relative to each company's own fiscal calendar (T = most recent completed fiscal year), not calendar year — the actual FY label and analyst count are shown under each value. Companies reporting in a different currency than their traded shares are converted using the relevant historical or spot FX rate, marked * — hover for detail. ⚠ flags a P/E outside a plausible range (a real failure mode: Yahoo's own consensus data has been wrong for at least one name in this cohort — PDD's trailing AND forward EPS were both ~8-10x inflated on Yahoo's feed, caught by this check and excluded). This data is LLM/API-researched, not a Bloomberg/FactSet-grade feed — treat as a first pass, not verified truth.</div>`;
 }
 
+// Semis Board - data-only catalyst desk view for the key semiconductor names:
+// next researched catalyst, next earnings, last earnings reactions (with a
+// typical-move average as the implied-move stand-in - there's no options/IV
+// feed here), EPS surprise history, researched forward P/E.
+const SEMIS_BOARD = ["NVDA", "AMD", "AVGO", "MRVL", "INTC", "TSM", "SMI",
+                     "ASML", "AMAT", "LRCX", "KLAC", "MU", "000660", "005930",
+                     "2454", "688256", "SMCI"];
+function renderSemisBoard() {
+  const el = document.getElementById("semis-wrap");
+  const byId = {};
+  DATA.instruments.forEach(i => { byId[i.id] = i; });
+  const rows = [];
+  for (const tid of SEMIS_BOARD) {
+    const inst = byId[tid];
+    if (!inst) continue;
+    const f = inst.fund || {};
+    const cal = CAL && CAL.tickers && CAL.tickers[tid];
+    const nextCat = ((cal && cal.events) || [])
+      .map(e => ({ ...e, days: daysTo(e.date) }))
+      .filter(e => e.days != null && e.days >= 0 && e.days <= 95 && e.type !== "Earnings")
+      .sort((a, b) => a.days - b.days)[0] || null;
+    const earnDays = f.next_earnings ? daysTo(f.next_earnings) : null;
+    const reactions = (inst.prev_earnings || []).slice(0, 4);
+    const absMoves = reactions.map(r => Math.abs(r.pct));
+    const typMove = absMoves.length
+      ? (absMoves.reduce((a, b) => a + b, 0) / absMoves.length) : null;
+    const hist = f.earnings_history || [];
+    const beats = hist.filter(h => (h.surprise ?? 0) > 0).length;
+    let avgSurp = hist.length
+      ? hist.reduce((a, h) => a + (h.surprise || 0), 0) / hist.length : null;
+    // near-zero EPS bases make surprise % meaningless (INTC: est ~$0.01 vs
+    // actual ~$0.14 reads as +1300%) - suppress the average, keep the count
+    if (avgSurp != null && Math.abs(avgSurp) > 60) avgSurp = null;
+    const fp = FWD_PE && FWD_PE[tid];
+    const fy1 = fp && (fp.years || []).find(y => y.pe != null);
+    rows.push({ tid, inst, f, nextCat, earnDays, reactions, typMove,
+                nBeats: hist.length ? `${beats}/${hist.length}` : null,
+                avgSurp, fy1 });
+  }
+  rows.sort((a, b) => (a.earnDays ?? 999) - (b.earnDays ?? 999));
+  const chip = (r) => `<span class="sb-chip ${r.pct >= 0 ? "u" : "d"}" title="${esc(r.date)}: ${esc(r.reason || "")}">${r.pct >= 0 ? "+" : ""}${r.pct}%</span>`;
+  const trs = rows.map(r => `<tr onclick="goTo('${r.tid}')">
+    <td class="ct-tk"><b>${r.tid}</b> <span class="muted">${esc(r.inst.label)}</span></td>
+    <td>${r.earnDays != null ? `${esc(r.f.next_earnings)} <span class="muted">(${r.earnDays}d)</span>` : '<span class="muted">—</span>'}</td>
+    <td class="sb-cat">${r.nextCat ? `${esc(calDateLabel(r.nextCat).replace(/<[^>]*>/g, ""))} · ${esc(r.nextCat.title)}` : '<span class="muted">—</span>'}</td>
+    <td>${r.reactions.length ? r.reactions.map(chip).join(" ") : '<span class="muted">—</span>'}</td>
+    <td>${r.typMove != null ? `±${r.typMove.toFixed(1)}%` : '<span class="muted">—</span>'}</td>
+    <td>${r.nBeats ? `${r.nBeats}${r.avgSurp != null ? ` <span class="muted">(avg ${r.avgSurp >= 0 ? "+" : ""}${r.avgSurp.toFixed(1)}%)</span>` : ""}` : '<span class="muted">—</span>'}</td>
+    <td>${r.fy1 ? `${r.fy1.pe}x <span class="muted">${esc(r.fy1.fy_label || "")}</span>`
+        : (r.f.fwd_pe != null ? `${r.f.fwd_pe.toFixed(1)}x <span class="muted">(Yahoo)</span>` : '<span class="muted">—</span>')}</td>
+    <td>${r.f.peg != null ? r.f.peg : '<span class="muted">—</span>'}</td>
+  </tr>`).join("");
+  el.innerHTML = `<div class="hist-head">Semis Board — catalysts &amp; earnings desk view (sorted by next earnings)</div>
+    <table class="cmp-table"><thead><tr>
+      <th>Name</th><th>Next Earnings</th><th>Next Catalyst (non-earnings)</th>
+      <th>Last Earnings Reactions</th><th>Typical Move</th><th>EPS Beats</th>
+      <th>Fwd P/E</th><th>PEG</th>
+    </tr></thead><tbody>${trs}</tbody></table>
+    <div class="rev-src" style="margin-top:8px">Reactions = researched 1-day moves around past earnings (hover for the why); newest first. Typical Move = average |reaction| — a stand-in for implied move, NOT options-implied (no IV feed here). EPS Beats = last ~4 quarters vs consensus (Yahoo). Fwd P/E = today's price ÷ researched consensus EPS for the next unreported fiscal year. PEG = fwd P/E ÷ fwd EPS growth. Catalysts from the researched 3-month calendar.</div>`;
+}
+
 window.showTab = function (tabKey) {
   document.getElementById("tab-summary").classList.toggle("active", tabKey === "summary");
   document.getElementById("tab-revenue").classList.toggle("active", tabKey === "revenue");
@@ -1717,6 +1783,8 @@ window.showTab = function (tabKey) {
   document.getElementById("circ-fin-wrap").style.display = tabKey === "circ-fin" ? "" : "none";
   document.getElementById("tab-deep-fin").classList.toggle("active", tabKey === "deep-fin");
   document.getElementById("deep-fin-wrap").style.display = tabKey === "deep-fin" ? "" : "none";
+  document.getElementById("tab-semis").classList.toggle("active", tabKey === "semis");
+  document.getElementById("semis-wrap").style.display = tabKey === "semis" ? "" : "none";
   for (const c of CATEGORIES) {
     document.getElementById("tab-" + c.key).classList.toggle("active", tabKey === c.key);
     const show = tabKey === c.key;
@@ -1727,7 +1795,7 @@ window.showTab = function (tabKey) {
   // sections. Those divs are fixed top-level elements shared across every
   // tab, so without this they'd keep showing stale content from whichever
   // tab was active before switching here.
-  const showIdeas = tabKey !== "revenue" && tabKey !== "compare" && tabKey !== "pe" && tabKey !== "nvda-eco" && tabKey !== "circ-fin" && tabKey !== "deep-fin";
+  const showIdeas = tabKey !== "revenue" && tabKey !== "compare" && tabKey !== "pe" && tabKey !== "nvda-eco" && tabKey !== "circ-fin" && tabKey !== "deep-fin" && tabKey !== "semis";
   document.getElementById("ideas").style.display = showIdeas ? "" : "none";
   document.getElementById("catalysts30").style.display = showIdeas ? "" : "none";
   document.getElementById("pastCatalysts").style.display = showIdeas ? "" : "none";
@@ -1753,6 +1821,10 @@ window.showTab = function (tabKey) {
   }
   if (tabKey === "deep-fin") {
     if (DATA) renderDeepFinancials();
+    return;
+  }
+  if (tabKey === "semis") {
+    if (DATA) renderSemisBoard();
     return;
   }
   const category = tabKey === "summary" ? null : tabKey;
@@ -1812,6 +1884,11 @@ function buildShell() {
   const deepFinWrap = document.createElement("div");
   deepFinWrap.id = "deep-fin-wrap"; deepFinWrap.className = "cmp-wrap"; deepFinWrap.style.display = "none";
   grids.appendChild(deepFinWrap);
+
+  mk("semis", "Semis Board");
+  const semisWrap = document.createElement("div");
+  semisWrap.id = "semis-wrap"; semisWrap.className = "cmp-wrap"; semisWrap.style.display = "none";
+  grids.appendChild(semisWrap);
 }
 
 function load() {
