@@ -211,7 +211,7 @@
 <script>
 "use strict";
 const TREND_ORDER = { up: 0, flat: 1, down: 2 };
-let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, DEEP_FUND = null, GEO_MIX = null, FX_RATES = null, HIST_PE = null, FWD_PE = null, ROIC = null, NVDA_PARTNERSHIPS = null, NVDA_DEBT = null, CIRC_FIN = null, DEEP_FIN = null, CAL = null, PAGE_EXTRAS = null, DELIVERY = null, STALE = false, OBSERVER = null;
+let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, DEEP_FUND = null, GEO_MIX = null, FX_RATES = null, HIST_PE = null, FWD_PE = null, ROIC = null, NVDA_PARTNERSHIPS = null, NVDA_DEBT = null, CIRC_FIN = null, DEEP_FIN = null, CAL = null, PAGE_EXTRAS = null, DELIVERY = null, MODELS = null, STALE = false, OBSERVER = null;
 const REVENUE_TAB_CATEGORIES = new Set(["china-internet", "compute", "hyperscaler-cloud", "platform"]);
 // Individual tickers pulled in from a category that isn't otherwise in
 // scope (e.g. ASML from Equipment) - added one at a time on request rather
@@ -1728,6 +1728,7 @@ const STOCK_PAGES = ["META", "NVDA", "AAPL", "MSFT", "GOOGL", "AMZN",
                      "AMD", "AVGO", "INTC", "TSM", "ASML", "MU", "MRVL",
                      "9988", "0700", "3690", "9618", "6181"];
 const DELIVERY_WAR_TIDS = new Set(["9988", "3690", "9618"]);
+const AI_MODEL_TIDS = new Set(["META", "GOOGL", "MSFT", "AMZN", "9988", "0700"]);
 let PAGE_SEL = "META";
 
 function pageDeepFinHtml(tid) {
@@ -1872,6 +1873,35 @@ function renderStockPage(tid) {
   // key metrics + segments
   html += pageSecHead("📐 Key metrics (last 4 quarters + FY)");
   html += pageDeepFinHtml(tid);
+
+  // model launch history (AI model-builder pages only)
+  if (AI_MODEL_TIDS.has(tid) && MODELS && MODELS.tickers && MODELS.tickers[tid]) {
+    const ml = MODELS.tickers[tid];
+    html += pageSecHead("🤖 Model launch history — verdicts & what the stock did");
+    const vBadge = v => v === "success" ? `<span class="pct u">success</span>`
+      : v === "flop" ? `<span class="pct d">flop</span>`
+      : `<span style="color:var(--accent)">mixed</span>`;
+    html += `<table class="ct-table"><thead><tr><th>Date</th><th>Model</th><th>Verdict</th><th>Move</th><th>Why</th></tr></thead><tbody>` +
+      ml.launches.map(l => {
+        const mv = l.move_pct;
+        const mvCell = mv == null ? `<span class="cmp-na">—</span>`
+          : `<span class="pct ${mv >= 0 ? "u" : "d"}">${mv >= 0 ? "+" : ""}${mv}%</span>`;
+        return `<tr><td class="ct-dt">${esc(l.date)}</td><td><b>${esc(l.model)}</b> <span class="pe-nm" title="Claimed: ${esc(l.claim || "")}">ⓘ</span></td>
+          <td>${vBadge(l.verdict)}</td><td>${mvCell}</td>
+          <td>${esc(l.why || "")}${l.src ? ` <span class="msrc">[${esc(l.src)}]</span>` : ""}</td></tr>`;
+      }).join("") + `</tbody></table>
+      <div class="rev-src">Verdict = contemporaneous market/developer judgment (researched). Move = next-trading-day close-to-close from own price data — note launches rarely move megacaps alone; the verdict column is the durable signal.</div>`;
+    const eco = (MODELS.ecosystem || {}).events || [];
+    if (eco.length) {
+      html += `<div style="margin-top:10px; font-weight:700; font-size:12px; color:var(--muted);">Ecosystem shocks (private-lab launches that moved public names)</div>
+        <table class="ct-table"><tbody>` + eco.map(e => {
+          const aff = (e.affected || []).map(a => `<b>${esc(a.tid)}</b> <span class="pct ${(a.move_pct ?? 0) >= 0 ? "u" : "d"}">${a.move_pct == null ? "—" : (a.move_pct >= 0 ? "+" : "") + a.move_pct + "%"}</span>`).join(" · ");
+          return `<tr><td class="ct-dt">${esc(e.date)}</td><td><b>${esc(e.model)}</b> <span class="muted">${esc(e.lab || "")}</span></td>
+            <td>${esc(e.why_it_mattered || "")}${e.src ? ` <span class="msrc">[${esc(e.src)}]</span>` : ""}</td>
+            <td style="white-space:nowrap">${aff}</td></tr>`;
+        }).join("") + `</tbody></table>`;
+    }
+  }
 
   // delivery-war loss tracker (Meituan / Alibaba / JD pages only)
   if (DELIVERY_WAR_TIDS.has(tid) && DELIVERY && (DELIVERY.companies || []).length) {
@@ -2142,8 +2172,9 @@ function load() {
     fetch("./catalyst-calendar.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./stock-page-extras.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./delivery-war.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
-  ]).then(([data, moves, scmap, earnDates, revMix, deepFund, geoMix, fxRates, histPe, fwdPe, roic, nvdaPartnerships, nvdaDebt, circFin, deepFin, cal, pageExtras, delivery]) => {
-    DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates; REV_MIX = revMix; DEEP_FUND = deepFund; GEO_MIX = geoMix; FX_RATES = fxRates; HIST_PE = histPe; FWD_PE = fwdPe; ROIC = roic; NVDA_PARTNERSHIPS = nvdaPartnerships; NVDA_DEBT = nvdaDebt; CIRC_FIN = circFin; DEEP_FIN = deepFin; CAL = cal; PAGE_EXTRAS = pageExtras; DELIVERY = delivery;
+    fetch("./model-launches.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
+  ]).then(([data, moves, scmap, earnDates, revMix, deepFund, geoMix, fxRates, histPe, fwdPe, roic, nvdaPartnerships, nvdaDebt, circFin, deepFin, cal, pageExtras, delivery, models]) => {
+    DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates; REV_MIX = revMix; DEEP_FUND = deepFund; GEO_MIX = geoMix; FX_RATES = fxRates; HIST_PE = histPe; FWD_PE = fwdPe; ROIC = roic; NVDA_PARTNERSHIPS = nvdaPartnerships; NVDA_DEBT = nvdaDebt; CIRC_FIN = circFin; DEEP_FIN = deepFin; CAL = cal; PAGE_EXTRAS = pageExtras; DELIVERY = delivery; MODELS = models;
     STALE = checkStale(DATA);
     const ideas = DATA.instruments.filter(i => i.idea && i.idea.kind === "enter").length;
     document.getElementById("meta").textContent =
