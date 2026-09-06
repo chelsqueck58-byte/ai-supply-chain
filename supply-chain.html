@@ -103,15 +103,22 @@
   .pg-mix-expl { color:var(--muted); font-size:11.5px; margin:2px 0 0 12px; }
   /* full 2-year Q1..Q4+FY chronology needs the width cap lifted (10 cols) */
   #page-body .deep-fin-table { max-width:none; }
-  /* Deal Map: one line per company, grouped */
-  .dm-group { margin-bottom:14px; }
+  /* Deal Map: one card per supplier, grouped, ticker badge for instant ID */
+  .dm-group { margin-bottom:18px; }
   .dm-group-head { font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
-    color:var(--accent); border-bottom:1px solid var(--border); padding-bottom:4px; margin-bottom:6px; }
-  .dm-line { padding:5px 0; border-bottom:1px solid #1b2027; font-size:12px; line-height:1.55; }
-  .dm-line-head { display:inline-block; min-width:150px; vertical-align:top; }
-  .dm-line-custs { display:inline; }
-  .dm-cust { white-space:nowrap; margin-right:2px; }
-  .dm-mix { color:var(--muted); font-size:11px; margin-top:2px; padding-left:150px; }
+    color:var(--accent); border-bottom:1px solid var(--border); padding-bottom:4px; margin-bottom:8px; }
+  .dm-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:8px; }
+  .dm-card { border:1px solid var(--border); border-radius:7px; padding:9px 11px; background:var(--panel); }
+  .dm-card-head { display:flex; align-items:center; gap:7px; padding-bottom:7px; margin-bottom:6px;
+    border-bottom:1px solid var(--border); }
+  .dm-badge { font:700 11px/1 ui-monospace, Menlo, monospace; padding:3px 7px; border-radius:4px; border:1px solid; }
+  .dm-card-label { color:var(--muted); font-size:11.5px; }
+  .dm-cust-list { display:flex; flex-direction:column; gap:3px; }
+  .dm-cust-row { font-size:11.5px; line-height:1.4; display:flex; gap:5px; flex-wrap:baseline; }
+  .dm-cust-name { font-weight:700; white-space:nowrap; }
+  .dm-cust-deal { color:var(--text); opacity:.9; }
+  .dm-mix { color:var(--muted); font-size:10.5px; line-height:1.4; margin-top:7px;
+    padding-top:6px; border-top:1px dashed var(--border); }
   .dm-rep { color:var(--accent); cursor:help; }
   .sb-chip { font-size:11px; padding:0 5px; border-radius:3px; white-space:nowrap; cursor:help;
     font-variant-numeric:tabular-nums; display:inline-block; margin:1px 2px 1px 0; }
@@ -463,7 +470,7 @@ function prevPerfBlock(prev, label) {
 // data.json for names the calendar doesn't cover, legacy inst.events for
 // non-calendar names, and macro events (researched list, falling back to
 // DATA.macro_events) on Summary only.
-const CAL_HORIZON_DAYS = 95;
+const CAL_HORIZON_DAYS = 185;
 const CAL_TYPE_COLOR = { Earnings: "#58a6ff", Product: "#3fb950", Regulatory: "#f85149",
                          Mgmt: "#d29922", Industry: "#bc8cff", Macro: "#f5c518" };
 function calFocus(inst) {
@@ -1872,22 +1879,27 @@ function pageGuidanceHtml(x) {
   const num = s => { const m = String(s || "").replace(/,/g, "").match(/-?\d+(\.\d+)?/); return m ? parseFloat(m[0]) : null; };
   const gt = x.guidance_table;
   if (gt && (gt.calls || []).length && (gt.rows || []).length) {
-    const head = gt.calls.map(c => `<th>${esc(c)}</th>`).join("");
-    const rows = gt.rows.map(r => {
-      let prev = null;
-      const cells = (r.values || []).map(v => {
-        if (!v || v === "-" || v === "—") { return `<td><span class="cmp-na">—</span></td>`; }
+    // transpose: one COLUMN per guided metric (capex, revenue, GM...), one ROW
+    // per earnings call, chronological top-to-bottom - matches how guidance
+    // actually gets read ("what did they guide, call over call")
+    const head = gt.rows.map(r => `<th>${esc(r.metric)}</th>`).join("");
+    const prevByMetric = gt.rows.map(() => null);
+    const rows = gt.calls.map((call, ci) => {
+      const cells = gt.rows.map((r, ri) => {
+        const v = (r.values || [])[ci];
+        if (!v || v === "-" || v === "—") return `<td><span class="cmp-na">—</span></td>`;
         const n = num(v); let mark = "";
-        if (prev != null && n != null && n !== prev)
-          mark = n > prev ? ` <span class="pct u" title="raised vs prior call">↑</span>`
-                          : ` <span class="pct d" title="cut vs prior call">↓</span>`;
-        if (n != null) prev = n;
-        return `<td><span class="pe-current">${esc(v)}</span>${mark}</td>`;
+        if (prevByMetric[ri] != null && n != null && n !== prevByMetric[ri])
+          mark = n > prevByMetric[ri] ? ` <span class="pct u" title="raised vs prior call">↑</span>`
+                                      : ` <span class="pct d" title="cut vs prior call">↓</span>`;
+        if (n != null) prevByMetric[ri] = n;
+        const tip = gt.rows[ri].src ? ` title="${esc(gt.rows[ri].src)}"` : "";
+        return `<td><span class="pe-current"${tip}>${esc(v)}</span>${mark}</td>`;
       }).join("");
-      return `<tr><td><b>${esc(r.metric)}</b>${r.src ? ` <span class="pe-nm" title="${esc(r.src)}">ⓘ</span>` : ""}</td>${cells}</tr>`;
+      return `<tr><td><b>${esc(call)}</b></td>${cells}</tr>`;
     }).join("");
     return `<div style="margin-top:10px; font-weight:700; font-size:12px; color:var(--accent);">Guidance (per earnings call · ↑↓ vs prior)</div>
-      <table class="cmp-table deep-fin-table"><thead><tr><th>Guide</th>${head}</tr></thead><tbody>${rows}</tbody></table>`;
+      <table class="cmp-table deep-fin-table"><thead><tr><th>Call</th>${head}</tr></thead><tbody>${rows}</tbody></table>`;
   }
   if ((x.guidance_revisions || []).length) {
     return `<div style="margin-top:10px; font-weight:700; font-size:12px; color:var(--accent);">Guidance (per call · structured table on next refresh)</div>
@@ -2132,7 +2144,16 @@ function renderStockPages() {
   renderStockPage(PAGE_SEL);
 }
 
-// ---- Deal Map tab: one line per company, grouped by chain segment ----
+// ---- Deal Map tab: one card per supplier, grouped by chain segment ----
+// Ticker badge in a colored square (poor-man's logo) makes the company
+// instantly scannable at the top of each card instead of blending into a
+// run-on sentence of names.
+const DM_BADGE_COLOR = ["#58a6ff", "#3fb950", "#f5c518", "#bc8cff", "#f85149", "#39c5cf", "#d29922"];
+function dmBadge(tid) {
+  let h = 0; for (const c of tid) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  const color = DM_BADGE_COLOR[h % DM_BADGE_COLOR.length];
+  return `<span class="dm-badge" style="background:${color}22;color:${color};border-color:${color}55">${esc(tid)}</span>`;
+}
 function renderDealMap() {
   const el = document.getElementById("deal-map-wrap");
   const groups = (DEALS && DEALS.groups) || [];
@@ -2140,17 +2161,21 @@ function renderDealMap() {
     el.innerHTML = `<div class="rev-none">Deal map research pending.</div>`;
     return;
   }
-  const custHtml = c => `<span class="dm-cust"><b>${esc(c.name)}</b> ${esc(c.deal)}${c.status === "reported" ? ` <span class="dm-rep" title="reported, not confirmed by the companies${c.src ? " — " + esc(c.src) : ""}">⚠</span>` : `<span class="pe-nm" title="${esc(c.src || "confirmed")}">ⓘ</span>`}</span>`;
+  const custRow = c => `<div class="dm-cust-row">
+    <span class="dm-cust-name">${esc(c.name)}</span>
+    <span class="dm-cust-deal">${esc(c.deal)}</span>
+    ${c.status === "reported" ? `<span class="dm-rep" title="reported, not confirmed by the companies${c.src ? " — " + esc(c.src) : ""}">⚠</span>` : `<span class="pe-nm" title="${esc(c.src || "confirmed")}">ⓘ</span>`}
+  </div>`;
   const sections = groups.map(g => {
-    const rows = (g.suppliers || []).map(s => `<div class="dm-line">
-      <div class="dm-line-head"><b>${esc(s.tid)}</b> <span class="muted">${esc(s.label || "")}</span></div>
-      <div class="dm-line-custs">${(s.customers || []).map(custHtml).join(" &nbsp;·&nbsp; ")}</div>
+    const cards = (g.suppliers || []).map(s => `<div class="dm-card">
+      <div class="dm-card-head">${dmBadge(s.tid)} <span class="dm-card-label">${esc(s.label || "")}</span></div>
+      <div class="dm-cust-list">${(s.customers || []).map(custRow).join("")}</div>
       ${s.disclosed_mix ? `<div class="dm-mix">📊 ${esc(s.disclosed_mix)}</div>` : ""}
     </div>`).join("");
-    return `<div class="dm-group"><div class="dm-group-head">${esc(g.label)}</div>${rows}</div>`;
+    return `<div class="dm-group"><div class="dm-group-head">${esc(g.label)}</div><div class="dm-grid">${cards}</div></div>`;
   }).join("");
   el.innerHTML = `<div class="hist-head">Deal Map — who supplies whom</div>
-    <div class="rev-src" style="margin-bottom:8px">One line per company · hover ⓘ for source · ⚠ = reported, not company-confirmed · 📊 = company's own disclosed customer-mix commentary. Researched ${esc(DEALS.fetched || "")}, weekly refresh.</div>
+    <div class="rev-src" style="margin-bottom:8px">Hover ⓘ for source · ⚠ = reported, not company-confirmed · 📊 = company's own disclosed customer-mix commentary. Researched ${esc(DEALS.fetched || "")}, weekly refresh.</div>
     ${sections}`;
 }
 
@@ -2193,7 +2218,7 @@ function renderSemisBoard() {
     const cal = CAL && CAL.tickers && CAL.tickers[tid];
     const nextCat = ((cal && cal.events) || [])
       .map(e => ({ ...e, days: daysTo(e.date) }))
-      .filter(e => e.days != null && e.days >= 0 && e.days <= 95 && e.type !== "Earnings")
+      .filter(e => e.days != null && e.days >= 0 && e.days <= CAL_HORIZON_DAYS && e.type !== "Earnings")
       .sort((a, b) => a.days - b.days)[0] || null;
     const earnDays = f.next_earnings ? daysTo(f.next_earnings) : null;
     const reactions = (inst.prev_earnings || []).slice(0, 4);
