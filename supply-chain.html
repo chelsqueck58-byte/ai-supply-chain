@@ -87,9 +87,11 @@
   #page-body .ct-table { font-size:12px; max-width:820px; }
   #page-body .ct-table td { font-size:12px; }
   .pg-mv-m { white-space:nowrap; font-variant-numeric:tabular-nums; }
-  .pg-mv-why td { border-bottom:1px solid #1b2027; color:var(--muted); font-size:11.5px;
-    padding-top:0; padding-bottom:7px; }
-  .pg-mv-row td { border-bottom:none; padding-bottom:2px; }
+  .pg-mv-row td { border-bottom:none; padding-bottom:2px; vertical-align:top; }
+  .pg-mv-why td { border-bottom:1px solid #1b2027; padding-top:0; padding-bottom:7px; }
+  .pg-mv-bullet { color:var(--muted); font-size:11.5px; line-height:1.45;
+    padding-left:14px !important; text-indent:-14px; }
+  .pg-mv-bullet::before { content:"• "; }
   .pg-why { font-size:11.5px; }
   .pg-metrics-wrap { display:flex; gap:18px; flex-wrap:wrap; align-items:flex-start; }
   .pg-guide { border:1px solid var(--border); border-radius:6px; padding:10px 12px;
@@ -101,11 +103,15 @@
   .pg-mix-expl { color:var(--muted); font-size:11.5px; margin:2px 0 0 12px; }
   /* full 2-year Q1..Q4+FY chronology needs the width cap lifted (10 cols) */
   #page-body .deep-fin-table { max-width:none; }
-  /* Deal Map: card wall sized to fit one screen */
-  .dm-wall { display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:8px; }
-  .dm-card { border:1px solid var(--border); border-radius:6px; padding:8px 10px; background:var(--panel); }
-  .dm-head { border-bottom:1px solid var(--border); padding-bottom:4px; margin-bottom:5px; font-size:13px; }
-  .dm-row { font-size:11.5px; line-height:1.5; margin:2px 0; }
+  /* Deal Map: one line per company, grouped */
+  .dm-group { margin-bottom:14px; }
+  .dm-group-head { font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--accent); border-bottom:1px solid var(--border); padding-bottom:4px; margin-bottom:6px; }
+  .dm-line { padding:5px 0; border-bottom:1px solid #1b2027; font-size:12px; line-height:1.55; }
+  .dm-line-head { display:inline-block; min-width:150px; vertical-align:top; }
+  .dm-line-custs { display:inline; }
+  .dm-cust { white-space:nowrap; margin-right:2px; }
+  .dm-mix { color:var(--muted); font-size:11px; margin-top:2px; padding-left:150px; }
   .dm-rep { color:var(--accent); cursor:help; }
   .sb-chip { font-size:11px; padding:0 5px; border-radius:3px; white-space:nowrap; cursor:help;
     font-variant-numeric:tabular-nums; display:inline-block; margin:1px 2px 1px 0; }
@@ -1955,11 +1961,13 @@ function renderStockPage(tid) {
                   title: e.title, why: e.why, src: e.src, impact: e.impact, kind: "event" });
     }
     rows.sort((a, b) => b.date.localeCompare(a.date));
-    // one move per row, cause always explained; rows with no researched cause dropped
+    // one move per row; "move" rows (from the vetted move-research pipeline) show
+    // the reason AS the headline with no filler sub-bullet; "event" rows (researched
+    // events checked against price data) get a verdict sub-bullet. Rows with no
+    // researched cause are dropped entirely.
     const shown = rows.filter(r => r.why).map(r => {
       if (r.kind === "move") {
-        return { ...r, mv: r.d1, tag: "", head: r.why,
-                 bullet: `same-day researched move${r.src ? ` [${r.src}]` : ""}` };
+        return { ...r, mv: r.d1, tag: "", head: r.why, bullet: null };
       }
       const d1 = r.d1, d5 = r.d5;
       const dir = r.impact === "pos" ? 1 : r.impact === "neg" ? -1 : 0;
@@ -1970,17 +1978,16 @@ function renderStockPage(tid) {
       else if (a5) { mv = d5; tag = " (5d)"; verdict = "1d muted — market slow to react, repriced over the week"; }
       else if (d1 != null && Math.abs(d1) < 1.5 && (d5 == null || Math.abs(d5) < 3)) verdict = "shrugged — already priced in";
       else verdict = "moved against the news — other flows dominated or it was pre-priced";
-      return { ...r, mv, tag, head: r.title,
-               bullet: `${r.why} — ${verdict}${r.src ? ` [${r.src}]` : ""}` };
+      return { ...r, mv, tag, head: r.title, bullet: `${r.why} — ${verdict}${r.src ? ` [${esc(r.src)}]` : ""}` };
     });
     if (shown.length) {
       html += `<table class="ct-table pg-mv"><tbody>` + shown.map(r =>
         `<tr class="pg-mv-row"><td class="ct-dt">${esc(r.date)}</td>
           <td class="pg-mv-m">${mvCellHtml(r.mv)}${r.tag ? ` <span class="muted">${r.tag}</span>` : ""}</td>
-          <td>${esc(r.head || "")}</td></tr>
-          <tr class="pg-mv-why"><td></td><td colspan="2">• ${esc(r.bullet)}</td></tr>`
+          <td>${esc(r.head || "")}</td></tr>` +
+        (r.bullet ? `<tr class="pg-mv-why"><td></td><td></td><td class="pg-mv-bullet">${esc(r.bullet)}</td></tr>` : "")
       ).join("") + `</tbody></table>
-      <div class="rev-src">One move per row (close-to-close, own price data; "(5d)" = the week's move when the market reacted slowly). Every row's cause explained in the bullet; events with no researched cause are dropped.</div>`;
+      <div class="rev-src">One move per row, close-to-close from own price data ("(5d)" = the week's move when the market reacted slowly). Events with no researched cause are dropped.</div>`;
     } else html += `<div class="rev-none">No researched movements in window.</div>`;
   }
 
@@ -1995,7 +2002,11 @@ function renderStockPage(tid) {
   } else html += `<div class="rev-none">Preview research pending.</div>`;
 
   // last 4 prints: one row per print - EPS vs est joined to the nearest
-  // researched reaction, 1d/5d computed from bars at the reaction date
+  // researched reaction. r.date in prev_earnings is the actual reaction
+  // trading day (already correct for AMC vs BMO releases - a print released
+  // after close reacts the NEXT session, and that's the date the research
+  // logged) - moveFrom() finds the first bar on/after that date, so it lands
+  // on the correct post-earnings session either way.
   html += pageSecHead("📊 Last 4 prints");
   {
     const hist = (f.earnings_history || []).slice(-4).reverse();
@@ -2013,19 +2024,23 @@ function renderStockPage(tid) {
           : "—";
         const s = hist.length ? hq.surprise : null;
         const sTxt = s == null ? "" : (Math.abs(s) > 60 ? ` <span class="muted" title="near-zero EPS base">n/m</span>` : ` <span class="pct ${s >= 0 ? "u" : "d"}">(${s >= 0 ? "+" : ""}${s}%)</span>`);
-        const d1 = r ? (r.pct != null ? r.pct : moveFrom(inst, r.date, 1)) : null;
-        const d5 = r ? moveFrom(inst, r.date, 5) : null;
+        const move = r ? (r.pct != null ? r.pct : moveFrom(inst, r.date, 1)) : null;
         return `<tr><td class="ct-dt">${esc(hist.length ? hq.q : hq.date)}</td>
           <td class="mono" style="white-space:nowrap">${epsCell}${sTxt}</td>
-          <td class="pg-mv-m">${mvCellHtml(d1)} <span class="muted">1d</span> · ${mvCellHtml(d5)} <span class="muted">5d</span></td>
+          <td class="pg-mv-m">${mvCellHtml(move)}</td>
           <td class="pg-why">${r && r.reason ? esc(r.reason) : "<span class='cmp-na'>—</span>"}${r && r.source ? ` <span class="msrc">[${esc(r.source)}]</span>` : ""}</td></tr>`;
       }).join("");
       html += `<table class="ct-table pg-prints"><thead><tr><th>Quarter</th><th>EPS vs est</th><th>Reaction</th><th>Why</th></tr></thead><tbody>${rows}</tbody></table>`;
     }
   }
 
+  // P/E - right before key metrics
+  html += pageSecHead("⚖ P/E — history, forward, and why it re-rated");
+  html += pagePeHtml(tid);
+  if (x.pe_narrative) html += `<div class="deep-fin-note" style="margin-top:6px"><b style="color:#9fd0ff">Re-rating narrative</b> <span class="muted">(interpretive, from analyst/press commentary)</span>: ${esc(x.pe_narrative)}</div>`;
+
   // key metrics -> guidance table -> segments
-  html += pageSecHead("📐 Key metrics — 2-year runway (Q1..Q4 → FY, latest right)");
+  html += pageSecHead("📐 Key metrics");
   const fin = pageDeepFinHtml(tid);
   html += fin.cw;
   html += pageGuidanceHtml(x);
@@ -2060,10 +2075,10 @@ function renderStockPage(tid) {
       ml.launches.map(l => {
         return `<tr><td class="ct-dt">${esc(l.date)}</td><td><b>${esc(l.model)}</b> <span class="pe-nm" title="Claimed: ${esc(l.claim || "")}">ⓘ</span></td>
           <td>${vBadge(l.verdict)}</td>
-          <td class="pg-mv-m">${mvCellHtml(l.move_pct)} <span class="muted">1d</span> · ${mvCellHtml(moveFrom(inst, l.date, 5))} <span class="muted">5d</span></td>
+          <td class="pg-mv-m">${mvCellHtml(l.move_pct)}</td>
           <td class="pg-why">${esc(l.why || "")}${l.src ? ` <span class="msrc">[${esc(l.src)}]</span>` : ""}</td></tr>`;
       }).join("") + `</tbody></table>
-      <div class="rev-src">Verdict = contemporaneous market/developer judgment (researched). 1d/5d = close-to-close from own price data — launches rarely move megacaps alone; the verdict column is the durable signal.</div>`;
+      <div class="rev-src">Verdict = contemporaneous market/developer judgment (researched). Reaction = that day's close-to-close from own price data — launches rarely move megacaps alone; the verdict column is the durable signal.</div>`;
     const eco = (MODELS.ecosystem || {}).events || [];
     if (eco.length) {
       html += `<div style="margin-top:10px; font-weight:700; font-size:12px; color:var(--muted);">Ecosystem shocks (private-lab launches that moved public names)</div>
@@ -2095,11 +2110,6 @@ function renderStockPage(tid) {
     if (DELIVERY.war_summary) html += `<div class="deep-fin-note" style="margin-top:8px">${esc(DELIVERY.war_summary)}</div>`;
   }
 
-  // P/E
-  html += pageSecHead("⚖ P/E — history, forward, and why it re-rated");
-  html += pagePeHtml(tid);
-  if (x.pe_narrative) html += `<div class="deep-fin-note" style="margin-top:6px"><b style="color:#9fd0ff">Re-rating narrative</b> <span class="muted">(interpretive, from analyst/press commentary)</span>: ${esc(x.pe_narrative)}</div>`;
-
   el.innerHTML = html;
 }
 
@@ -2122,20 +2132,26 @@ function renderStockPages() {
   renderStockPage(PAGE_SEL);
 }
 
-// ---- Deal Map tab: per-supplier customer cards - who buys what ----
+// ---- Deal Map tab: one line per company, grouped by chain segment ----
 function renderDealMap() {
   const el = document.getElementById("deal-map-wrap");
-  const sup = (DEALS && DEALS.suppliers) || [];
-  if (!sup.length) {
+  const groups = (DEALS && DEALS.groups) || [];
+  if (!groups.length) {
     el.innerHTML = `<div class="rev-none">Deal map research pending.</div>`;
     return;
   }
-  const cards = sup.map(s => `<div class="dm-card"><div class="dm-head"><b>${esc(s.tid)}</b> <span class="muted">${esc(s.label || "")}</span></div>
-    ${(s.customers || []).map(c => `<div class="dm-row"><b>${esc(c.name)}</b> · ${esc(c.deal)}${c.status === "reported" ? ` <span class="dm-rep" title="reported, not confirmed by the companies${c.src ? " — " + esc(c.src) : ""}">⚠</span>` : `<span class="pe-nm" title="${esc(c.src || "confirmed")}">ⓘ</span>`}</div>`).join("")}
-  </div>`).join("");
-  el.innerHTML = `<div class="hist-head">Deal Map — each AI name's customers</div>
-    <div class="rev-src" style="margin-bottom:8px">Signed/disclosed deals (hover ⓘ for source) · ⚠ = reported, not company-confirmed. Researched ${esc(DEALS.fetched || "")}, weekly refresh.</div>
-    <div class="dm-wall">${cards}</div>`;
+  const custHtml = c => `<span class="dm-cust"><b>${esc(c.name)}</b> ${esc(c.deal)}${c.status === "reported" ? ` <span class="dm-rep" title="reported, not confirmed by the companies${c.src ? " — " + esc(c.src) : ""}">⚠</span>` : `<span class="pe-nm" title="${esc(c.src || "confirmed")}">ⓘ</span>`}</span>`;
+  const sections = groups.map(g => {
+    const rows = (g.suppliers || []).map(s => `<div class="dm-line">
+      <div class="dm-line-head"><b>${esc(s.tid)}</b> <span class="muted">${esc(s.label || "")}</span></div>
+      <div class="dm-line-custs">${(s.customers || []).map(custHtml).join(" &nbsp;·&nbsp; ")}</div>
+      ${s.disclosed_mix ? `<div class="dm-mix">📊 ${esc(s.disclosed_mix)}</div>` : ""}
+    </div>`).join("");
+    return `<div class="dm-group"><div class="dm-group-head">${esc(g.label)}</div>${rows}</div>`;
+  }).join("");
+  el.innerHTML = `<div class="hist-head">Deal Map — who supplies whom</div>
+    <div class="rev-src" style="margin-bottom:8px">One line per company · hover ⓘ for source · ⚠ = reported, not company-confirmed · 📊 = company's own disclosed customer-mix commentary. Researched ${esc(DEALS.fetched || "")}, weekly refresh.</div>
+    ${sections}`;
 }
 
 // ---- Macro Events tab: the shared gamma - Fed/CPI/policy + industry
