@@ -103,6 +103,9 @@
   .pg-mix-expl { color:var(--muted); font-size:11.5px; margin:2px 0 0 12px; }
   /* full 2-year Q1..Q4+FY chronology needs the width cap lifted (10 cols) */
   #page-body .deep-fin-table { max-width:none; }
+  /* always-highlighted metrics (GM, FCF) - a glance-worthy row without reading everything */
+  .pg-hi-metric td { background:rgba(88,166,255,.07); }
+  .pg-hi-metric td:first-child b { color:#9fd0ff; }
   /* Deal Map: one card per supplier, grouped, ticker badge for instant ID */
   .dm-group { margin-bottom:18px; }
   .dm-group-head { font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
@@ -461,7 +464,8 @@ function prevPerfBlock(prev, label) {
   const line = (p) => {
     const cls = p.pct >= 0 ? "u" : "d";
     const src = p.source ? ` <span class="msrc">[${esc(p.source)}]</span>` : "";
-    return `<div class="ct-prev">↩ <span class="pct ${cls}">${p.pct >= 0 ? "+" : ""}${p.pct}%</span>: ${esc(p.reason)}${src}</div>`;
+    const cum = p.window_days ? ` <span class="muted" title="cumulative over ${p.window_days} trading days, ${esc(p.window_start || "")} → ${esc(p.date || "")}">(${p.window_days}d cum)</span>` : "";
+    return `<div class="ct-prev">↩ <span class="pct ${cls}">${p.pct >= 0 ? "+" : ""}${p.pct}%</span>${cum}: ${esc(p.reason)}${src}</div>`;
   };
   return list.map(p => line(p)).join("");
 }
@@ -603,7 +607,7 @@ function pastCatalystRows(category, lookbackDays = 30) {
           const label = isEarningsMove(mv) ? "<b style=\"color:#58a6ff\">📊 EARNINGS</b>" : "";
           rows.push({
             id: inst.id, label: inst.label, date: mv.d,
-            event: (label ? `<div style="font-weight:600;margin-bottom:4px">${label}</div>` : "") + prevPerfBlock({ date: mv.d, pct: mv.pct, reason: mv.reason, source: mv.source }, "Move")
+            event: (label ? `<div style="font-weight:600;margin-bottom:4px">${label}</div>` : "") + prevPerfBlock({ date: mv.d, pct: mv.pct, reason: mv.reason, source: mv.source, window_days: mv.window_days, window_start: mv.window_start }, "Move")
           });
         }
       }
@@ -1107,7 +1111,15 @@ function _renderCompareTableImpl(wrap) {
       const f = inst.fund || {};
       const df = DEEP_FUND && DEEP_FUND[inst.id];
       const mktCap = fmtMarketCap(f.market_cap, inst.currency, true) || na;
-      const fwdPe = (f.fwd_pe != null) ? f.fwd_pe.toFixed(1) + "x" : na;
+      // researched, fiscal-year-specific consensus (repriced daily to today's
+      // close) - same figure the P/E History and Stock Pages tabs use. Falls
+      // back to Yahoo's raw blended-NTM fwd_pe only when we have no research
+      // for the name, so this tab doesn't silently disagree with the rest of
+      // the site on the same metric.
+      const fwdPeYrs = (FWD_PE && FWD_PE[inst.id] && FWD_PE[inst.id].years) || [];
+      const fwdPeResearched = fwdPeYrs.find(y => y.pe != null);
+      const fwdPe = fwdPeResearched ? `${fwdPeResearched.pe}x`
+        : (f.fwd_pe != null) ? `${f.fwd_pe.toFixed(1)}x <span class="pe-nm" title="Yahoo blended NTM - no fiscal-year research for this name">(Y)</span>` : na;
       const gm = fmtPctPlain(f.gross_margin) || na;
       const om = fmtPctPlain(f.operating_margin) || na;
       const npm = fmtPctPlain(f.net_margin) || na;
@@ -1449,7 +1461,6 @@ function renderCircularFinancing() {
     </tr></thead><tbody>${rows}</tbody></table>`;
 }
 
-const DEEP_FIN_ORDER = ["META", "NVDA", "9988", "6181"];
 const DEEP_FIN_METRICS = [
   { key: "revenue_m", label: "Revenue", money: true },
   { key: "gross_margin_pct", label: "Gross Margin", pct: true },
@@ -1514,81 +1525,6 @@ function deepFinHeadCell(p, periodLabel) {
   const full = p.quarter_label || "";
   const tip = full && full !== short ? ` title="${esc(full)}"` : "";
   return `<th${tip}>${esc(short)}</th>`;
-}
-
-function renderDeepFinancials() {
-  const wrap = document.getElementById("deep-fin-wrap");
-  if (wrap.dataset.rendered) return;
-  wrap.dataset.rendered = "1";
-  const data = DEEP_FIN;
-  if (!data || !Object.keys(data).length) {
-    wrap.innerHTML = `<div class="rev-none">No deep financials data available.</div>`;
-    return;
-  }
-  const na = `<span class="cmp-na">—</span>`;
-  const tids = DEEP_FIN_ORDER.filter(t => data[t]);
-  let html = `<div class="hist-head">Deep Financials — Meta, NVIDIA, Alibaba, Laopu Gold</div>
-    <div class="rev-src" style="margin-bottom:14px">Curated watchlist. Last 4 quarters + latest fiscal year (bolded), company-wide and by segment. Hover ⓘ for source/detail.</div>`;
-
-  for (const tid of tids) {
-    const d = data[tid];
-    const label = (SC_MAP && SC_MAP[tid] && SC_MAP[tid].name) || tid;
-    const symbol = CCY_SYMBOL[d.currency] || ((d.currency || "") + " ");
-    const periods = deepFinPeriods(d.fiscal_years, d.quarters);
-    const periodLabel = p => p.isFy ? "FY" : deepFinShortQ(p.quarter_label);
-
-    if (!periods.length) {
-      html += `<div class="hist-head" style="margin-top:20px; font-size:13px;">${esc(label)} (${esc(tid)})</div>
-        <div class="rev-none">No data yet.</div>`;
-      continue;
-    }
-
-    const cwRows = DEEP_FIN_METRICS.map(m => {
-      const cells = periods.map(p => {
-        const val = deepFinCellVal(p, m, symbol);
-        const cls = p.isFy ? "deep-fin-fy" : "pe-current";
-        if (val == null) return `<td class="${p.isFy ? "deep-fin-fy-col" : ""}">${na}</td>`;
-        const tip = [m.basisKey && p[m.basisKey], p.source].filter(Boolean).join(" — ");
-        const info = tip ? ` <span class="pe-nm" title="${esc(tip)}">ⓘ</span>` : "";
-        return `<td class="${p.isFy ? "deep-fin-fy-col" : ""}"><span class="${cls}">${val}</span>${info}</td>`;
-      }).join("");
-      return `<tr><td><b>${esc(m.label)}</b></td>${cells}</tr>`;
-    }).join("");
-
-    const headCells = periods.map(p => deepFinHeadCell(p, periodLabel)).join("");
-
-    let segHtml = "";
-    if ((d.segments || []).length) {
-      segHtml = d.segments.map(seg => {
-        const segPeriods = deepFinPeriods(seg.fiscal_years, seg.quarters);
-        const segHeadCells = segPeriods.map(p => deepFinHeadCell(p, periodLabel)).join("");
-        const revRow = segPeriods.map(p => {
-          const val = p.revenue_m != null ? fmtMoney(p.revenue_m * 1e6, symbol) : null;
-          const cls = p.isFy ? "deep-fin-fy" : "pe-current";
-          return `<td class="${p.isFy ? "deep-fin-fy-col" : ""}">${val ? `<span class="${cls}">${val}</span>` : na}</td>`;
-        }).join("");
-        const hasHeadline = segPeriods.some(p => p.headline_metric_value);
-        const headlineName = (segPeriods.find(p => p.headline_metric_name) || {}).headline_metric_name;
-        const headlineRow = hasHeadline ? `<tr><td><b>${esc(headlineName || "Headline Metric")}</b></td>${
-          segPeriods.map(p => {
-            const cls = p.isFy ? "deep-fin-fy" : "pe-current";
-            if (!p.headline_metric_value) return `<td class="${p.isFy ? "deep-fin-fy-col" : ""}">${na}</td>`;
-            const noteIcon = p.note ? ` <span class="pe-nm" title="${esc(p.note)}">ⓘ</span>` : "";
-            return `<td class="${p.isFy ? "deep-fin-fy-col" : ""}"><span class="${cls}">${esc(p.headline_metric_value)}</span>${noteIcon}</td>`;
-          }).join("")
-        }</tr>` : "";
-        return `<div style="margin-top:10px; font-weight:700; color:#9fd0ff; font-size:11px;">${esc(seg.name)}</div>
-          <table class="cmp-table deep-fin-table"><thead><tr><th>Metric</th>${segHeadCells}</tr></thead>
-          <tbody><tr><td>Revenue</td>${revRow}</tr>${headlineRow}</tbody></table>`;
-      }).join("");
-    }
-
-    html += `<div class="hist-head" style="margin-top:26px; font-size:14px;">${esc(label)} <span class="cmp-id">${esc(tid)}</span></div>
-      <table class="cmp-table deep-fin-table"><thead><tr><th>Metric</th>${headCells}</tr></thead><tbody>${cwRows}</tbody></table>
-      ${segHtml ? `<div style="margin-top:6px; font-weight:700; font-size:12px; color:var(--muted);">By Segment</div>${segHtml}` : ""}`;
-  }
-
-  wrap.innerHTML = html;
 }
 
 function renderPeHistory() {
@@ -1843,9 +1779,24 @@ function pageDeepFinHtml(tid) {
       const info = tip ? ` <span class="pe-nm" title="${esc(tip)}">ⓘ</span>` : "";
       return `<td class="${p.isFy ? "deep-fin-fy-col" : ""}"><span class="${cls}">${val}</span>${info}</td>`;
     }).join("");
-    return `<tr><td><b>${esc(m.label)}</b></td>${cells}</tr>`;
+    // gross margin and FCF are the two numbers worth a glance without reading
+    // every row - always highlight them
+    const hi = (m.key === "gross_margin_pct" || m.key === "fcf_m") ? " pg-hi-metric" : "";
+    return `<tr class="${hi}"><td><b>${esc(m.label)}</b></td>${cells}</tr>`;
   }).join("");
   const headCells = periods.map(pageFinHeadCell).join("");
+
+  // revenue-mix % + "what it sells" folds into each segment's own header line
+  // instead of a separate Revenue Mix section
+  const rm = REV_MIX && REV_MIX[tid];
+  const rmByName = {};
+  for (const s of (rm && rm.segments) || []) rmByName[(s.name || "").toLowerCase()] = s;
+  const x = (typeof PAGE_EXTRAS === "object" && PAGE_EXTRAS && PAGE_EXTRAS[tid]) || {};
+  const explByName = {};
+  for (const s of x.segment_explainers || []) explByName[(s.segment || "").toLowerCase()] = s.sells;
+  const lookup = (map, key) => map[key] ||
+    (Object.entries(map).find(([k]) => k && (key.includes(k) || k.includes(key))) || [])[1];
+
   let segHtml = "";
   for (const seg of d.segments || []) {
     const segPeriods = pageFinPeriods(seg);
@@ -1863,13 +1814,18 @@ function pageDeepFinHtml(tid) {
       const noteIcon = p.note ? ` <span class="pe-nm" title="${esc(p.note)}">ⓘ</span>` : "";
       return `<td class="${p.isFy ? "deep-fin-fy-col" : ""}"><span class="${cls}">${esc(p.headline_metric_value)}</span>${noteIcon}</td>`;
     }).join("")}</tr>` : "";
-    segHtml += `<div style="margin-top:10px; font-weight:700; color:#9fd0ff; font-size:11px;">${esc(seg.name)}</div>
+    const key = (seg.name || "").toLowerCase();
+    const mixEntry = lookup(rmByName, key);
+    const sells = lookup(explByName, key);
+    const pctTag = mixEntry && mixEntry.pct != null ? ` <span class="mono" style="color:var(--muted)">(${Number(mixEntry.pct).toFixed(1)}%)</span>` : "";
+    segHtml += `<div style="margin-top:10px; font-weight:700; color:#9fd0ff; font-size:11px;">${esc(seg.name)}${pctTag}</div>
+      ${sells ? `<div class="pg-mix-expl" style="margin:2px 0 4px">${esc(sells)}</div>` : ""}
       <table class="cmp-table deep-fin-table"><thead><tr><th>Metric</th>${segHead}</tr></thead>
       <tbody><tr><td>Revenue</td>${revRow}</tr>${headlineRow}</tbody></table>`;
   }
   return {
     cw: `<table class="cmp-table deep-fin-table"><thead><tr><th>Metric</th>${headCells}</tr></thead><tbody>${cwRows}</tbody></table>`,
-    seg: segHtml ? `<div style="margin-top:8px; font-weight:700; font-size:12px; color:var(--muted);">By Segment</div>${segHtml}` : "",
+    seg: segHtml ? `<div style="margin-top:8px; font-weight:700; font-size:12px; color:var(--muted);">By Segment ${rm && rm.fiscal_period ? `<span class="rev-src" style="display:inline">(mix as of ${esc(rm.fiscal_period)})</span>` : ""}</div>${segHtml}` : "",
   };
 }
 
@@ -1884,7 +1840,10 @@ function pageGuidanceHtml(x) {
     // actually gets read ("what did they guide, call over call")
     const head = gt.rows.map(r => `<th>${esc(r.metric)}</th>`).join("");
     const prevByMetric = gt.rows.map(() => null);
-    const rows = gt.calls.map((call, ci) => {
+    // ↑/↓ markers require walking calls oldest->newest first (each call
+    // compares to the one before it); the row array is reversed afterward so
+    // the DISPLAY reads most-recent-call-first, matching every other section
+    const rowsAsc = gt.calls.map((call, ci) => {
       const cells = gt.rows.map((r, ri) => {
         const v = (r.values || [])[ci];
         if (!v || v === "-" || v === "—") return `<td><span class="cmp-na">—</span></td>`;
@@ -1897,8 +1856,9 @@ function pageGuidanceHtml(x) {
         return `<td><span class="pe-current"${tip}>${esc(v)}</span>${mark}</td>`;
       }).join("");
       return `<tr><td><b>${esc(call)}</b></td>${cells}</tr>`;
-    }).join("");
-    return `<div style="margin-top:10px; font-weight:700; font-size:12px; color:var(--accent);">Guidance (per earnings call · ↑↓ vs prior)</div>
+    });
+    const rows = rowsAsc.slice().reverse().join("");
+    return `<div style="margin-top:10px; font-weight:700; font-size:12px; color:var(--accent);">Guidance (per earnings call, most recent first · ↑↓ vs prior)</div>
       <table class="cmp-table deep-fin-table"><thead><tr><th>Call</th>${head}</tr></thead><tbody>${rows}</tbody></table>`;
   }
   if ((x.guidance_revisions || []).length) {
@@ -1964,7 +1924,8 @@ function renderStockPage(tid) {
       if (mv.d < cutoff || !mv.reason) continue;
       moveDates.push(mv.d);
       rows.push({ date: mv.d, d1: mv.pct, d5: moveFrom(inst, mv.d, 5),
-                  title: null, why: mv.reason, src: mv.source, kind: "move" });
+                  title: null, why: mv.reason, src: mv.source, kind: "move",
+                  windowDays: mv.window_days, windowStart: mv.window_start });
     }
     for (const e of x.past_events || []) {
       if (e.date < cutoff) continue;
@@ -1979,7 +1940,8 @@ function renderStockPage(tid) {
     // researched cause are dropped entirely.
     const shown = rows.filter(r => r.why).map(r => {
       if (r.kind === "move") {
-        return { ...r, mv: r.d1, tag: "", head: r.why, bullet: null };
+        const tag = r.windowDays ? ` (${r.windowDays}d cum${r.windowStart ? ", " + r.windowStart + "→" + r.date : ""})` : "";
+        return { ...r, mv: r.d1, tag: "", head: r.why + tag, bullet: null };
       }
       const d1 = r.d1, d5 = r.d5;
       const dir = r.impact === "pos" ? 1 : r.impact === "neg" ? -1 : 0;
@@ -2058,23 +2020,6 @@ function renderStockPage(tid) {
   html += pageGuidanceHtml(x);
   html += fin.seg;
 
-  // revenue mix table + what each segment sells
-  const rm = REV_MIX && REV_MIX[tid];
-  if (rm && (rm.segments || []).length) {
-    html += pageSecHead("🧩 Revenue mix — what each segment sells");
-    const expl = {};
-    for (const s of x.segment_explainers || []) expl[(s.segment || "").toLowerCase()] = s.sells;
-    html += `<table class="ct-table" style="max-width:780px"><thead><tr><th>Segment</th><th>% of rev</th><th>What it sells</th></tr></thead><tbody>` +
-      rm.segments.map(s => {
-        const key = (s.name || "").toLowerCase();
-        const e = expl[key] ||
-          (Object.entries(expl).find(([k]) => k && (key.includes(k) || k.includes(key))) || [])[1];
-        return `<tr><td style="white-space:nowrap"><b>${esc(s.name)}</b></td>
-          <td class="mono">${s.pct != null ? Number(s.pct).toFixed(1) + "%" : "—"}</td>
-          <td class="pg-why">${e ? esc(e) : "<span class='cmp-na'>—</span>"}</td></tr>`;
-      }).join("") + `</tbody></table>
-    <div class="rev-src">Mix as of ${esc(rm.fiscal_period || "latest reported")}${rm.source ? " — " + esc(rm.source) : ""}.</div>`;
-  }
 
   // model launch history (AI model-builder pages only)
   if (AI_MODEL_TIDS.has(tid) && MODELS && MODELS.tickers && MODELS.tickers[tid]) {
@@ -2084,7 +2029,7 @@ function renderStockPage(tid) {
       : v === "flop" ? `<span class="pct d">flop</span>`
       : `<span style="color:var(--accent)">mixed</span>`;
     html += `<table class="ct-table"><thead><tr><th>Date</th><th>Model</th><th>Verdict</th><th>Reaction</th><th>Why</th></tr></thead><tbody>` +
-      ml.launches.map(l => {
+      ml.launches.slice().reverse().map(l => {
         return `<tr><td class="ct-dt">${esc(l.date)}</td><td><b>${esc(l.model)}</b> <span class="pe-nm" title="Claimed: ${esc(l.claim || "")}">ⓘ</span></td>
           <td>${vBadge(l.verdict)}</td>
           <td class="pg-mv-m">${mvCellHtml(l.move_pct)}</td>
@@ -2094,7 +2039,7 @@ function renderStockPage(tid) {
     const eco = (MODELS.ecosystem || {}).events || [];
     if (eco.length) {
       html += `<div style="margin-top:10px; font-weight:700; font-size:12px; color:var(--muted);">Ecosystem shocks (private-lab launches that moved public names)</div>
-        <table class="ct-table"><tbody>` + eco.map(e => {
+        <table class="ct-table"><tbody>` + eco.slice().reverse().map(e => {
           const aff = (e.affected || []).map(a => `<b>${esc(a.tid)}</b> <span class="pct ${(a.move_pct ?? 0) >= 0 ? "u" : "d"}">${a.move_pct == null ? "—" : (a.move_pct >= 0 ? "+" : "") + a.move_pct + "%"}</span>`).join(" · ");
           return `<tr><td class="ct-dt">${esc(e.date)}</td><td><b>${esc(e.model)}</b> <span class="muted">${esc(e.lab || "")}</span></td>
             <td>${esc(e.why_it_mattered || "")}${e.src ? ` <span class="msrc">[${esc(e.src)}]</span>` : ""}</td>
@@ -2272,8 +2217,6 @@ window.showTab = function (tabKey) {
   document.getElementById("nvda-eco-wrap").style.display = tabKey === "nvda-eco" ? "" : "none";
   document.getElementById("tab-circ-fin").classList.toggle("active", tabKey === "circ-fin");
   document.getElementById("circ-fin-wrap").style.display = tabKey === "circ-fin" ? "" : "none";
-  document.getElementById("tab-deep-fin").classList.toggle("active", tabKey === "deep-fin");
-  document.getElementById("deep-fin-wrap").style.display = tabKey === "deep-fin" ? "" : "none";
   document.getElementById("tab-semis").classList.toggle("active", tabKey === "semis");
   document.getElementById("semis-wrap").style.display = tabKey === "semis" ? "" : "none";
   document.getElementById("tab-pages").classList.toggle("active", tabKey === "pages");
@@ -2292,7 +2235,7 @@ window.showTab = function (tabKey) {
   // sections. Those divs are fixed top-level elements shared across every
   // tab, so without this they'd keep showing stale content from whichever
   // tab was active before switching here.
-  const showIdeas = tabKey !== "revenue" && tabKey !== "compare" && tabKey !== "pe" && tabKey !== "nvda-eco" && tabKey !== "circ-fin" && tabKey !== "deep-fin" && tabKey !== "semis" && tabKey !== "pages" && tabKey !== "macro-ev" && tabKey !== "deal-map";
+  const showIdeas = tabKey !== "revenue" && tabKey !== "compare" && tabKey !== "pe" && tabKey !== "nvda-eco" && tabKey !== "circ-fin" && tabKey !== "semis" && tabKey !== "pages" && tabKey !== "macro-ev" && tabKey !== "deal-map";
   document.getElementById("ideas").style.display = showIdeas ? "" : "none";
   document.getElementById("catalysts30").style.display = showIdeas ? "" : "none";
   document.getElementById("pastCatalysts").style.display = showIdeas ? "" : "none";
@@ -2314,10 +2257,6 @@ window.showTab = function (tabKey) {
   }
   if (tabKey === "circ-fin") {
     if (DATA) renderCircularFinancing();
-    return;
-  }
-  if (tabKey === "deep-fin") {
-    if (DATA) renderDeepFinancials();
     return;
   }
   if (tabKey === "semis") {
@@ -2388,11 +2327,6 @@ function buildShell() {
   const circFinWrap = document.createElement("div");
   circFinWrap.id = "circ-fin-wrap"; circFinWrap.className = "cmp-wrap"; circFinWrap.style.display = "none";
   grids.appendChild(circFinWrap);
-
-  mk("deep-fin", "Deep Financials");
-  const deepFinWrap = document.createElement("div");
-  deepFinWrap.id = "deep-fin-wrap"; deepFinWrap.className = "cmp-wrap"; deepFinWrap.style.display = "none";
-  grids.appendChild(deepFinWrap);
 
   mk("semis", "Semis Board");
   const semisWrap = document.createElement("div");
