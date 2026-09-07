@@ -1798,6 +1798,35 @@ function pageYoyRevRow(periods, bold) {
   return `<tr><td>${label}</td>${cells}</tr>`;
 }
 
+// Segment gross margin. The research payload carries no dedicated segment GM
+// field - most issuers disclose segment operating income, not segment gross
+// profit - so GM is read from whichever a segment actually has: an explicit
+// gross_margin_pct / gross_profit_m if the pipeline ever emits one, otherwise
+// the headline metric when that headline IS a gross-margin or gross-profit
+// figure (ASML, LRCX, KLAC, 6181 today). Segments with none show — .
+const SEG_GM_RE = /gross\s+(margin|profit)/i;
+function pageSegGmVal(p) {
+  if (p.gross_margin_pct != null) return p.gross_margin_pct.toFixed(1) + "%";
+  const fromProfit = m => (m != null && p.revenue_m > 0) ? (m / p.revenue_m * 100).toFixed(1) + "%" : null;
+  if (p.gross_profit_m != null) return fromProfit(p.gross_profit_m);
+  if (!SEG_GM_RE.test(p.headline_metric_name || "") || !p.headline_metric_value) return null;
+  const v = String(p.headline_metric_value);
+  if (v.includes("%")) return v;
+  const n = parseFloat(v.replace(/[^0-9.-]/g, ""));
+  if (!isFinite(n)) return null;
+  return fromProfit(/\b[Bb]n?\b|billion/.test(v) ? n * 1000 : n);
+}
+function pageSegGmRow(periods) {
+  const vals = periods.map(pageSegGmVal);
+  if (!vals.some(Boolean)) return "";
+  const cells = periods.map((p, i) => {
+    const cls = p.isFy ? "deep-fin-fy" : "pe-current";
+    const inner = vals[i] ? `<span class="${cls}">${esc(vals[i])}</span>` : `<span class="cmp-na">—</span>`;
+    return `<td class="${p.isFy ? "deep-fin-fy-col" : ""}">${inner}</td>`;
+  }).join("");
+  return `<tr><td>Gross Margin</td>${cells}</tr>`;
+}
+
 function pageDeepFinHtml(tid) {
   const d = DEEP_FIN && DEEP_FIN[tid];
   const na = `<span class="cmp-na">—</span>`;
@@ -1854,8 +1883,10 @@ function pageDeepFinHtml(tid) {
       const cls = p.isFy ? "deep-fin-fy" : "pe-current";
       return `<td class="${p.isFy ? "deep-fin-fy-col" : ""}">${val ? `<span class="${cls}">${val}</span>` : na}</td>`;
     }).join("");
+    const gmRow = pageSegGmRow(segPeriods);
     const headlineName = (segPeriods.find(p => p.headline_metric_name) || {}).headline_metric_name;
-    const headlineRow = headlineName ? `<tr><td><b>${esc(headlineName)}</b></td>${segPeriods.map(p => {
+    // a headline that is itself gross margin/profit already renders as the GM row
+    const headlineRow = headlineName && !(gmRow && SEG_GM_RE.test(headlineName)) ? `<tr><td><b>${esc(headlineName)}</b></td>${segPeriods.map(p => {
       const cls = p.isFy ? "deep-fin-fy" : "pe-current";
       if (!p.headline_metric_value) return `<td class="${p.isFy ? "deep-fin-fy-col" : ""}">${na}</td>`;
       const noteIcon = p.note ? ` <span class="pe-nm" title="${esc(p.note)}">ⓘ</span>` : "";
@@ -1868,7 +1899,7 @@ function pageDeepFinHtml(tid) {
     segHtml += `<div style="margin-top:10px; font-weight:700; color:#9fd0ff; font-size:11px;">${esc(seg.name)}${pctTag}</div>
       ${sells ? `<div class="pg-mix-expl" style="margin:2px 0 4px">${esc(sells)}</div>` : ""}
       <table class="cmp-table deep-fin-table"><thead><tr><th>Metric</th>${segHead}</tr></thead>
-      <tbody><tr><td>Revenue</td>${revRow}</tr>${pageYoyRevRow(segPeriods, false)}${headlineRow}</tbody></table>`;
+      <tbody><tr><td>Revenue</td>${revRow}</tr>${pageYoyRevRow(segPeriods, false)}${gmRow}${headlineRow}</tbody></table>`;
   }
   return {
     cw: `<table class="cmp-table deep-fin-table"><thead><tr><th>Metric</th>${headCells}</tr></thead><tbody>${cwRows}</tbody></table>`,
