@@ -9,141 +9,288 @@
       "src": "publication or filing the item came from - required for anything asserted as fact"
     }
   },
-  "generated": "2026-09-08T09:40:00+08:00",
+  "generated": "2026-09-08T16:14:46+08:00",
   "tickers": {
-    "NVDA": [
+    "META": [
+      {
+        "date": "2026-09-03",
+        "headline": "Meta opened paid developer access to Muse Spark 1.3; its AI chief called it the biggest jump yet on model performance and said it matches Anthropic and OpenAI offerings, and shares rose about 3.5%",
+        "why": "Frontier-model parity claim plus paid API access is the clearest test yet of returns on Meta's AI capex",
+        "src": "24/7 Wall St."
+      },
+      {
+        "date": "2026-09-03",
+        "headline": "WhatsApp launched bill payments in India across 22,722 billers on the Bharat Connect (BBPS) network, rolling out gradually on Android and iOS",
+        "why": "Extends monetization of WhatsApp's largest user base beyond messaging into recurring payments",
+        "src": "Meta Newsroom"
+      },
       {
         "date": "2026-09-02",
-        "headline": "Definitive agreement to acquire Hugging Face",
-        "why": "~$11.9B payable to Hugging Face stockholders plus up to ~$1.0B of equity-based retention for employees joining NVIDIA; close expected 1H 2027 subject to regulatory approvals.",
-        "src": "SEC 8-K (nvda-20260902)"
+        "headline": "Morgan Stanley said the $18B state settlement removes a legal overhang and could clear the way for new AI launches (MetaClaw, agentic ad tools, subscriptions, API/cloud), with a $775 price target",
+        "why": "Sell-side reframing of the settlement from liability to catalyst, with an EPS uplift of more than $10 attributed to the pipeline",
+        "src": "CNBC"
+      },
+      {
+        "date": "2026-09-01",
+        "headline": "Meta released Muse Voice Transcribe, its first real-time audio model, via the Meta Model API at $3 per 1,000 audio minutes",
+        "why": "A priced, developer-facing model expands Meta's move from free open models toward direct AI revenue",
+        "src": "Engadget"
+      }
+    ],
+    "NVDA": [
+      {
+        "date": "2026-09-03",
+        "headline": "NVIDIA disclosed a definitive agreement to acquire Hugging Face for approximately $11.9 billion in cash to stockholders plus an equity retention program of up to about $1.0 billion, with closing expected in the first half of 2027 subject to regulatory approvals",
+        "why": "Largest NVIDIA acquisition since Mellanox; extends the company from silicon into the open-model distribution layer, and the filing states the deal is conditioned on regulatory approvals",
+        "src": "NVIDIA Corporation Form 8-K (date of report Sept 2, 2026; filed Sept 3, 2026)"
       }
     ],
     "AAPL": [
       {
-        "date": "2026-09-01",
-        "headline": "John Ternus takes over as CEO from Tim Cook",
-        "why": "The Sept 9 iPhone event is the first product launch under the new CEO.",
-        "src": "CNBC"
-      },
-      {
         "date": "2026-09-03",
-        "headline": "Six new products expected at the Sept 9 “Surprise and Shine” event",
-        "why": "iPhone 18 Pro on the A20 Pro, a book-style foldable iPhone Ultra, new Apple Watch and AirPods — press preview, not confirmed by Apple.",
-        "src": "9to5Mac"
-      }
-    ],
-    "META": [
-      {
-        "date": "2026-09-01",
-        "headline": "Muse Voice Transcribe launched",
-        "why": "Meta's first real-time audio perception model; 70+ languages and 20+ speaker diarization, shipping in the Meta AI macOS app.",
-        "src": "9to5Mac"
+        "headline": "Apple was hit with a £2 billion ($2.7 billion) UK class action at London's Competition Appeal Tribunal, filed by ATT Collective Action Limited, alleging it applied stricter App Tracking Transparency rules to third-party developers than to its own advertising services",
+        "why": "Adds to UK legal exposure following the tribunal's ~£1.5 billion App Store commission ruling; the claim still requires certification",
+        "src": "Reuters"
       },
       {
         "date": "2026-09-02",
-        "headline": "Muse Spark 1.3 released and opened to paid developers",
-        "why": "Zuckerberg called it Meta's biggest jump yet in coding and agentic work; rolls out to Instagram, Facebook and Meta AI.",
-        "src": "Bloomberg"
+        "headline": "Morgan Stanley's Erik Woodring estimated the first foldable iPhone could contribute about $14 billion of December-quarter revenue, with 7-8 million units built in 2H26 and up to 20 million over the first product cycle",
+        "why": "Sizes the revenue contribution of a new product category ahead of the Sept 9 event; Woodring kept an Overweight rating and $360 target",
+        "src": "Investing.com (Morgan Stanley research note)"
+      },
+      {
+        "date": "2026-09-01",
+        "headline": "John Ternus became Apple CEO, with Tim Cook moving to executive chairman, completing the succession announced in April 2026",
+        "why": "First leadership change in 15 years, days before the company's biggest product launch of the year",
+        "src": "Apple Form 8-K/A (SEC, filed 2026-09-01); NBC News"
+      },
+      {
+        "date": "2026-09-01",
+        "headline": "Apple disclosed Ternus's pay package: $3 million salary and a $55 million target annual equity award, 75% of which is performance RSUs vesting on Apple's total shareholder return relative to the S&P 500, plus a one-time prorated $2.5 million RSU grant",
+        "why": "Ties the majority of the new CEO's compensation to relative shareholder return",
+        "src": "Apple Form 8-K/A (SEC, filed 2026-09-01)"
       }
     ],
     "MSFT": [
       {
-        "date": "2026-09-03",
-        "headline": "Will disclose Azure revenue in dollars every quarter for the first time",
-        "why": "Operating segments cut from three to two, replacing the structure in place since 2015 — the segment tables on this page change shape from the next filing.",
-        "src": "Microsoft, via Yahoo Finance"
+        "date": "2026-09-04",
+        "headline": "Stifel analyst Brad Reback raised his Microsoft price target to $530 from $450 while maintaining a Hold/Neutral rating, after meetings with management pointed to broader Microsoft 365 Copilot deployment, with weekly active engagement described as on par with Outlook and Teams.",
+        "why": "An 18% target raise held at Hold frames the debate as Copilot adoption improving while valuation caps upside.",
+        "src": "Seeking Alpha"
+      },
+      {
+        "date": "2026-09-02",
+        "headline": "Microsoft filed an 8-K restructuring reporting into two segments — Agents and Infra, and Devices and Consumer — from fiscal 2027, and will begin disclosing Azure revenue in dollars under a narrower definition excluding GitHub cloud, Security Copilot and healthcare cloud; restated Azure revenue was $",
+        "why": "First standalone dollar disclosure of Azure resets the segment model and the AI-revenue debate for every MSFT estimate.",
+        "src": "Microsoft Form 8-K, Exhibit 99.1 (SEC)"
+      },
+      {
+        "date": "2026-09-01",
+        "headline": "BofA Securities analyst Tal Liani raised his Microsoft price target to $600 from $500, keeping a Buy rating, citing 4Q26 validation of the AI strategy with Azure growth going from 39% in 3Q26 to 43% in 4Q26 and guidance of 45% in 1Q27.",
+        "why": "A 20% target hike from a major bulge-bracket house anchors the bull case on Azure acceleration.",
+        "src": "Price-Target.com"
       }
     ],
     "GOOGL": [
       {
         "date": "2026-09-02",
-        "headline": "Gemini 3.8 Flash launched, the third Flash model in six weeks",
-        "why": "Priced at $0.75/M input and $3.75/M output tokens, matching the prior Flash model; paired with a Gemini 3.8 Flash Cyber model aimed at government and enterprise.",
+        "headline": "Judge Leonie Brinkema rejected the DOJ's bid to force Google to divest its AdX ad exchange, imposing behavioral remedies instead, including real-time bid access for rival publisher ad servers",
+        "why": "Removes the structural-breakup risk hanging over Google's open-web display ad business, leaving the ad tech stack intact under conduct rules",
+        "src": "Al Jazeera / AdExchanger (E.D. Va. Case 1:23-cv-108, Doc. 1857)"
+      },
+      {
+        "date": "2026-09-02",
+        "headline": "Google launched Gemini 3.8 Flash and a Gemini 3.8 Flash Cyber security variant, its third Flash model in six weeks, across the Gemini app, AI Mode, Sheets, AI Studio and the Gemini API",
+        "why": "Model cadence and a paid enterprise/government cybersecurity tier speak to Google's competitive position and monetization in AI",
+        "src": "The Register / 9to5Google"
+      },
+      {
+        "date": "2026-09-02",
+        "headline": "Berkshire Hathaway CEO Greg Abel publicly explained the conglomerate's roughly $37 billion Alphabet stake on CNBC, calling Alphabet a significant player in AI",
+        "why": "First detailed rationale from the holder of what is now one of Berkshire's largest US equity positions in Alphabet",
         "src": "CNBC"
+      }
+    ],
+    "AMZN": [
+      {
+        "date": "2026-09-03",
+        "headline": "Amazon's Zoox extended its commercial robotaxi service to Harry Reid International Airport in Las Vegas, with airport pickup and dropoff at both terminals starting September 5",
+        "why": "First robotaxi operator serving the airport, extending Zoox's paid-service footprint weeks after it began charging for rides",
+        "src": "TechCrunch"
+      },
+      {
+        "date": "2026-09-02",
+        "headline": "DOJ Antitrust Division expanded its beef-pricing investigation to eight grocery retailers including Amazon, requesting 2020-2026 records on beef purchasing, retail pricing, margins and price analyses",
+        "why": "Adds a second active federal antitrust exposure alongside the FTC case, targeting Amazon's grocery business",
+        "src": "Bloomberg / Fox Business"
       }
     ],
     "AMD": [
       {
-        "date": "2026-09-01",
-        "headline": "Instinct MI355X infrastructure live in Saudi Arabia with Cisco and HUMAIN",
-        "why": "Partners flag up to 250MW more beginning 2027, toward as much as 1GW by 2030; first-phase revenue is small against a ~$13B quarter.",
-        "src": "The Motley Fool"
+        "date": "2026-09-04",
+        "headline": "AMD unveiled the Threadripper Halo Station at IFA 2026: a liquid-cooled workstation pairing the 96-core Threadripper PRO 9995WX with up to four Instinct MI350P accelerators (up to 576GB HBM3E), pitched as able to run trillion-parameter models locally",
+        "why": "Pushes Instinct silicon into the on-prem AI workstation market and puts AMD in direct competition with Nvidia's DGX Station in a new revenue category",
+        "src": "ServeTheHome / Tom's Hardware"
+      },
+      {
+        "date": "2026-09-04",
+        "headline": "At its IFA 2026 opening keynote, AMD's Jack Huynh introduced a second-generation Ryzen AI Halo developer platform with 192GB unified memory, said to run 125-billion-parameter models locally, with HP and Lenovo systems on the Ryzen AI Max 400 series due to reach customers in Q3 2026",
+        "why": "Extends AMD's local/on-device AI franchise in client compute and sets the Q3 2026 OEM shipment timing for the Ryzen AI Max 400 series",
+        "src": "AMD IFA 2026 keynote (via Tech Times)"
       }
     ],
     "AVGO": [
       {
-        "date": "2026-09-02",
-        "headline": "Q3 FY2026: revenue $29.59B (+86% YoY), AI semiconductor revenue $16.7B (+221% YoY)",
-        "why": "FY2026 AI revenue guidance raised to ~$58B; management targets ~$115B in FY2027 and ~$230B in FY2028.",
-        "src": "Broadcom IR"
-      },
-      {
-        "date": "2026-09-02",
-        "headline": "Q4 guidance $34.8B against ~$35.03B consensus",
-        "why": "Guide landed just below expectations despite the quarter's beat.",
+        "date": "2026-09-03",
+        "headline": "Macquarie Equity Research upgraded Broadcom to Outperform from Neutral and raised its price target to $490 from $437, citing the Anthropic compute ramp and reduced Google insourcing risk",
+        "why": "A rating upgrade, not just a target change, from a firm modeling over $40B of Anthropic purchases in FY2028",
         "src": "CNBC"
       },
       {
-        "date": "2026-09-03",
-        "headline": "Truist cut its price target to $520 from $550",
-        "src": "Truist, via media"
+        "date": "2026-09-02",
+        "headline": "Broadcom reported Q3 FY2026 revenue of $29.6B, up 86% y/y, with AI semiconductor revenue of $16.7B, up 221% y/y, and non-GAAP diluted EPS of $3.32; declared a $0.65 quarterly dividend payable Sept 30, 2026",
+        "why": "AI accelerators and networking are now the majority of revenue, resetting the earnings base for the company",
+        "src": "Broadcom Inc. press release (PR Newswire)"
+      },
+      {
+        "date": "2026-09-02",
+        "headline": "Broadcom guided Q4 FY2026 revenue to approximately $34.8B, up 93% y/y, with AI revenue of $21.7B, up 236% y/y, and CEO Hock Tan told the earnings call AI revenue is expected to roughly double again in each of the next two years, to about $115B in FY2027 and $230B in FY2028",
+        "why": "The multi-year AI revenue framework is the primary driver of forward estimates and valuation",
+        "src": "Broadcom Q3 FY2026 earnings call / Broadcom press release"
+      },
+      {
+        "date": "2026-09-02",
+        "headline": "On the earnings call Hock Tan said Anthropic is on track to become Broadcom's largest XPU customer in 2027, and described a new long-term Google agreement covering multi-tens of billions of dollars of TPUs annually, with production shipments of Google's TPU v8i underway",
+        "why": "Names the specific customer commitments underpinning the FY2027-28 AI targets and addresses Google insourcing concerns",
+        "src": "Benzinga (Broadcom Q3 FY2026 earnings call)"
       }
     ],
     "INTC": [
       {
         "date": "2026-09-08",
-        "headline": "Backing the ASML/TSMC 12-inch photomask initiative",
-        "why": "Intel and Samsung joined the industry push to large-format masks for High-NA EUV.",
-        "src": "Bloomberg"
+        "headline": "Intel Foundry and ASML said High NA EUV is in high-volume manufacturing at Intel, with more than one million wafers processed to date, and that High NA layers on Intel 18A meet or exceed comparable NXE-patterned layers",
+        "why": "Supports Intel's claim of a lithography lead ahead of the 14A ramp, the node its external foundry customer pipeline depends on",
+        "src": "Intel Corporation press release (intc.com investor relations)"
+      },
+      {
+        "date": "2026-09-04",
+        "headline": "Global Equities Research analyst Trip Chowdhry published a $200 price target on Intel, citing 16x year-over-year CPU demand growth and pointing to Dell's reported 122% year-over-year jump in traditional server revenue as validation",
+        "why": "An outlier bull target roughly double consensus that was widely cited during Intel's ~7% weekly gain",
+        "src": "Investing.com (also StreetInsider, TipRanks)"
+      },
+      {
+        "date": "2026-09-03",
+        "headline": "Mizuho analyst Vijay Rakesh cut his Intel price target to $92 from $109, keeping a Neutral/Hold rating, citing near-term multiple compression for agentic-AI names alongside foundry margin pressure and weaker PC demand",
+        "why": "A top-ranked semis analyst cut his target below the then-current share price of about $91.67, against a sell-side consensus target near $116",
+        "src": "Investing.com (also TheStreet, TipRanks)"
       }
     ],
     "TSM": [
       {
         "date": "2026-09-08",
-        "headline": "Joint initiative with ASML to move the industry to 12-inch photomasks for High-NA EUV",
-        "why": "Targets a 12-inch mask pilot line by 2031 and lithography readiness for advanced-node production by 2033; TSMC plans High-NA EUV in high-volume manufacturing from 2030.",
-        "src": "ASML/TSMC press release"
+        "headline": "ASML and TSMC announced a joint industry initiative to move High NA EUV from 6-inch to 12-inch photomasks, targeting a mask pilot line in 2031 and advanced-node production on 12-inch High NA systems by 2033; TSMC said it intends to use High NA in high-volume manufacturing for advanced nodes starting",
+        "why": "First firm public timeline for TSMC's High NA adoption, a key input to long-term leading-edge cost structure and its lead over competing foundries",
+        "src": "TSMC/ASML press release (GlobeNewswire)"
+      },
+      {
+        "date": "2026-09-03",
+        "headline": "Cliff Hou said TSMC is building 25 fabs and advanced packaging facilities worldwide this year, 13 of them in Taiwan, a fivefold acceleration versus its historical 5-6 per year, and still cannot keep pace with AI demand",
+        "why": "Demand exceeding a fivefold expansion supports pricing power and utilization, while the build-out scale raises execution and depreciation risk",
+        "src": "Taipei Times"
+      },
+      {
+        "date": "2026-09-02",
+        "headline": "TSMC's estimate of its quarterly chipmaking-tool needs has nearly doubled since December, to about 1.9x the level it projected, Deputy Co-COO Cliff Hou said at Semicon Taiwan",
+        "why": "Equipment procurement running ~90% above the December plan points to capex above the $60-64bn 2026 budget and to sustained AI-driven capacity build",
+        "src": "Bloomberg"
       }
     ],
     "ASML": [
       {
         "date": "2026-09-08",
-        "headline": "Joint initiative with TSMC to move the industry to 12-inch photomasks for High-NA EUV",
-        "why": "Pilot line targeted for 2031, full lithography readiness for advanced-node production by 2033; announced ahead of the SPIE Bacus conference, with other High-NA adopters expressing interest in joining.",
-        "src": "ASML/TSMC press release"
+        "headline": "ASML and TSMC announced a joint industry initiative to move High NA EUV from 6-inch to 12-inch photomasks, targeting a mask pilot line by 2031 and production readiness by 2033; TSMC said it intends to use High NA in high-volume manufacturing for advanced nodes from 2030",
+        "why": "First public TSMC timeline for adopting High NA, ASML's ~$400m-per-tool next-generation platform, and a roadmap commitment from its largest customer",
+        "src": "ASML press release via GlobeNewswire"
+      },
+      {
+        "date": "2026-09-08",
+        "headline": "Samsung Electronics and ASML expanded their strategic collaboration, with Samsung planning to introduce High NA EUV into DRAM high-volume manufacturing by 2028 and joining the 12-inch photomask initiative",
+        "why": "Extends High NA demand beyond logic into memory, a new end market for ASML's highest-priced systems",
+        "src": "Samsung Global Newsroom / ASML press release"
+      },
+      {
+        "date": "2026-09-08",
+        "headline": "Intel Foundry and ASML said High NA EUV is in high-volume production at Intel with more than one million wafers processed to date across certification, R&D and volume production on select layers of Core Ultra Series 3 (Panther Lake), with overlay, throughput and availability meeting Intel's expectat",
+        "why": "Production-scale validation of High NA performance, the key gating factor for further customer orders",
+        "src": "ASML/Intel Foundry press release (SPIE Photomask Technology + EUV Lithography conference)"
       }
     ],
     "MU": [
       {
         "date": "2026-09-04",
-        "headline": "Closed at $1,016.59, up 256% year to date",
-        "why": "Record DRAM contract pricing and AI datacenter memory demand; management has flagged a meaningful moderation in the rate of price increases in fiscal Q4, which reports later this month.",
-        "src": "24/7 Wall St."
+        "headline": "Industry reports said Micron is adding roughly 60,000 wafers/month of HBM capacity to reach about 100,000 wafers/month by year-end, with 12-Hi HBM4 potentially half of output",
+        "why": "Would roughly double HBM output and narrow the capacity gap with SK hynix and Samsung in the highest-margin memory segment",
+        "src": "ETNews; TrendForce News"
+      },
+      {
+        "date": "2026-09-02",
+        "headline": "Commerce Secretary Howard Lutnick said the administration's Section 232 semiconductor tariffs will exempt US-based production and impose duties of up to 100% on chips made abroad, citing Micron's US investment",
+        "why": "Sets the tariff framework for imported memory and bears on the payoff from Micron's US fab build-out",
+        "src": "CNBC interview; International Trade Today"
+      },
+      {
+        "date": "2026-09-02",
+        "headline": "The Federal Circuit affirmed PTAB decisions cancelling five Netlist memory patents that had been asserted against Micron",
+        "why": "Removes a set of patent claims from Netlist's long-running litigation against Micron",
+        "src": "Bloomberg Law; US Court of Appeals for the Federal Circuit opinions (Nos. 24-1707, 24-1859)"
+      },
+      {
+        "date": "2026-09-01",
+        "headline": "Micron's Taiwan unions, representing ~10,000 of its ~15,000 workers in Taoyuan and Taichung, threatened to strike unless the company overhauls its bonus system; Micron said this year's bonus payout will be its largest ever",
+        "why": "Taiwan is Micron's largest manufacturing base for DRAM and HBM, so a work stoppage there is a direct supply risk",
+        "src": "Taipei Times (reporting Bloomberg), Sept 2, 2026 edition"
       }
     ],
     "9988": [
       {
+        "date": "2026-09-07",
+        "headline": "Tmall launched an 'AI Space Station' marketplace selling AI subscriptions, token top-ups and specialised packages from Alibaba Cloud, Z.ai, MiniMax and DeepSeek; SCMP reports AI token and subscription transactions across Taobao and Tmall rose more than 160% within 48 hours of Z.ai opening its storef",
+        "why": "Opens a new AI monetisation channel that runs through the core commerce platform rather than the cloud sales motion",
+        "src": "South China Morning Post"
+      },
+      {
         "date": "2026-09-02",
-        "headline": "June-quarter quick-commerce losses narrowed as delivery discounting eased",
-        "why": "Alibaba and JD both narrowed losses while Meituan clawed back profit; improving profit outlooks may draw back investors put off by the price war.",
-        "src": "Bloomberg"
+        "headline": "Alibaba released Qwen3.8-Max-0902, a post-training upgrade to its 2.4T-parameter flagship focused on coding and agent work, at unchanged pricing; TechNode reports its front-end Code Arena score rose 22 points to 1,691, first on that leaderboard",
+        "why": "Flagship model competitiveness underpins the Alibaba Cloud external revenue growth and AI commercialisation thesis that justifies the RMB380bn capex programme",
+        "src": "TechNode"
+      }
+    ],
+    "0700": [
+      {
+        "date": "2026-09-04",
+        "headline": "Bilibili priced $700m zero-coupon convertible notes; Tencent subscribed for $200m of the notes while selling 26,374,900 Bilibili Class Z shares at HK$115.38 via placing, with Bilibili repurchasing a further 13,591,090 Class Z shares/ADSs held by Tencent at the same price",
+        "why": "Converts part of Tencent's Bilibili equity stake into debt and returns cash to Tencent, reshaping a sizeable investment-portfolio holding",
+        "src": "Bilibili Inc. press release (pricing announcement)"
+      },
+      {
+        "date": "2026-09-02",
+        "headline": "Tencent-backed AI chipmaker Enflame priced its Shanghai STAR Market IPO at RMB142.18/share raising about RMB6.12bn, with the retail tranche 4,073 times subscribed and the online portion 6,109 times covered",
+        "why": "Tencent holds a roughly 20% stake in Enflame and is a major customer, so the listing marks the stake and its domestic AI-chip supply link",
+        "src": "Bloomberg; Reuters"
+      },
+      {
+        "date": "2026-09-02",
+        "headline": "Tencent launched the WorkBuddy open platform (open.WorkBuddy.cn) at a Shenzhen event, opening its Skill/Expert/Connector agent capabilities to over 100 initial ecosystem partners, with nine co-branded smart hardware devices and 30+ industry applications",
+        "why": "Extends Tencent's AI office agent from an in-house product to a third-party platform, a step in monetising its Hunyuan-based AI stack",
+        "src": "Science and Technology Daily (科技日报)"
       }
     ],
     "3690": [
       {
         "date": "2026-09-02",
-        "headline": "Clawed back profit in the June quarter as delivery discounting eased",
-        "why": "Alibaba and JD narrowed their quick-commerce losses over the same period; improving profit outlooks may draw back investors put off by the price war.",
-        "src": "Bloomberg"
-      }
-    ],
-    "9618": [
-      {
-        "date": "2026-09-02",
-        "headline": "June-quarter quick-commerce losses narrowed as delivery discounting eased",
-        "why": "JD and Alibaba both narrowed losses while Meituan clawed back profit; improving profit outlooks may draw back investors put off by the price war.",
-        "src": "Bloomberg"
+        "headline": "Brazil's antitrust regulator CADE denied Keeta's appeal against rival 99's restaurant exclusivity contracts and instead ordered broader inquiries into competitive practices across the Brazilian delivery market, including Keeta's entry",
+        "why": "Keeta is Meituan's flagship overseas expansion and Brazil is its largest new market; a widened regulatory review follows iFood's predatory-pricing complaint and raises execution and cost risk for the international segment",
+        "src": "Reuters"
       }
     ]
   }
