@@ -1728,45 +1728,19 @@ let PAGE_SEL = "META";
 // Stock Pages chronology: Q1..Q4 then that year's FY, then the next year's
 // quarters, FY - the full 2-year runway rather than Deep Financials' compact
 // 4Q+FY view.
-// Company-wide rows carry period_end and sort on it. Segment rows carry only
-// labels ("Q2 FY2026", "H1 2025", "FY2025"), so they fall back to an ordinal
-// parsed from the label - without it every segment quarter sorted ahead of
-// every segment FY instead of interleaving Q1..Q4, FY.
-// The ordinal is year*10 + slot (Q1..Q4 -> 1..4, H1 -> 2, H2 -> 4, FY -> 5),
-// which also makes the prior-year comparable exactly ord - 10 for YoY.
-function pageFinPeriodOrd(p, isFy) {
-  const lbl = String((isFy ? p.fy_label : p.quarter_label) || "");
-  let year = null;
-  const fym = lbl.match(/FY\s*'?(\d{2,4})/i);
-  if (fym) year = fym[1].length <= 2 ? 2000 + Number(fym[1]) : Number(fym[1]);
-  else { const ym = lbl.match(/\b(19|20)(\d{2})\b/); if (ym) year = Number(ym[0]); }
-  if (year == null) return null;
-  if (isFy) return year * 10 + 5;
-  const qm = lbl.match(/\bQ([1-4])\b/i);
-  if (qm) return year * 10 + Number(qm[1]);
-  const hm = lbl.match(/\bH([12])\b/i);
-  if (hm) return year * 10 + (hm[1] === "1" ? 2 : 4);
-  if (/^\s*FY/i.test(lbl)) return year * 10 + 5;
-  return null;
-}
 function pageFinPeriods(container) {
-  const tag = (arr, isFy) => (arr || []).map(p => ({ ...p, isFy, ord: pageFinPeriodOrd(p, isFy) }));
-  const qs = tag(container.quarters, false);
-  const fys = tag(container.fiscal_years, true);
-  const all = qs.concat(fys);
-  if (!all.some(p => p.period_end) && all.every(p => p.ord != null))
-    return all.sort((a, b) => a.ord - b.ord);
   const byEnd = (a, b) => String(a.period_end || "").localeCompare(String(b.period_end || ""));
-  qs.sort(byEnd); fys.sort(byEnd);
+  const qs = (container.quarters || []).slice().sort(byEnd);
+  const fys = (container.fiscal_years || []).slice().sort(byEnd);
   const seq = [];
   let qi = 0;
   for (const fy of fys) {
     while (qi < qs.length && String(qs[qi].period_end || "") <= String(fy.period_end || "")) {
-      seq.push(qs[qi]); qi++;
+      seq.push({ ...qs[qi], isFy: false }); qi++;
     }
-    seq.push(fy);
+    seq.push({ ...fy, isFy: true });
   }
-  while (qi < qs.length) { seq.push(qs[qi]); qi++; }
+  while (qi < qs.length) { seq.push({ ...qs[qi], isFy: false }); qi++; }
   return seq;
 }
 function pageFinHeadCell(p) {
@@ -1777,54 +1751,6 @@ function pageFinHeadCell(p) {
   const short = deepFinShortQ(p.quarter_label);
   const full = p.quarter_label || "";
   return `<th${full && full !== short ? ` title="${esc(full)}"` : ""}>${esc(short)}</th>`;
-}
-
-// Revenue YoY growth, shown directly under Revenue on the company-wide table
-// and on every segment table. The prior-year comparable is ord - 10 (same
-// quarter/half/FY one year back), so it lines up even when the runway starts
-// mid-year and simply shows — where no year-ago period is on the page.
-function pageYoyRevRow(periods, bold) {
-  const na = `<span class="cmp-na">—</span>`;
-  const byOrd = {};
-  for (const p of periods) if (p.ord != null && p.revenue_m != null) byOrd[p.ord] = p.revenue_m;
-  const cells = periods.map(p => {
-    const td = c => `<td class="${p.isFy ? "deep-fin-fy-col" : ""}">${c}</td>`;
-    const prev = p.ord != null ? byOrd[p.ord - 10] : null;
-    if (p.revenue_m == null || prev == null || prev <= 0) return td(na);
-    const g = (p.revenue_m / prev - 1) * 100;
-    return td(`<span class="pct ${g >= 0 ? "u" : "d"}">${g >= 0 ? "+" : ""}${g.toFixed(1)}%</span>`);
-  }).join("");
-  const label = bold ? "<b>Revenue YoY</b>" : "Revenue YoY";
-  return `<tr><td>${label}</td>${cells}</tr>`;
-}
-
-// Segment gross margin. The research payload carries no dedicated segment GM
-// field - most issuers disclose segment operating income, not segment gross
-// profit - so GM is read from whichever a segment actually has: an explicit
-// gross_margin_pct / gross_profit_m if the pipeline ever emits one, otherwise
-// the headline metric when that headline IS a gross-margin or gross-profit
-// figure (ASML, LRCX, KLAC, 6181 today). Segments with none show — .
-const SEG_GM_RE = /gross\s+(margin|profit)/i;
-function pageSegGmVal(p) {
-  if (p.gross_margin_pct != null) return p.gross_margin_pct.toFixed(1) + "%";
-  const fromProfit = m => (m != null && p.revenue_m > 0) ? (m / p.revenue_m * 100).toFixed(1) + "%" : null;
-  if (p.gross_profit_m != null) return fromProfit(p.gross_profit_m);
-  if (!SEG_GM_RE.test(p.headline_metric_name || "") || !p.headline_metric_value) return null;
-  const v = String(p.headline_metric_value);
-  if (v.includes("%")) return v;
-  const n = parseFloat(v.replace(/[^0-9.-]/g, ""));
-  if (!isFinite(n)) return null;
-  return fromProfit(/\b[Bb]n?\b|billion/.test(v) ? n * 1000 : n);
-}
-function pageSegGmRow(periods) {
-  const vals = periods.map(pageSegGmVal);
-  if (!vals.some(Boolean)) return "";
-  const cells = periods.map((p, i) => {
-    const cls = p.isFy ? "deep-fin-fy" : "pe-current";
-    const inner = vals[i] ? `<span class="${cls}">${esc(vals[i])}</span>` : `<span class="cmp-na">—</span>`;
-    return `<td class="${p.isFy ? "deep-fin-fy-col" : ""}">${inner}</td>`;
-  }).join("");
-  return `<tr><td>Gross Margin</td>${cells}</tr>`;
 }
 
 function pageDeepFinHtml(tid) {
@@ -1839,7 +1765,7 @@ function pageDeepFinHtml(tid) {
     metrics.push(m);
     if (m.key === "net_margin_pct") metrics.push({ key: "__np", label: "Net Profit (derived)", derived: true });
   }
-  const cwRowList = metrics.map(m => {
+  const cwRows = metrics.map(m => {
     const cells = periods.map(p => {
       let val;
       if (m.derived) {
@@ -1857,9 +1783,7 @@ function pageDeepFinHtml(tid) {
     // every row - always highlight them
     const hi = (m.key === "gross_margin_pct" || m.key === "fcf_m") ? " pg-hi-metric" : "";
     return `<tr class="${hi}"><td><b>${esc(m.label)}</b></td>${cells}</tr>`;
-  });
-  cwRowList.splice(metrics.findIndex(m => m.key === "revenue_m") + 1, 0, pageYoyRevRow(periods, true));
-  const cwRows = cwRowList.join("");
+  }).join("");
   const headCells = periods.map(pageFinHeadCell).join("");
 
   // revenue-mix % + "what it sells" folds into each segment's own header line
@@ -1883,10 +1807,8 @@ function pageDeepFinHtml(tid) {
       const cls = p.isFy ? "deep-fin-fy" : "pe-current";
       return `<td class="${p.isFy ? "deep-fin-fy-col" : ""}">${val ? `<span class="${cls}">${val}</span>` : na}</td>`;
     }).join("");
-    const gmRow = pageSegGmRow(segPeriods);
     const headlineName = (segPeriods.find(p => p.headline_metric_name) || {}).headline_metric_name;
-    // a headline that is itself gross margin/profit already renders as the GM row
-    const headlineRow = headlineName && !(gmRow && SEG_GM_RE.test(headlineName)) ? `<tr><td><b>${esc(headlineName)}</b></td>${segPeriods.map(p => {
+    const headlineRow = headlineName ? `<tr><td><b>${esc(headlineName)}</b></td>${segPeriods.map(p => {
       const cls = p.isFy ? "deep-fin-fy" : "pe-current";
       if (!p.headline_metric_value) return `<td class="${p.isFy ? "deep-fin-fy-col" : ""}">${na}</td>`;
       const noteIcon = p.note ? ` <span class="pe-nm" title="${esc(p.note)}">ⓘ</span>` : "";
@@ -1899,7 +1821,7 @@ function pageDeepFinHtml(tid) {
     segHtml += `<div style="margin-top:10px; font-weight:700; color:#9fd0ff; font-size:11px;">${esc(seg.name)}${pctTag}</div>
       ${sells ? `<div class="pg-mix-expl" style="margin:2px 0 4px">${esc(sells)}</div>` : ""}
       <table class="cmp-table deep-fin-table"><thead><tr><th>Metric</th>${segHead}</tr></thead>
-      <tbody><tr><td>Revenue</td>${revRow}</tr>${pageYoyRevRow(segPeriods, false)}${gmRow}${headlineRow}</tbody></table>`;
+      <tbody><tr><td>Revenue</td>${revRow}</tr>${headlineRow}</tbody></table>`;
   }
   return {
     cw: `<table class="cmp-table deep-fin-table"><thead><tr><th>Metric</th>${headCells}</tr></thead><tbody>${cwRows}</tbody></table>`,
@@ -1908,9 +1830,7 @@ function pageDeepFinHtml(tid) {
 }
 
 // guidance tracked across earnings calls, same table style as key metrics -
-// its own section, immediately above Key metrics (what management said they
-// expect reads before the numbers they are guiding against). Renders its own
-// section head so it can be dropped entirely when nothing is researched.
+// sits between the company-wide table and By Segment
 function pageGuidanceHtml(x) {
   const num = s => { const m = String(s || "").replace(/,/g, "").match(/-?\d+(\.\d+)?/); return m ? parseFloat(m[0]) : null; };
   const gt = x.guidance_table;
@@ -1938,12 +1858,12 @@ function pageGuidanceHtml(x) {
       return `<tr><td><b>${esc(call)}</b></td>${cells}</tr>`;
     });
     const rows = rowsAsc.slice().reverse().join("");
-    return pageSecHead("🎯 Guidance — per earnings call, most recent first · ↑↓ vs prior") +
-      `<table class="cmp-table deep-fin-table"><thead><tr><th>Call</th>${head}</tr></thead><tbody>${rows}</tbody></table>`;
+    return `<div style="margin-top:10px; font-weight:700; font-size:12px; color:var(--accent);">Guidance (per earnings call, most recent first · ↑↓ vs prior)</div>
+      <table class="cmp-table deep-fin-table"><thead><tr><th>Call</th>${head}</tr></thead><tbody>${rows}</tbody></table>`;
   }
   if ((x.guidance_revisions || []).length) {
-    return pageSecHead("🎯 Guidance — per call · structured table on next refresh") +
-      `<table class="ct-table" style="max-width:720px"><tbody>` + x.guidance_revisions.map(g =>
+    return `<div style="margin-top:10px; font-weight:700; font-size:12px; color:var(--accent);">Guidance (per call · structured table on next refresh)</div>
+      <table class="ct-table" style="max-width:720px"><tbody>` + x.guidance_revisions.map(g =>
         `<tr><td class="ct-dt" style="width:150px">${esc(g.when)}</td><td>${esc(g.change)}${g.src ? ` <span class="msrc">[${esc(g.src)}]</span>` : ""}</td></tr>`).join("") +
       `</tbody></table>`;
   }
@@ -2093,11 +2013,11 @@ function renderStockPage(tid) {
   html += pagePeHtml(tid);
   if (x.pe_narrative) html += `<div class="deep-fin-note" style="margin-top:6px"><b style="color:#9fd0ff">Re-rating narrative</b> <span class="muted">(interpretive, from analyst/press commentary)</span>: ${esc(x.pe_narrative)}</div>`;
 
-  // guidance -> key metrics -> segments
-  html += pageGuidanceHtml(x);
+  // key metrics -> guidance table -> segments
   html += pageSecHead("📐 Key metrics");
   const fin = pageDeepFinHtml(tid);
   html += fin.cw;
+  html += pageGuidanceHtml(x);
   html += fin.seg;
 
 
