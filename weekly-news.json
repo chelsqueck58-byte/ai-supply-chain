@@ -1,0 +1,14 @@
+{
+  "_schema": {
+    "generated": "ISO timestamp of the daily refresh; the page shows it and flags >=2d stale",
+    "tickers": "map of ticker id -> array of news items, any order (the page sorts newest-first and filters to the last 7 days)",
+    "item": {
+      "date": "YYYY-MM-DD, the day the news broke (the page joins this to own price data for the 1d move)",
+      "headline": "one line, what happened",
+      "why": "optional, one line on why it matters for this name",
+      "src": "publication or filing the item came from - required for anything asserted as fact"
+    }
+  },
+  "generated": null,
+  "tickers": {}
+}

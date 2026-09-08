@@ -252,7 +252,7 @@
 <script>
 "use strict";
 const TREND_ORDER = { up: 0, flat: 1, down: 2 };
-let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, DEEP_FUND = null, GEO_MIX = null, FX_RATES = null, HIST_PE = null, FWD_PE = null, ROIC = null, NVDA_PARTNERSHIPS = null, NVDA_DEBT = null, CIRC_FIN = null, DEEP_FIN = null, CAL = null, PAGE_EXTRAS = null, DELIVERY = null, MODELS = null, DEALS = null, STALE = false, OBSERVER = null;
+let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, DEEP_FUND = null, GEO_MIX = null, FX_RATES = null, HIST_PE = null, FWD_PE = null, ROIC = null, NVDA_PARTNERSHIPS = null, NVDA_DEBT = null, CIRC_FIN = null, DEEP_FIN = null, CAL = null, PAGE_EXTRAS = null, DELIVERY = null, MODELS = null, DEALS = null, NEWS = null, STALE = false, OBSERVER = null;
 const REVENUE_TAB_CATEGORIES = new Set(["china-internet", "compute", "hyperscaler-cloud", "platform"]);
 // Individual tickers pulled in from a category that isn't otherwise in
 // scope (e.g. ASML from Equipment) - added one at a time on request rather
@@ -1966,6 +1966,42 @@ function pageSecHead(t) {
   return `<div class="ct-head" style="margin-top:18px">${t}</div>`;
 }
 
+// Top-of-page news strip: every researched item for this name in the last
+// NEWS_WINDOW_DAYS, newest first, refreshed daily. Deliberately separate from
+// "Key movements" below - that is a ~6-month history filtered to moves with a
+// vetted cause, this is "what happened this week" and shows an item whether or
+// not the stock reacted. The 1d move next to each item is computed from own
+// price data, so a flat number next to a big headline is itself the signal.
+const NEWS_WINDOW_DAYS = 7;
+function pageNewsHtml(tid, inst) {
+  const items = (NEWS && NEWS.tickers && NEWS.tickers[tid]) || [];
+  const cutoff = new Date(Date.now() - NEWS_WINDOW_DAYS * 86400000).toISOString().slice(0, 10);
+  const recent = items.filter(n => n.date && n.date >= cutoff)
+    .sort((a, b) => b.date.localeCompare(a.date));
+  // a refresh that stopped running is worse than no section at all - say so
+  const gen = NEWS && NEWS.generated;
+  const genAge = gen ? daysTo(gen.slice(0, 10)) : null;
+  const stamp = gen
+    ? `<span class="rev-src" style="display:inline">refreshed ${esc(gen.slice(0, 10))}${genAge != null && genAge <= -2 ? ` · <span class="pct d">${-genAge}d stale</span>` : ""}</span>`
+    : "";
+  let out = pageSecHead(`🗞 This week — last ${NEWS_WINDOW_DAYS} days ${stamp}`);
+  if (!recent.length) {
+    out += `<div class="rev-none">${gen ? "Nothing researched for this name in the window." : "Daily news refresh has not run yet."}</div>`;
+    return out;
+  }
+  out += `<table class="ct-table pg-mv"><tbody>` + recent.map(n => {
+    const why = [n.why, n.src ? `[${n.src}]` : ""].filter(Boolean).join(" ");
+    return `<tr class="pg-mv-row"><td class="ct-dt">${esc(n.date)}</td>
+      <td class="pg-mv-m">${mvCellHtml(moveFrom(inst, n.date, 1))}</td>
+      <td>${esc(n.headline || "")}</td></tr>` +
+      (why ? `<tr class="pg-mv-why"><td></td><td></td><td class="pg-mv-bullet">${[
+        n.why ? esc(n.why) : "", n.src ? `<span class="msrc">[${esc(n.src)}]</span>` : ""
+      ].filter(Boolean).join(" ")}</td></tr>` : "");
+  }).join("") + `</tbody></table>
+    <div class="rev-src">Move = that day's close-to-close from own price data. Items are researched headlines, not a wire feed — a name with nothing listed had nothing researched, which is not the same as nothing happening.</div>`;
+  return out;
+}
+
 function renderStockPage(tid) {
   const el = document.getElementById("page-body");
   const inst = DATA.instruments.find(i => i.id === tid);
@@ -1977,6 +2013,10 @@ function renderStockPage(tid) {
     <span class="mono" style="margin-left:12px;color:var(--muted);font-size:12px">
     ${inst.last_close != null ? esc(String(inst.last_close)) : ""} · YTD ${inst.ytd_pct != null ? (inst.ytd_pct >= 0 ? "+" : "") + inst.ytd_pct.toFixed(1) + "%" : "—"}
     ${f.next_earnings ? ` · earnings ${esc(f.next_earnings)}${earnD != null ? ` (${earnD}d)` : ""}` : ""}</span></div>`;
+
+  // last week's news sits above everything else - it is the reason to open
+  // the page on any given day
+  html += pageNewsHtml(tid, inst);
 
   // upcoming catalysts
   const cal = CAL && CAL.tickers && CAL.tickers[tid];
@@ -2453,8 +2493,9 @@ function load() {
     fetch("./delivery-war.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./model-launches.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./deal-map.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
-  ]).then(([data, moves, scmap, earnDates, revMix, deepFund, geoMix, fxRates, histPe, fwdPe, roic, nvdaPartnerships, nvdaDebt, circFin, deepFin, cal, pageExtras, delivery, models, deals]) => {
-    DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates; REV_MIX = revMix; DEEP_FUND = deepFund; GEO_MIX = geoMix; FX_RATES = fxRates; HIST_PE = histPe; FWD_PE = fwdPe; ROIC = roic; NVDA_PARTNERSHIPS = nvdaPartnerships; NVDA_DEBT = nvdaDebt; CIRC_FIN = circFin; DEEP_FIN = deepFin; CAL = cal; PAGE_EXTRAS = pageExtras; DELIVERY = delivery; MODELS = models; DEALS = deals;
+    fetch("./weekly-news.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
+  ]).then(([data, moves, scmap, earnDates, revMix, deepFund, geoMix, fxRates, histPe, fwdPe, roic, nvdaPartnerships, nvdaDebt, circFin, deepFin, cal, pageExtras, delivery, models, deals, news]) => {
+    DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates; REV_MIX = revMix; DEEP_FUND = deepFund; GEO_MIX = geoMix; FX_RATES = fxRates; HIST_PE = histPe; FWD_PE = fwdPe; ROIC = roic; NVDA_PARTNERSHIPS = nvdaPartnerships; NVDA_DEBT = nvdaDebt; CIRC_FIN = circFin; DEEP_FIN = deepFin; CAL = cal; PAGE_EXTRAS = pageExtras; DELIVERY = delivery; MODELS = models; DEALS = deals; NEWS = news;
     STALE = checkStale(DATA);
     const ideas = DATA.instruments.filter(i => i.idea && i.idea.kind === "enter").length;
     document.getElementById("meta").textContent =
