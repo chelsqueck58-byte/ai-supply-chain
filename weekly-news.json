@@ -9,6 +9,142 @@
       "src": "publication or filing the item came from - required for anything asserted as fact"
     }
   },
-  "generated": null,
-  "tickers": {}
+  "generated": "2026-09-08T09:40:00+08:00",
+  "tickers": {
+    "NVDA": [
+      {
+        "date": "2026-09-02",
+        "headline": "Definitive agreement to acquire Hugging Face",
+        "why": "~$11.9B payable to Hugging Face stockholders plus up to ~$1.0B of equity-based retention for employees joining NVIDIA; close expected 1H 2027 subject to regulatory approvals.",
+        "src": "SEC 8-K (nvda-20260902)"
+      }
+    ],
+    "AAPL": [
+      {
+        "date": "2026-09-01",
+        "headline": "John Ternus takes over as CEO from Tim Cook",
+        "why": "The Sept 9 iPhone event is the first product launch under the new CEO.",
+        "src": "CNBC"
+      },
+      {
+        "date": "2026-09-03",
+        "headline": "Six new products expected at the Sept 9 “Surprise and Shine” event",
+        "why": "iPhone 18 Pro on the A20 Pro, a book-style foldable iPhone Ultra, new Apple Watch and AirPods — press preview, not confirmed by Apple.",
+        "src": "9to5Mac"
+      }
+    ],
+    "META": [
+      {
+        "date": "2026-09-01",
+        "headline": "Muse Voice Transcribe launched",
+        "why": "Meta's first real-time audio perception model; 70+ languages and 20+ speaker diarization, shipping in the Meta AI macOS app.",
+        "src": "9to5Mac"
+      },
+      {
+        "date": "2026-09-02",
+        "headline": "Muse Spark 1.3 released and opened to paid developers",
+        "why": "Zuckerberg called it Meta's biggest jump yet in coding and agentic work; rolls out to Instagram, Facebook and Meta AI.",
+        "src": "Bloomberg"
+      }
+    ],
+    "MSFT": [
+      {
+        "date": "2026-09-03",
+        "headline": "Will disclose Azure revenue in dollars every quarter for the first time",
+        "why": "Operating segments cut from three to two, replacing the structure in place since 2015 — the segment tables on this page change shape from the next filing.",
+        "src": "Microsoft, via Yahoo Finance"
+      }
+    ],
+    "GOOGL": [
+      {
+        "date": "2026-09-02",
+        "headline": "Gemini 3.8 Flash launched, the third Flash model in six weeks",
+        "why": "Priced at $0.75/M input and $3.75/M output tokens, matching the prior Flash model; paired with a Gemini 3.8 Flash Cyber model aimed at government and enterprise.",
+        "src": "CNBC"
+      }
+    ],
+    "AMD": [
+      {
+        "date": "2026-09-01",
+        "headline": "Instinct MI355X infrastructure live in Saudi Arabia with Cisco and HUMAIN",
+        "why": "Partners flag up to 250MW more beginning 2027, toward as much as 1GW by 2030; first-phase revenue is small against a ~$13B quarter.",
+        "src": "The Motley Fool"
+      }
+    ],
+    "AVGO": [
+      {
+        "date": "2026-09-02",
+        "headline": "Q3 FY2026: revenue $29.59B (+86% YoY), AI semiconductor revenue $16.7B (+221% YoY)",
+        "why": "FY2026 AI revenue guidance raised to ~$58B; management targets ~$115B in FY2027 and ~$230B in FY2028.",
+        "src": "Broadcom IR"
+      },
+      {
+        "date": "2026-09-02",
+        "headline": "Q4 guidance $34.8B against ~$35.03B consensus",
+        "why": "Guide landed just below expectations despite the quarter's beat.",
+        "src": "CNBC"
+      },
+      {
+        "date": "2026-09-03",
+        "headline": "Truist cut its price target to $520 from $550",
+        "src": "Truist, via media"
+      }
+    ],
+    "INTC": [
+      {
+        "date": "2026-09-08",
+        "headline": "Backing the ASML/TSMC 12-inch photomask initiative",
+        "why": "Intel and Samsung joined the industry push to large-format masks for High-NA EUV.",
+        "src": "Bloomberg"
+      }
+    ],
+    "TSM": [
+      {
+        "date": "2026-09-08",
+        "headline": "Joint initiative with ASML to move the industry to 12-inch photomasks for High-NA EUV",
+        "why": "Targets a 12-inch mask pilot line by 2031 and lithography readiness for advanced-node production by 2033; TSMC plans High-NA EUV in high-volume manufacturing from 2030.",
+        "src": "ASML/TSMC press release"
+      }
+    ],
+    "ASML": [
+      {
+        "date": "2026-09-08",
+        "headline": "Joint initiative with TSMC to move the industry to 12-inch photomasks for High-NA EUV",
+        "why": "Pilot line targeted for 2031, full lithography readiness for advanced-node production by 2033; announced ahead of the SPIE Bacus conference, with other High-NA adopters expressing interest in joining.",
+        "src": "ASML/TSMC press release"
+      }
+    ],
+    "MU": [
+      {
+        "date": "2026-09-04",
+        "headline": "Closed at $1,016.59, up 256% year to date",
+        "why": "Record DRAM contract pricing and AI datacenter memory demand; management has flagged a meaningful moderation in the rate of price increases in fiscal Q4, which reports later this month.",
+        "src": "24/7 Wall St."
+      }
+    ],
+    "9988": [
+      {
+        "date": "2026-09-02",
+        "headline": "June-quarter quick-commerce losses narrowed as delivery discounting eased",
+        "why": "Alibaba and JD both narrowed losses while Meituan clawed back profit; improving profit outlooks may draw back investors put off by the price war.",
+        "src": "Bloomberg"
+      }
+    ],
+    "3690": [
+      {
+        "date": "2026-09-02",
+        "headline": "Clawed back profit in the June quarter as delivery discounting eased",
+        "why": "Alibaba and JD narrowed their quick-commerce losses over the same period; improving profit outlooks may draw back investors put off by the price war.",
+        "src": "Bloomberg"
+      }
+    ],
+    "9618": [
+      {
+        "date": "2026-09-02",
+        "headline": "June-quarter quick-commerce losses narrowed as delivery discounting eased",
+        "why": "JD and Alibaba both narrowed losses while Meituan clawed back profit; improving profit outlooks may draw back investors put off by the price war.",
+        "src": "Bloomberg"
+      }
+    ]
+  }
 }
