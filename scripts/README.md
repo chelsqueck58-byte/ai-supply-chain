@@ -103,7 +103,33 @@ Call `refresh_news()` alongside the other data stages, then `publish("data refre
 once at the end. A news failure is deliberately non-fatal: the previous run's
 items stay in place and age out of the 7-day window on their own.
 
-## 4. Notes
+## 4. Telegram research needs a date
+
+`data.json` carries forwarded research per instrument as `inst.tele`, currently
+`{catalysts, fundamentals, historicals}` — with no date and no source. The page
+renders it directly under a live price, so an undated note reads as today's
+view even when it is months old.
+
+Concrete case (2026-09-10): META's block cites "Muse Spark 1.1 API Launch" and
+"Current $666, PT $775". Muse Spark 1.3 shipped 2026-09-02, and META last closed
+near $666 on 2026-07-16 — so the note is roughly two months old and correct as
+written. Rewriting "1.1" to "1.3" would falsify the analyst; dating it fixes the
+problem properly.
+
+The front end now reads two optional fields and labels the note undated when
+they are missing:
+
+    inst.tele = {
+      "catalysts": "...", "fundamentals": "...", "historicals": "...",
+      "date": "YYYY-MM-DD",   # Telegram message date, not the ingest date
+      "src":  "Morgan Stanley"
+    }
+
+Notes older than 30 days get a red "56d old" flag. The ingestion step just needs
+to carry the Telegram message date through — it already has it — plus the house
+name where the note states one.
+
+## 5. Notes
 
 - `news_refresh.py --only NVDA,AAPL` re-runs a subset; `--dry-run` prints without writing.
 - Validation is deliberately strict: an item is dropped unless its date parses,

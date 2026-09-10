@@ -61,6 +61,8 @@
   .teleblock .th { color:#f0b429; font-weight:600; margin-bottom:2px; }
   .teleblock .tb { color:var(--text); margin:2px 0; white-space:pre-line; }
   .teleblock .tb:last-child { margin-bottom:0; }
+  .teleblock .temeta { color:var(--muted); font-weight:400; font-size:10px; }
+  .teleblock .telold { color:#e5534b; font-weight:600; }
   .earn { padding:6px 10px; font-size:11px; border-top:1px solid var(--border); background:rgba(88,166,255,.05); }
   .earn .eh { color:var(--muted); }
   .earn .efocus { color:#9fd0ff; margin-top:3px; }
@@ -452,6 +454,15 @@ function daysTo(ds) {
   const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
   return Math.round((target - today) / 8.64e7);
 }
+// Telegram-forwarded research is a point-in-time note, not a live feed, and it
+// renders directly under a live price - so it has to say when it was written.
+// An undated note quoting "current $666, PT $775" reads as today's view even
+// when both numbers have long since moved, and its product references go stale
+// the same way (a note written against Muse Spark 1.1 still says 1.1 after 1.3
+// ships). Ingestion should stamp `date` with the Telegram message date and
+// `src` with the house that wrote it; until it does, label the note undated
+// rather than let it pass as current.
+const TELE_STALE_DAYS = 30;
 function teleResearch(inst) {
   const t = inst.tele;
   if (!t) return "";
@@ -460,7 +471,13 @@ function teleResearch(inst) {
   if (t.fundamentals) rows.push(`<div class="tb">📊 ${esc(t.fundamentals.replace(/\*\*/g, ""))}</div>`);
   if (t.historicals) rows.push(`<div class="tb">📈 ${esc(t.historicals.replace(/\*\*/g, ""))}</div>`);
   if (!rows.length) return "";
-  return `<div class="teleblock"><div class="th">🔒 Your research (via Telegram)</div>${rows.join("")}</div>`;
+  return `<div class="teleblock"><div class="th">🔒 Your research (via Telegram) ${teleStamp(t)}</div>${rows.join("")}</div>`;
+}
+function teleStamp(t) {
+  if (!t.date) return `<span class="temeta">undated — check the numbers against the price above</span>`;
+  const age = daysTo(t.date);
+  const old = age != null && age <= -TELE_STALE_DAYS ? ` · <span class="telold">${-age}d old</span>` : "";
+  return `<span class="temeta">${t.src ? esc(t.src) + " · " : ""}${esc(t.date)}${old}</span>`;
 }
 
 function recentPastEvents(inst) {
