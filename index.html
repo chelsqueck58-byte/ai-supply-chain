@@ -480,16 +480,24 @@ function teleStamp(t) {
   return `<span class="temeta">${t.src ? esc(t.src) + " · " : ""}${esc(t.date)}${old}</span>`;
 }
 
+// Card events are a "what just moved this name" strip, not a history: anything
+// older than CARD_EVENT_MAX_DAYS is noise sitting next to a live price.
+// moves.json arrays are stored newest-first (see movements.py), so the recent
+// end is the FRONT - slice(-2) took the OLDEST two and was putting events up to
+// 673 days old on every card. Ages come from daysTo(), which does the UTC
+// calendar-day maths correctly (see its comment) rather than differencing a
+// date-only string parsed as local midnight against a local `new Date()`.
+const CARD_EVENT_MAX_DAYS = 30;
 function recentPastEvents(inst) {
   if (!MOVES || !MOVES[inst.id]) return "";
-  const m = MOVES[inst.id];
-  const researched = (m.moves || []).filter(mv => mv.reason).slice(-2).reverse();
+  const researched = ((MOVES[inst.id] || {}).moves || []).filter(mv => {
+    if (!mv.reason || !mv.d) return false;
+    const age = daysTo(mv.d);
+    return age != null && age <= 0 && age >= -CARD_EVENT_MAX_DAYS;
+  }).slice(0, 2);
   if (!researched.length) return "";
-  const today = new Date();
   const rows = researched.map(mv => {
-    const d = new Date(mv.d);
-    if (d >= today) return "";
-    const daysAgo = Math.floor((today - d) / (24 * 60 * 60 * 1000));
+    const daysAgo = -daysTo(mv.d);
     const cls = mv.pct >= 0 ? "u" : "d";
     const label = mv.catalyst_type === "earnings" ? "📊" : (mv.catalyst_type === "beta" ? "📈" : "•");
     return `<div style="font-size:11px; margin:4px 0; padding:4px 0; border-top:1px solid var(--border);">

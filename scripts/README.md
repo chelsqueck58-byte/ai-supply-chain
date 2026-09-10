@@ -1,11 +1,12 @@
 # ai-supply-chain refresh scripts
 
-Two files, both meant to run on the Mac mini from the repo checkout:
+Three files, all meant to run on the Mac mini from the repo checkout:
 
 | script | what it does |
 |---|---|
 | `news_refresh.py` | researches the last 7 days per ticker via headless `claude -p` and writes `weekly-news.json` |
 | `publish.py` | commits and pushes **only** generated data, never the front end |
+| `install_news_job.sh` | one-shot: installs the daily launchd job for the two above |
 
 ## 1. One-time fix on the mini
 
@@ -35,44 +36,33 @@ git pull --rebase origin main
 Then in `orchestrate.py`, **delete every `git add -A` / `git add .` / `git commit`
 / `git push`** and call `publish.py` instead (see §3).
 
-## 2. Scheduling
+## 2. Wiring in the daily news refresh
 
-`launchd` fires in the mini's local time, so HKT goes in directly — no UTC
-conversion (that conversion is only needed for GitHub Actions cron).
-
-`~/Library/LaunchAgents/com.chels.ai-supply-chain.news.plist`, daily 07:30 HKT:
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-  <key>Label</key>              <string>com.chels.ai-supply-chain.news</string>
-  <key>WorkingDirectory</key>   <string>/Users/chels/ai-supply-chain</string>
-  <key>ProgramArguments</key>
-  <array>
-    <string>/bin/zsh</string>
-    <string>-lc</string>
-    <string>.venv/bin/python3 scripts/news_refresh.py &amp;&amp; .venv/bin/python3 scripts/publish.py -m "news refresh"</string>
-  </array>
-  <key>StartCalendarInterval</key>
-  <dict><key>Hour</key><integer>7</integer><key>Minute</key><integer>30</integer></dict>
-  <key>StandardOutPath</key>    <string>/Users/chels/Library/Logs/ai-supply-chain-news.log</string>
-  <key>StandardErrorPath</key>  <string>/Users/chels/Library/Logs/ai-supply-chain-news.log</string>
-</dict>
-</plist>
-```
+One command, on the mini, from the repo checkout:
 
 ```bash
-launchctl unload ~/Library/LaunchAgents/com.chels.ai-supply-chain.news.plist 2>/dev/null
-launchctl load  ~/Library/LaunchAgents/com.chels.ai-supply-chain.news.plist
-launchctl start com.chels.ai-supply-chain.news        # test it now
-tail -f ~/Library/Logs/ai-supply-chain-news.log
+git pull --rebase origin main
+bash scripts/install_news_job.sh
 ```
 
-`-lc` matters: it loads the login shell so `claude` is on `PATH`. If it still
-isn't, set `CLAUDE_BIN=/Users/chels/.local/bin/claude` in the plist's
-`EnvironmentVariables`.
+That installs a launchd agent running `news_refresh.py` then `publish.py` daily
+at 07:30 HKT (launchd fires in local time, so no UTC conversion — that is only
+needed for GitHub Actions cron). It is idempotent: re-running unloads the old
+copy first. It refuses to install if the venv, `claude`, or the scripts are
+missing, because a launchd job that fails at 07:30 fails almost silently.
+
+`CLAUDE_BIN` and `PATH` are written into the plist explicitly — launchd jobs get
+no login shell, so an interactive-only PATH entry would leave `claude`
+unfindable at run time.
+
+```bash
+launchctl start com.chels.ai-supply-chain.news     # run it now
+tail -f ~/Library/Logs/ai-supply-chain-news.log    # watch it
+```
+
+This deliberately does **not** touch `orchestrate.py`. The news refresh runs on
+its own timer and publishes through `publish.py`, so it cannot clobber the front
+end. §3 is only needed if you would rather fold it into the existing pipeline.
 
 ## 3. Calling from orchestrate.py
 
