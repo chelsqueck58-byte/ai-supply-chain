@@ -125,6 +125,21 @@
   .dm-mix { color:var(--muted); font-size:10.5px; line-height:1.4; margin-top:7px;
     padding-top:6px; border-top:1px dashed var(--border); }
   .dm-rep { color:var(--accent); cursor:help; }
+  /* Stock Cards: one card per stock, grouped by sector */
+  .sc-group { margin-bottom:20px; }
+  .sc-group-head { font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--accent); border-bottom:1px solid var(--border); padding-bottom:4px; margin-bottom:8px; }
+  .sc-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:10px; }
+  .sc-card { border:1px solid var(--border); border-radius:7px; padding:10px 12px; background:var(--panel); }
+  .sc-card-head { display:flex; align-items:center; gap:7px; padding-bottom:7px; margin-bottom:6px;
+    border-bottom:1px solid var(--border); font-size:13px; }
+  .sc-sec-label { font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);
+    margin:8px 0 3px; }
+  .sc-sec-label:first-of-type { margin-top:2px; }
+  .sc-val-row { font-size:12.5px; }
+  .sc-news-row, .sc-cat-row { display:flex; gap:6px; align-items:baseline; font-size:11.5px;
+    line-height:1.5; margin:2px 0; flex-wrap:wrap; }
+  .sc-news-text { flex:1 1 auto; min-width:120px; }
   .sb-chip { font-size:11px; padding:0 5px; border-radius:3px; white-space:nowrap; cursor:help;
     font-variant-numeric:tabular-nums; display:inline-block; margin:1px 2px 1px 0; }
   .sb-chip.u { color:var(--up); background:rgba(63,185,80,.12); }
@@ -2329,6 +2344,106 @@ function renderStockPages() {
   renderStockPage(PAGE_SEL);
 }
 
+// ---- Stock Cards tab: one card per Stock Pages name, grouped by sector,
+// using only data already on hand (no new research) - forward valuation
+// (researched fwd P/E, nearest year, + PEG), latest 5 dated items (merged
+// moves.json reasons + researched past_events, same sourcing Stock Pages'
+// own "Key movements" section uses), and the next few researched catalysts.
+function stockCardValuation(tid, inst) {
+  const f = inst.fund || {};
+  const yrs = (FWD_PE && FWD_PE[tid] && FWD_PE[tid].years) || [];
+  const fwd = yrs.find(y => y.pe != null);
+  const peCell = fwd ? `<b class="pe-fwd1">${fwd.pe}x</b> <span class="muted">${esc(fwd.fy_label || "")} fwd P/E</span>`
+    : (f.fwd_pe != null ? `<b class="pe-fwd1">${f.fwd_pe.toFixed(1)}x</b> <span class="muted">fwd P/E (Yahoo)</span>` : `<span class="cmp-na">—</span>`);
+  const pegCell = f.peg != null ? ` <span class="muted">· PEG ${f.peg}</span>` : "";
+  return `${peCell}${pegCell}`;
+}
+function stockCardNews(tid, inst) {
+  const cutoff = new Date(Date.now() - 365 * 86400000).toISOString().slice(0, 10);
+  const x = (typeof PAGE_EXTRAS === "object" && PAGE_EXTRAS && PAGE_EXTRAS[tid]) || {};
+  const items = [];
+  const seenDates = [];
+  for (const mv of ((MOVES && MOVES[tid]) || {}).moves || []) {
+    if (mv.d < cutoff || !mv.reason) continue;
+    seenDates.push(mv.d);
+    items.push({ date: mv.d, pct: mv.pct, text: mv.reason, src: mv.source });
+  }
+  for (const e of x.past_events || []) {
+    if (e.date < cutoff) continue;
+    if (seenDates.some(d => Math.abs(new Date(d) - new Date(e.date)) < 3 * 86400000)) continue;
+    items.push({ date: e.date, pct: null, text: e.title, src: e.src });
+  }
+  items.sort((a, b) => b.date.localeCompare(a.date));
+  const top5 = items.slice(0, 5);
+  if (!top5.length) return `<div class="rev-none" style="padding:4px 0">No recent items on hand.</div>`;
+  // past_events' src sometimes arrives pre-bracketed ("[X @handle]"), moves.json's
+  // source never is ("Bloomberg") - strip either shape before adding our own brackets
+  const cleanSrc = s => String(s || "").replace(/^\[|\]$/g, "");
+  return top5.map(it => `<div class="sc-news-row">
+    <span class="ct-dt">${esc(it.date)}</span>
+    ${it.pct != null ? mvCellHtml(it.pct) : ""}
+    <span class="sc-news-text">${esc(it.text)}</span>
+    ${it.src ? `<span class="msrc">[${esc(cleanSrc(it.src))}]</span>` : ""}
+  </div>`).join("");
+}
+function stockCardCatalysts(tid) {
+  const cal = CAL && CAL.tickers && CAL.tickers[tid];
+  const events = ((cal && cal.events) || [])
+    .map(e => ({ ...e, days: daysTo(e.date) }))
+    .filter(e => e.days != null && e.days >= 0)
+    .sort((a, b) => a.days - b.days)
+    .slice(0, 4);
+  if (!events.length) return `<div class="rev-none" style="padding:4px 0">No researched catalysts on hand.</div>`;
+  return events.map(e => {
+    const c = CAL_TYPE_COLOR[e.type] || "var(--muted)";
+    return `<div class="sc-cat-row">
+      <span class="ct-dt">${calDateLabel(e)}</span>
+      <span class="ct-type" style="color:${c};border-color:${c}">${esc(e.type)}</span>
+      <span class="sc-news-text">${esc(e.title)}</span>
+    </div>`;
+  }).join("");
+}
+function renderStockCardOne(tid) {
+  const inst = DATA.instruments.find(i => i.id === tid);
+  if (!inst) return "";
+  const earnD = inst.fund && inst.fund.next_earnings ? daysTo(inst.fund.next_earnings) : null;
+  return `<div class="sc-card">
+    <div class="sc-card-head">
+      ${dmBadge(tid)} <b>${esc(inst.label)}</b>
+      <span class="mono muted" style="margin-left:auto">${inst.last_close != null ? esc(String(inst.last_close)) : ""}
+        ${inst.ytd_pct != null ? ` <span class="pct ${inst.ytd_pct >= 0 ? "u" : "d"}">${inst.ytd_pct >= 0 ? "+" : ""}${inst.ytd_pct.toFixed(1)}%</span>` : ""}
+      </span>
+    </div>
+    <div class="sc-sec-label">Forward valuation</div>
+    <div class="sc-val-row">${stockCardValuation(tid, inst)}${inst.fund && inst.fund.next_earnings ? ` <span class="muted">· earnings ${esc(inst.fund.next_earnings)}${earnD != null ? ` (${earnD}d)` : ""}</span>` : ""}</div>
+    <div class="sc-sec-label">Latest 5 items</div>
+    ${stockCardNews(tid, inst)}
+    <div class="sc-sec-label">Upcoming catalysts</div>
+    ${stockCardCatalysts(tid)}
+  </div>`;
+}
+function renderStockCards() {
+  const el = document.getElementById("stock-cards-wrap");
+  const byId = {}; DATA.instruments.forEach(i => { byId[i.id] = i; });
+  const byCat = new Map();
+  for (const tid of STOCK_PAGES) {
+    const inst = byId[tid];
+    if (!inst) continue;
+    const cat = getCategory(inst) || "other";
+    if (!byCat.has(cat)) byCat.set(cat, []);
+    byCat.get(cat).push(tid);
+  }
+  let html = `<div class="hist-head">Stock Cards — by sector</div>
+    <div class="rev-src" style="margin-bottom:10px">Forward valuation = researched forward P/E (nearest fiscal year, bold) + PEG where available. Latest 5 items = dated moves/events already on hand (own price data + researched history), most recent first. Catalysts = the researched upcoming calendar.</div>`;
+  for (const cat of CATEGORIES) {
+    const tids = byCat.get(cat.key);
+    if (!tids || !tids.length) continue;
+    html += `<div class="sc-group"><div class="sc-group-head">${esc(cat.label)}</div>
+      <div class="sc-grid">${tids.map(renderStockCardOne).join("")}</div></div>`;
+  }
+  el.innerHTML = html;
+}
+
 // ---- Deal Map tab: one card per supplier, grouped by chain segment ----
 // Ticker badge in a colored square (poor-man's logo) makes the company
 // instantly scannable at the top of each card instead of blending into a
@@ -2465,6 +2580,8 @@ window.showTab = function (tabKey) {
   document.getElementById("macro-ev-wrap").style.display = tabKey === "macro-ev" ? "" : "none";
   document.getElementById("tab-deal-map").classList.toggle("active", tabKey === "deal-map");
   document.getElementById("deal-map-wrap").style.display = tabKey === "deal-map" ? "" : "none";
+  document.getElementById("tab-stock-cards").classList.toggle("active", tabKey === "stock-cards");
+  document.getElementById("stock-cards-wrap").style.display = tabKey === "stock-cards" ? "" : "none";
   for (const c of CATEGORIES) {
     document.getElementById("tab-" + c.key).classList.toggle("active", tabKey === c.key);
     const show = tabKey === c.key;
@@ -2475,7 +2592,7 @@ window.showTab = function (tabKey) {
   // sections. Those divs are fixed top-level elements shared across every
   // tab, so without this they'd keep showing stale content from whichever
   // tab was active before switching here.
-  const showIdeas = tabKey !== "revenue" && tabKey !== "compare" && tabKey !== "pe" && tabKey !== "nvda-eco" && tabKey !== "circ-fin" && tabKey !== "semis" && tabKey !== "pages" && tabKey !== "macro-ev" && tabKey !== "deal-map";
+  const showIdeas = tabKey !== "revenue" && tabKey !== "compare" && tabKey !== "pe" && tabKey !== "nvda-eco" && tabKey !== "circ-fin" && tabKey !== "semis" && tabKey !== "pages" && tabKey !== "macro-ev" && tabKey !== "deal-map" && tabKey !== "stock-cards";
   document.getElementById("ideas").style.display = showIdeas ? "" : "none";
   document.getElementById("catalysts30").style.display = showIdeas ? "" : "none";
   document.getElementById("pastCatalysts").style.display = showIdeas ? "" : "none";
@@ -2513,6 +2630,10 @@ window.showTab = function (tabKey) {
   }
   if (tabKey === "deal-map") {
     if (DATA) renderDealMap();
+    return;
+  }
+  if (tabKey === "stock-cards") {
+    if (DATA) renderStockCards();
     return;
   }
   const category = tabKey === "summary" ? null : tabKey;
@@ -2587,6 +2708,11 @@ function buildShell() {
   const dealWrap = document.createElement("div");
   dealWrap.id = "deal-map-wrap"; dealWrap.className = "cmp-wrap"; dealWrap.style.display = "none";
   grids.appendChild(dealWrap);
+
+  mk("stock-cards", "Stock Cards");
+  const cardsWrap = document.createElement("div");
+  cardsWrap.id = "stock-cards-wrap"; cardsWrap.className = "cmp-wrap"; cardsWrap.style.display = "none";
+  grids.appendChild(cardsWrap);
 }
 
 function load() {
