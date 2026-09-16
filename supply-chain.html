@@ -610,8 +610,79 @@ function isEarningsMove(mv) {
   return true;
 }
 
+// Sector-event grouping: when the SAME underlying story hits 3+ tickers on
+// the same day (a China export-control headline, a Fed move, a broad semis
+// selloff), the per-ticker loop below would otherwise print one near-
+// identical full row per name. Cluster same-day, non-earnings rows by
+// reason-text similarity first; a cluster of 3+ collapses into one row
+// (category label + the shared story), with each stock's own move always
+// shown as a sub-bullet rather than click-to-expand. Earnings moves are
+// never clustered - a shared report date is a coincidence, not a story.
+// Independently-researched per-stock reasons describing the SAME sector
+// story rarely share enough vocabulary for whole-text similarity (Jaccard
+// over all words) to clear any reasonable bar - each cites different figures,
+// tickers and specific triggers even when the underlying story is identical.
+// Confirmed empirically: full-text Jaccard found ZERO 3+ clusters across five
+// real, obviously-shared-story dates. Matching on a curated set of sector/
+// macro SIGNAL words instead (the vocabulary that actually names a shared
+// story - "selloff", "chip", "fed", "china"...) finds them reliably.
+const CATALYST_SIGNAL_WORDS = new Set(("selloff sell-off rally rout correction bounce rebound plunge slump surge "
+  + "tumble soar broad sector sector-wide market-wide across chip chips chipmaker chipmakers semis semi "
+  + "semiconductor semiconductors ai fed fomc rate rates hike hikes cpi ppi inflation yields yield treasury "
+  + "treasuries bond bonds jobs payrolls hawkish dovish china tariff tariffs export exports sanctions sox "
+  + "nasdaq hang seng kospi hsi hstech dram memory equipment capex valuation profit-taking deratization "
+  + "de-risking risk-off risk-on oil geopolitical").split(" "));
+function reasonSignalSet(reason) {
+  const words = (reason || "").toLowerCase().match(/[a-z0-9-]+/g) || [];
+  return new Set(words.filter(w => CATALYST_SIGNAL_WORDS.has(w)));
+}
+function sharedSignalCount(a, b) {
+  let n = 0;
+  for (const w of a) if (b.has(w)) n++;
+  return n;
+}
+function clusterSameDayRows(entries) {
+  // entries: [{id, label, pct, reason, source, window_days, window_start}]
+  // for ONE date. Returns [{type:"single", ...entry} | {type:"group", ...}]
+  const pool = entries.map(e => ({ ...e, sigSet: reasonSignalSet(e.reason) }));
+  const out = [];
+  while (pool.length) {
+    const seed = pool.shift();
+    const cluster = [seed];
+    const dir = seed.pct >= 0;
+    // union of every member's signal words so far, so a candidate that only
+    // overlaps with a LATER member (not the original seed) still joins -
+    // three separately-worded takes on one broad selloff otherwise fragment
+    // into three small groups instead of one real one
+    const clusterSig = new Set(seed.sigSet);
+    let grew = true;
+    while (grew) {
+      grew = false;
+      for (let i = pool.length - 1; i >= 0; i--) {
+        if ((pool[i].pct >= 0) === dir && sharedSignalCount(clusterSig, pool[i].sigSet) >= 3) {
+          cluster.push(pool[i]);
+          for (const w of pool[i].sigSet) clusterSig.add(w);
+          pool.splice(i, 1);
+          grew = true;
+        }
+      }
+    }
+    if (cluster.length >= 3) {
+      const rep = cluster.slice().sort((a, b) => (b.reason || "").length - (a.reason || "").length)[0];
+      const cats = new Set(cluster.map(e => getCategory(DATA.instruments.find(i => i.id === e.id) || {})));
+      const catLabel = cats.size === 1 && [...cats][0]
+        ? (CATEGORIES.find(c => c.key === [...cats][0]) || {}).label : null;
+      out.push({ type: "group", label: catLabel || `${cluster.length} names`, rep, members: cluster });
+    } else {
+      for (const e of cluster) out.push({ type: "single", ...e });
+    }
+  }
+  return out;
+}
+
 function pastCatalystRows(category, lookbackDays = 30) {
-  const rows = [];
+  const singles = [];
+  const byDateRaw = new Map(); // date -> [{id,label,pct,reason,source,window_days,window_start}] non-earnings, clusterable
   const today = new Date(), cutoff = new Date(today.getTime() - lookbackDays * 24 * 60 * 60 * 1000);
   const insts = filterByCategory(DATA.instruments, category);
   for (const inst of insts) {
@@ -620,13 +691,18 @@ function pastCatalystRows(category, lookbackDays = 30) {
       const researched = (m.moves || []).filter(mv => mv.reason);
       for (const mv of researched) {
         const d = new Date(mv.d);
-        if (d >= cutoff && d < today) {
-          const label = isEarningsMove(mv) ? "<b style=\"color:#58a6ff\">📊 EARNINGS</b>" : "";
-          rows.push({
+        if (d < cutoff || d >= today) continue;
+        if (isEarningsMove(mv)) {
+          singles.push({
             id: inst.id, label: inst.label, date: mv.d,
-            event: (label ? `<div style="font-weight:600;margin-bottom:4px">${label}</div>` : "") + prevPerfBlock({ date: mv.d, pct: mv.pct, reason: mv.reason, source: mv.source, window_days: mv.window_days, window_start: mv.window_start }, "Move")
+            event: `<div style="font-weight:600;margin-bottom:4px"><b style="color:#58a6ff">📊 EARNINGS</b></div>`
+              + prevPerfBlock({ date: mv.d, pct: mv.pct, reason: mv.reason, source: mv.source, window_days: mv.window_days, window_start: mv.window_start }, "Move")
           });
+          continue;
         }
+        if (!byDateRaw.has(mv.d)) byDateRaw.set(mv.d, []);
+        byDateRaw.get(mv.d).push({ id: inst.id, label: inst.label, pct: mv.pct, reason: mv.reason,
+          source: mv.source, window_days: mv.window_days, window_start: mv.window_start });
       }
     }
     // Quarters that reported but moved the stock <5% never make it into
@@ -646,12 +722,33 @@ function pastCatalystRows(category, lookbackDays = 30) {
         const pctPart = typeof ed.reaction_pct === "number"
           ? `<span class="pct ${ed.reaction_pct >= 0 ? "u" : "d"}">${ed.reaction_pct >= 0 ? "+" : ""}${ed.reaction_pct}%</span>: ` : "";
         const src = ed.source ? ` <span class="msrc">[${esc(ed.source)}]</span>` : "";
-        rows.push({
+        singles.push({
           id: inst.id, label: inst.label, date: ed.report_date,
           event: `<div style="font-weight:600;margin-bottom:4px"><b style="color:#58a6ff">📊 EARNINGS</b></div>`
             + `<div class="ct-prev">${pctPart}${esc(ed.reason || "reported results")}${src}</div>`
         });
       }
+    }
+  }
+
+  const rows = singles.slice();
+  for (const [date, entries] of byDateRaw) {
+    for (const clustered of clusterSameDayRows(entries)) {
+      if (clustered.type === "single") {
+        rows.push({ id: clustered.id, label: clustered.label, date,
+          event: prevPerfBlock({ date, pct: clustered.pct, reason: clustered.reason, source: clustered.source,
+            window_days: clustered.window_days, window_start: clustered.window_start }, "Move") });
+        continue;
+      }
+      const memberList = clustered.members.slice().sort((a, b) => Math.abs(b.pct) - Math.abs(a.pct))
+        .map(m => `<span class="pct ${m.pct >= 0 ? "u" : "d"}"><b>${esc(m.id)}</b> ${m.pct >= 0 ? "+" : ""}${m.pct}%</span>`)
+        .join(" &nbsp; ");
+      const repSrc = clustered.rep.source ? ` <span class="msrc">[${esc(clustered.rep.source)}]</span>` : "";
+      rows.push({
+        id: clustered.label, label: "moved together", date, isGroup: true,
+        event: `<div class="ct-prev">↩ ${esc(clustered.rep.reason)}${repSrc}</div>`
+          + `<div class="ct-prev" style="margin-top:4px">${memberList}</div>`,
+      });
     }
   }
   rows.sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -662,13 +759,14 @@ function renderPastCatalysts(category, lookbackDays = 30) {
   if (STALE) { el.innerHTML = ""; return; }
   const rows = pastCatalystRows(category, lookbackDays);
   if (!rows.length) { el.innerHTML = ""; return; }
-  const trs = rows.map(r => `<tr onclick="goTo('${r.id}')">
-    <td class="ct-tk"><b>${r.id}</b> <span class="muted">${r.label}</span></td>
+  const trs = rows.map(r => `<tr ${r.isGroup ? "" : `onclick="goTo('${r.id}')"`}>
+    <td class="ct-tk">${r.isGroup ? `📡 <b style="color:var(--accent)">${esc(r.id)}</b> <span class="muted">${esc(r.label)}</span>` : `<b>${r.id}</b> <span class="muted">${r.label}</span>`}</td>
     <td class="ct-dt">${r.date}</td>
     <td class="ct-tx">${r.event}</td>
   </tr>`).join("");
   el.innerHTML = `<div class="ct-head">📅 Past Key Events — last ${lookbackDays} days</div>
-    <table class="ct-table"><thead><tr><th>Ticker</th><th>Date</th><th>Event</th></tr></thead><tbody>${trs}</tbody></table>`;
+    <table class="ct-table"><thead><tr><th>Ticker</th><th>Date</th><th>Event</th></tr></thead><tbody>${trs}</tbody></table>
+    <div class="rev-src">📡 = a shared sector/story event that moved 3+ names the same day, collapsed into one row - each stock's own move is listed below it.</div>`;
 }
 
 window.goTo = function (id) {
