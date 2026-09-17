@@ -1,0 +1,122 @@
+{
+  "_schema": {
+    "generated": "ISO timestamp of the refresh",
+    "tickers": "map of ticker id -> focus object",
+    "focus": {
+      "focus": "one specific, concrete sentence on what investors are watching/debating for this name right now - a number, a date, a named risk, not a generic theme",
+      "source": "publication, analyst note, or filing - required",
+      "as_of": "YYYY-MM-DD, the date of the source material"
+    }
+  },
+  "generated": "2026-09-17T02:07:57+08:00",
+  "tickers": {
+    "META": {
+      "focus": "Q2 FCF collapsed 91% YoY to $784M as capex hit $31.1B (98% of operating cash flow); Q3 print Oct 28 will show if FY26 capex tops out near $145B guide",
+      "source": "Meta Q2 2026 earnings, Jul 29 2026; 24/7 Wall St., Sep 15",
+      "as_of": "2026-09-17",
+      "_fetched": "2026-09-17"
+    },
+    "NVDA": {
+      "focus": "NVDA guided Q3 FY27 gross margin to ~74%, below Street's 74.77% est, with Q4 bottoming at 71-72% as HBM now ~45% of B200 COGS (vs 41% on H100) — Nov print tests whether margin holds as memory costs bite.",
+      "source": "NVIDIA Q2 FY2027 earnings call (CFO Colette Kress), Aug 26, 2026",
+      "as_of": "2026-09-17",
+      "_fetched": "2026-09-17"
+    },
+    "AAPL": {
+      "focus": "Apple guided Sept-qtr gross margin to ~46.5% (vs 48.1% in June) on memory-chip cost inflation Cook called a '100-year flood' — debate is whether Dec-qtr guidance holds or slips further.",
+      "source": "Apple Q3 FY26 earnings call, Jul 2026 (via Motley Fool, Aug 27)",
+      "as_of": "2026-09-17",
+      "_fetched": "2026-09-17"
+    },
+    "MSFT": {
+      "focus": "Azure guided to ~45% constant-currency growth for Q1 FY27, with CFO Amy Hood saying demand still exceeds supply; Oct 2026 print tests if capacity catch-up holds that pace.",
+      "source": "Microsoft FY26 Q4 earnings call, Jul 29 2026",
+      "as_of": "2026-09-17",
+      "_fetched": "2026-09-17"
+    },
+    "GOOGL": {
+      "focus": "Cloud backlog hit $514B (Q2, from $460B in Q1), but 2026 capex was raised to $195-205B; most TPU deal revenue won't book until 2027 — debate is whether backlog conversion pace justifies the spend.",
+      "source": "Motley Fool, Aug 16",
+      "as_of": "2026-08-16",
+      "_fetched": "2026-09-17"
+    },
+    "AMZN": {
+      "focus": "AWS backlog hit $496B in Q2, but CEO Jassy said capacity still won't meet 2026 demand; Oct 29 Q3 print will show if capacity limits cap AWS growth despite the backlog and 39% op margin.",
+      "source": "Amazon Q2 2026 earnings call, Jul 30",
+      "as_of": "2026-07-30",
+      "_fetched": "2026-09-17"
+    },
+    "AMD": {
+      "focus": "AMD's Q3 guide of ~$13B (±$300M) needs ~12.7% sequential revenue growth over Q2's $11.54B plus 56% adj. gross margin -- next print tests if MI450/Helios ramp clears that bar.",
+      "source": "GuruFocus, Sep 14, 2026",
+      "as_of": "2026-09-17",
+      "_fetched": "2026-09-17"
+    },
+    "AVGO": {
+      "focus": "AVGO guided Q4 FY26 revenue to ~$34.8B, below the $35.05B Street consensus, even as AI chip revenue guide accelerated to $21.7B (+236% YoY) - debate: does non-AI/software softness offset AI strength?",
+      "source": "CNBC, Sep 2, 2026 (Q3 FY26 earnings)",
+      "as_of": "2026-09-17",
+      "_fetched": "2026-09-17"
+    },
+    "INTC": {
+      "focus": "External foundry revenue was just $293M in Q2 despite marquee 18A design wins (Nvidia, AMD, Apple, OpenAI); Oct 22 Q3 print is the test of whether that customer revenue actually shows up.",
+      "source": "Intel Q2 2026 earnings release, Jul 23, 2026",
+      "as_of": "2026-09-17",
+      "_fetched": "2026-09-17"
+    },
+    "TSM": {
+      "focus": "Q3 gross margin guided to 65-67% (from 68.8% in Q2) as 2nm ramp cuts 3-4pp and overseas fabs add another 2-3pp drag; October print tests whether dilution troughs here.",
+      "source": "TSMC Q2 2026 earnings call, Jul 17; 24/7 Wall St/Yahoo Finance, Sep 11",
+      "as_of": "2026-09-17",
+      "_fetched": "2026-09-17"
+    },
+    "ASML": {
+      "focus": "Bernstein's Rasgon hiked ASML PT to $2,859 (~70% upside, from $2,623) on Sep 14, even as shares fell for a month on tightening China export-control fears (China ~20% of FY26 sales).",
+      "source": "Motley Fool via Yahoo Finance, Sep 14, 2026",
+      "as_of": "2026-09-14",
+      "_fetched": "2026-09-17"
+    },
+    "MU": {
+      "focus": "FQ4 report Sept 30: gross-margin guide of ~86% is up just ~1pt from 84.9%, vs prior 10-pt sequential jumps — mgmt flagged 'meaningful moderation' in DRAM/NAND price hikes. Debate: normalization or pricing crack?",
+      "source": "24/7 Wall St, Sep 7, 2026",
+      "as_of": "2026-09-17",
+      "_fetched": "2026-09-17"
+    },
+    "MRVL": {
+      "focus": "Qualcomm-AWS $60B multi-gen deal (Sep 8) for custom inference silicon + 1.6T optics raises doubts on MRVL keeping its incumbent Trainium/optical share at AWS.",
+      "source": "TechTimes, Sep 8, 2026",
+      "as_of": "2026-09-17",
+      "_fetched": "2026-09-17"
+    },
+    "9988": {
+      "focus": "Capex jumped 75% YoY to RMB67.7bn in Q1 FY27, driving FCF to a record -RMB44.7bn outflow (vs -RMB18.8bn a year prior); bulls say cloud's 45% YoY growth (22-qtr high) justifies the burn.",
+      "source": "Alibaba Q1 FY2027 earnings, Aug 27, 2026",
+      "as_of": "2026-08-27",
+      "_fetched": "2026-09-17"
+    },
+    "0700": {
+      "focus": "Q2 capex jumped 176% YoY to RMB52.8bn, flipping FCF negative (-RMB13.8bn) for the first time since 2005; debate is whether AI spend is cost or asset heading into the Nov Q3 print.",
+      "source": "BigGo Finance, Aug 13 2026 (Q2 earnings)",
+      "as_of": "2026-09-17",
+      "_fetched": "2026-09-17"
+    },
+    "3690": {
+      "focus": "Can Meituan hold Q2's swing to RMB2.15bn net profit (+490% YoY) into the Nov 27 Q3 print, or does the JD/Alibaba subsidy ceasefire (since Mar 25 SAMR probe) break and margins slip back to losses",
+      "source": "Meituan Q2 results, Aug 28, 2026",
+      "as_of": "2026-09-17",
+      "_fetched": "2026-09-17"
+    },
+    "9618": {
+      "focus": "JD Retail guided a Q3 2026 return to positive revenue growth after -2.9% in Q2; investors watching whether that turning point actually materializes as trade-in comps ease.",
+      "source": "JD.com Q2 2026 earnings call, Aug 13, 2026",
+      "as_of": "2026-09-17",
+      "_fetched": "2026-09-17"
+    },
+    "6181": {
+      "focus": "H1 print (Aug 25) showed same-store sales down mid-double-digits YoY Mar-May; net profit +88% missed ~RMB5bn est. Watching if Q3 stabilizes as bullion firms or slide deepens.",
+      "source": "Bloomberg, Aug 25, 2026",
+      "as_of": "2026-08-25",
+      "_fetched": "2026-09-17"
+    }
+  }
+}
