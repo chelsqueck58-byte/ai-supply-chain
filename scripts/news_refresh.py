@@ -28,6 +28,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
 NEWS_PATH = REPO / "weekly-news.json"
@@ -105,7 +106,17 @@ Output a JSON array and nothing else - no prose, no markdown fence:
 """
 
 
+LIMIT_RE = re.compile(r"hit your (?:session|weekly|monthly|usage)|spend limit|usage limit", re.I)
+LIMIT_HIT = threading.Event()   # set once the subscription window is exhausted
+
+
+class LimitHit(RuntimeError):
+    """The subscription's session/weekly limit is used up - stop, do not retry."""
+
+
 def run_claude(prompt: str) -> str:
+    if LIMIT_HIT.is_set():
+        raise LimitHit("subscription limit already hit this run")
     cmd = [
         claude_bin(),
         "-p",
@@ -125,6 +136,10 @@ def run_claude(prompt: str) -> str:
         )
     except subprocess.TimeoutExpired:
         raise RuntimeError(f"claude timed out after {CLAUDE_TIMEOUT_S}s")
+    combined = (done.stdout or "") + (done.stderr or "")
+    if LIMIT_RE.search(combined[:2000]):
+        LIMIT_HIT.set()
+        raise LimitHit(combined.strip()[:200])
     if done.returncode != 0:
         raise RuntimeError(f"claude exited {done.returncode}: {done.stderr.strip()[:300]}")
     # --output-format json wraps the answer; fall back to raw stdout if the
@@ -216,6 +231,9 @@ def research_one(tid: str, start: dt.date, end: dt.date) -> tuple[str, list | No
     try:
         text = run_claude(build_prompt(tid, STOCK_PAGES[tid], start, end))
         items = clean_items(tid, extract_json_array(text), start, end)
+    except LimitHit as err:
+        log(f"{tid}: SKIPPED - subscription limit hit ({err})")
+        return tid, None
     except (RuntimeError, ValueError) as err:
         log(f"{tid}: FAILED - {err}")
         return tid, None
@@ -223,13 +241,29 @@ def research_one(tid: str, start: dt.date, end: dt.date) -> tuple[str, list | No
     return tid, items
 
 
-def refresh(only: list[str] | None, dry_run: bool, jobs: int) -> int:
+def load_refreshed() -> dict:
+    try:
+        doc = json.loads(NEWS_PATH.read_text())
+    except (OSError, json.JSONDecodeError):
+        return {}
+    r = doc.get("refreshed") if isinstance(doc, dict) else None
+    return r if isinstance(r, dict) else {}
+
+
+def refresh(only: list[str] | None, dry_run: bool, jobs: int, max_tickers: int) -> int:
     end = dt.datetime.now(HKT).date()
     start = end - dt.timedelta(days=WINDOW_DAYS)
     targets = [t for t in STOCK_PAGES if not only or t in only]
     if not targets:
         log(f"no matching tickers in --only {only}")
         return 2
+    refreshed = load_refreshed()
+    if not only and max_tickers and len(targets) > max_tickers:
+        # Each ticker costs a full multi-turn web-research loop (~25 API calls).
+        # The window is 7 days, so refreshing the stalest few each day keeps every
+        # page inside it while spending a fraction of refreshing all of them daily.
+        targets = sorted(targets, key=lambda t: refreshed.get(t, ""))[:max_tickers]
+        log(f"rotation: refreshing the {len(targets)} stalest of {len(STOCK_PAGES)}: {', '.join(targets)}")
 
     # Start from the previous run so one ticker's failure keeps yesterday's
     # items rather than blanking that page. Stale entries age out of the
@@ -253,7 +287,10 @@ def refresh(only: list[str] | None, dry_run: bool, jobs: int) -> int:
         else:
             tickers.pop(tid, None)
         ok.append(tid)
+        refreshed[tid] = end.isoformat()
 
+    if LIMIT_HIT.is_set():
+        log("subscription limit hit - remaining tickers left for the next run")
     if not ok:
         log("every ticker failed - leaving weekly-news.json untouched")
         return 1
@@ -261,6 +298,7 @@ def refresh(only: list[str] | None, dry_run: bool, jobs: int) -> int:
     doc = {
         "_schema": SCHEMA_BLOCK,
         "generated": dt.datetime.now(HKT).replace(microsecond=0).isoformat(),
+        "refreshed": refreshed,
         "tickers": {t: tickers[t] for t in STOCK_PAGES if tickers.get(t)},
     }
     total = sum(len(v) for v in doc["tickers"].values())
@@ -282,10 +320,13 @@ def main() -> int:
     parser.add_argument("--dry-run", action="store_true", help="print, do not write")
     parser.add_argument("--jobs", type=int, default=DEFAULT_JOBS,
                         help=f"tickers researched concurrently (default {DEFAULT_JOBS})")
+    parser.add_argument("--max-tickers", type=int,
+                        default=int(os.environ.get("NEWS_MAX_TICKERS", "6")),
+                        help="refresh only the N stalest tickers per run (0 = all; ignored with --only)")
     args = parser.parse_args()
     only = [t.strip().upper() for t in args.only.split(",")] if args.only else None
     try:
-        return refresh(only, args.dry_run, max(1, args.jobs))
+        return refresh(only, args.dry_run, max(1, args.jobs), args.max_tickers)
     except RuntimeError as err:
         log(f"fatal: {err}")
         return 1
