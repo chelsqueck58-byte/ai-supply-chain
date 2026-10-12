@@ -250,6 +250,29 @@ def load_refreshed() -> dict:
     return r if isinstance(r, dict) else {}
 
 
+def newsworthy_today() -> set:
+    """Tickers whose news matters today: a >=3% move in their latest session, or
+    earnings within a week. These are refreshed every run; the rest rotate."""
+    try:
+        data = json.loads((REPO / "data.json").read_text())
+    except (OSError, json.JSONDecodeError):
+        return set()
+    today = dt.datetime.now(HKT).date()
+    out = set()
+    for inst in data.get("instruments", []):
+        pct = inst.get("change_pct")
+        if isinstance(pct, (int, float)) and abs(pct) >= 3:
+            out.add(inst.get("id"))
+        ne = (inst.get("fund") or {}).get("next_earnings")
+        if ne:
+            try:
+                if 0 <= (dt.date.fromisoformat(ne) - today).days <= 7:
+                    out.add(inst.get("id"))
+            except ValueError:
+                pass
+    return out
+
+
 def refresh(only: list[str] | None, dry_run: bool, jobs: int, max_tickers: int) -> int:
     end = dt.datetime.now(HKT).date()
     start = end - dt.timedelta(days=WINDOW_DAYS)
@@ -262,8 +285,12 @@ def refresh(only: list[str] | None, dry_run: bool, jobs: int, max_tickers: int) 
         # Each ticker costs a full multi-turn web-research loop (~25 API calls).
         # The window is 7 days, so refreshing the stalest few each day keeps every
         # page inside it while spending a fraction of refreshing all of them daily.
-        targets = sorted(targets, key=lambda t: refreshed.get(t, ""))[:max_tickers]
-        log(f"rotation: refreshing the {len(targets)} stalest of {len(STOCK_PAGES)}: {', '.join(targets)}")
+        hot = newsworthy_today()
+        # movers / earnings-week names first (stalest first among them), then the
+        # rest by staleness; never fewer than the cap so rotation keeps moving
+        targets = sorted(targets, key=lambda t: (t not in hot, refreshed.get(t, "")))[:max_tickers]
+        log(f"rotation: refreshing {len(targets)} of {len(STOCK_PAGES)} "
+            f"({sum(t in hot for t in targets)} newsworthy today): {', '.join(targets)}")
 
     # Start from the previous run so one ticker's failure keeps yesterday's
     # items rather than blanking that page. Stale entries age out of the
@@ -321,7 +348,7 @@ def main() -> int:
     parser.add_argument("--jobs", type=int, default=DEFAULT_JOBS,
                         help=f"tickers researched concurrently (default {DEFAULT_JOBS})")
     parser.add_argument("--max-tickers", type=int,
-                        default=int(os.environ.get("NEWS_MAX_TICKERS", "6")),
+                        default=int(os.environ.get("NEWS_MAX_TICKERS", "8")),
                         help="refresh only the N stalest tickers per run (0 = all; ignored with --only)")
     args = parser.parse_args()
     only = [t.strip().upper() for t in args.only.split(",")] if args.only else None
