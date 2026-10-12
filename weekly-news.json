@@ -9,294 +9,372 @@
       "src": "publication or filing the item came from - required for anything asserted as fact"
     }
   },
-  "generated": "2026-09-10T23:11:27+08:00",
+  "generated": "2026-10-12T07:37:55+08:00",
   "tickers": {
     "META": [
       {
-        "date": "2026-09-10",
-        "headline": "JPMorgan upgrades META to Overweight from Neutral, raises price target to $820 from $640",
-        "why": "Cites frontier-model progress and Muse, which reached #3 in the US App Store on day two with early usage 10x training cohorts; notes shares are down 1% YTD vs the S&P 500's 12% gain.",
+        "date": "2026-10-09",
+        "headline": "Meta bars ByteDance/TikTok from advertising on Facebook and Instagram in 7 countries",
+        "why": "Escalates platform rivalry with TikTok and cuts off a major ad-spend channel reciprocally, following TikTok's own restrictions on Meta links/ads",
+        "src": "Bloomberg"
+      },
+      {
+        "date": "2026-10-07",
+        "headline": "Biohub adds Google, Meta and US government to $1.8B Virtual Biology Initiative",
+        "why": "Meta commits (jointly with Google DeepMind/Isomorphic, $300M combined) to an open AI-biology dataset effort, extending its AI capex into life-sciences research",
+        "src": "Endpoints News"
+      },
+      {
+        "date": "2026-10-06",
+        "headline": "Citi projects Meta's Muse AI assistant could generate over $27B in annual revenue by 2030",
+        "why": "Citi models ~$23B from commerce transactions and ~$4.5B from subscriptions, framing Muse as a new monetization engine beyond core ads",
+        "src": "Reuters (via Investing.com)"
+      },
+      {
+        "date": "2026-10-06",
+        "headline": "Wells Fargo raises Meta price target to $1,000 from $796, highest on the Street",
+        "why": "Analyst Ken Gawrelski cites early Muse demand but also cut near-term earnings outlook, flagging Meta may keep AI compute capacity in-house rather than sell it",
         "src": "Investing.com"
-      },
-      {
-        "date": "2026-09-08",
-        "headline": "Meta launches Muse, a personal AI agent on web, iOS/Android and WhatsApp, free plus $20 and $100 monthly paid tiers",
-        "why": "Meta's first consumer AI subscription product; it can act across Meta apps and partners like OpenTable, Spotify and Shopify. Motley Fool reported shares rose as much as 7.2% on the news.",
-        "src": "Meta Newsroom; Axios; TechCrunch; Motley Fool"
-      },
-      {
-        "date": "2026-09-08",
-        "headline": "Reuters: Meta employees reported Muse security and reliability failures in internal tests as recently as launch week",
-        "why": "Internal posts describe the agent getting around guardrails and exposing private iCloud photos, plus repeated logouts; Meta says staff access to user VMs stays technically possible until Confidential VMs launch later in 2026.",
-        "src": "Reuters (via Implicator.ai; also Forbes)"
       }
     ],
     "NVDA": [
       {
-        "date": "2026-09-10",
-        "headline": "NVIDIA and Palantir launch sovereign AI stack for supply chains, deployed first in NVIDIA's own supply chain",
-        "why": "Puts NVIDIA's Nemotron open models into Palantir Foundry and AIP for enterprise and government supply-chain customers. NVIDIA says each Vera Rubin rack needs 1.3M parts.",
+        "date": "2026-10-10",
+        "headline": "Nvidia in talks to acquire or boost its stake in Reflection AI at a $25B valuation",
+        "why": "Would deepen Nvidia's push into AI software/agents beyond chips and expand its already $800M bet on the startup",
+        "src": "Financial Times (via Bloomberg)"
+      },
+      {
+        "date": "2026-10-08",
+        "headline": "Nvidia commits $1 billion over five years to U.S. science, including quantum computing and healthcare compute",
+        "why": "Signals deeper ties to U.S. government research priorities (Genesis Mission) that could support future public-sector demand",
         "src": "NVIDIA Newsroom"
       },
       {
-        "date": "2026-09-09",
-        "headline": "DOJ probing whether NVIDIA structured its Groq licensing deal to avoid antitrust review; civil investigative demand sent",
-        "why": "DOJ could fine NVIDIA, but officials don't expect the deal to be unwound and the inquiry could end with no action. NVIDIA defended the arrangement.",
-        "src": "The New York Times (via Reuters)"
+        "date": "2026-10-07",
+        "headline": "Nvidia and Microsoft launch RTX Spark AI PCs and co-engineered Windows agent platform",
+        "why": "Opens a new consumer/edge-AI hardware channel for Nvidia silicon alongside its core data-center business",
+        "src": "NVIDIA Blog / TechCrunch"
       },
       {
-        "date": "2026-09-03",
-        "headline": "NVIDIA agrees to acquire Hugging Face for $12.93B; expected to close in 1H 2027 subject to regulatory approval",
-        "why": "NVIDIA's second-largest deal after Groq. Terms are ~$11.9B to stockholders plus up to ~$1.0B in employee retention. NVIDIA pledged to keep the platform open, including to other silicon vendors (per the 8-K).",
-        "src": "NVIDIA Form 8-K / NVIDIA Blog"
+        "date": "2026-10-06",
+        "headline": "Nvidia shares near record highs, pushing market cap toward $6 trillion",
+        "why": "Reflects investor re-rating of AI capex durability; sets a high valuation bar heading into next earnings",
+        "src": "Bloomberg"
       }
     ],
     "AAPL": [
       {
-        "date": "2026-09-09",
-        "headline": "Apple unveils iPhone Duo, its first foldable iPhone, from $1,999; preorders Oct 16, on sale Oct 23",
-        "why": "It is Apple's first new iPhone form factor under new CEO John Ternus. The 256GB model starts at $1,999 and the 2TB model at $3,199, per Fortune. It launches in 70+ countries on Oct 23 and 28 more on Oct 30.",
-        "src": "Apple Newsroom; Fortune"
+        "date": "2026-10-09",
+        "headline": "Apple reportedly cuts iPhone 18 Pro/Pro Max component orders ~15-20% on soft demand after price hike",
+        "why": "Suggests weaker-than-expected unit demand for the higher-priced Pro lineup entering the holiday quarter",
+        "src": "Nikkei Asia"
       },
       {
-        "date": "2026-09-09",
-        "headline": "iPhone 18 Pro starts at $1,199 and Pro Max at $1,299, both up $100 year over year",
-        "why": "Fortune says the increase reflects industrywide higher memory costs. MacRumors notes it is smaller than the rises of up to $200-$300 that IDC and GF Securities had floated, which bears on iPhone demand and margins.",
-        "src": "Fortune; MacRumors"
+        "date": "2026-10-08",
+        "headline": "Apple announces 'Welcome home' event for Oct 13 to unveil smart home hub, new HomePod mini, Apple TV",
+        "why": "Signals entry into a new smart-home hardware category with Siri AI at the core",
+        "src": "9to5Mac"
       },
       {
-        "date": "2026-09-03",
-        "headline": "UK app developers file £2bn ($2.7bn) claim against Apple at the Competition Appeal Tribunal over App Tracking Transparency",
-        "why": "The claim alleges ATT holds third-party developers to stricter tracking rules than Apple's own ad services. Apple disputes it. France, Germany, Italy, Romania and Poland have similar ATT probes, and France and Italy have already fined Apple.",
-        "src": "Reuters (via Claims Journal)"
+        "date": "2026-10-07",
+        "headline": "EU weighs flat annual 'CORE' levy on big tech incl. Apple instead of targeted digital tax",
+        "why": "New EU revenue-based corporate levy would add a recurring cost and replaces a more combative digital-services-tax plan",
+        "src": "9to5Mac"
+      },
+      {
+        "date": "2026-10-06",
+        "headline": "Apple sets Q4 FY2026 earnings release for November 2",
+        "why": "Confirms reporting date for the quarter covering iPhone 18 Pro launch-week sales",
+        "src": "9to5Mac / MacRumors"
       }
     ],
     "MSFT": [
       {
-        "date": "2026-09-03",
-        "headline": "OpenAI's GPT-6 Astra starts rolling out in Microsoft Foundry on Azure; Nadella says early customers are already using it",
-        "why": "OpenAI's newest frontier model runs on Azure with pay-as-you-go and dedicated-capacity options, at $10 per million input tokens and $50 per million output tokens",
-        "src": "Microsoft Azure Blog"
+        "date": "2026-10-09",
+        "headline": "Microsoft launches Microsoft-Decision-1, a fast low-cost AI model for scoring decisions instead of generating text",
+        "why": "New Foundry product line signals Microsoft pushing beyond chat-style LLMs into cheaper, faster enterprise decision-automation, a potential Azure AI revenue driver",
+        "src": "GuruFocus"
       },
       {
-        "date": "2026-09-03",
-        "headline": "Microsoft will cap Xbox Cloud Gaming at 15/10/5 hours a month for Game Pass Ultimate/Premium/Essential from November",
-        "why": "Microsoft says cloud gaming costs rise with usage. The caps hit about 4% of subscribers, extra hours will be sold, and non-subscribers can buy hours too",
-        "src": "Xbox Wire; CNBC"
+        "date": "2026-10-08",
+        "headline": "US Labor Dept suspends Microsoft, Adobe and six outsourcing firms from PERM green card program",
+        "why": "Blocks Microsoft from certifying new H-1B/green-card sponsorships amid fraud allegations tied to its visa usage and layoffs",
+        "src": "TechCrunch"
       }
     ],
     "GOOGL": [
       {
-        "date": "2026-09-09",
-        "headline": "Google commits at least €13B to Finland AI infrastructure over 2027-28, its largest single investment in Europe",
-        "why": "Adds to capex: data centers in Hamina, Kajaani, Muhos and Vaala, plus a 22-year Fortum PPA for Loviisa nuclear, 629 MW of wind PPAs and a 94 MW battery",
-        "src": "Google Cloud press release"
+        "date": "2026-10-08",
+        "headline": "Waymo closes $5B term loan, its first debt financing, after $16B equity round at $126B valuation",
+        "why": "Shows Waymo funding robotaxi expansion via debt backed by its own IP rather than Alphabet capital, easing pressure on parent balance sheet",
+        "src": "TechCrunch"
       },
       {
-        "date": "2026-09-08",
-        "headline": "Google rolls out EU search changes to comply with DMA and says they will degrade the user experience",
-        "why": "Google told Reuters this is the largest cut in search quality in its history. Past DMA changes cut free direct booking traffic to European businesses by 30%, and more hits are expected",
-        "src": "Reuters (via RTÉ)"
+        "date": "2026-10-08",
+        "headline": "TD Cowen raises Alphabet price target to $485 from $475, maintains bullish stance",
+        "why": "Incremental analyst conviction ahead of Oct 28 Q3 earnings, among a cluster of Buy-rated target reiterations this week",
+        "src": "TD Cowen (via StockAnalysis.com)"
       },
       {
-        "date": "2026-09-08",
-        "headline": "Accenture and Google Cloud form a Gemini Enterprise Business Group with a 1,000-engineer forward-deployed workforce",
-        "why": "Adds an enterprise deployment channel for Gemini Enterprise, building on Accenture's ~50,000 Google Cloud-skilled staff. Neither company disclosed financials",
-        "src": "Accenture newsroom; TechCrunch"
+        "date": "2026-10-07",
+        "headline": "Google and Unity launch Playground platform with Unity Spark for AI-generated games",
+        "why": "New AI monetization avenue in gaming/content creation, expanding Gemini's reach into a new consumer product category",
+        "src": "PYMNTS"
+      },
+      {
+        "date": "2026-10-06",
+        "headline": "Google signs 20-year nuclear PPA with Constellation Energy, $4.3B in reactor upgrades",
+        "why": "Locks in 3.59GW of power including 890MW nuclear for AI data centers, adding to Alphabet's AI infrastructure capex commitments",
+        "src": "Bloomberg"
       }
     ],
     "AMZN": [
       {
-        "date": "2026-09-09",
-        "headline": "Amazon raises £4.25B (~$5.76B) in its first-ever sterling bond sale",
-        "why": "Four tranches (3 to 19 years) priced at ~5.2%-6.7% yield on >£10.65B of demand; reported as a way to diversify funding for AI infrastructure spending",
-        "src": "Reuters (via Investing.com / Euronext)"
+        "date": "2026-10-09",
+        "headline": "Judge rejects Amazon's bid to delay FTC antitrust monopoly trial",
+        "why": "Keeps litigation risk and timeline (trial set for March 2027) intact, no relief on regulatory overhang",
+        "src": "Law360 Pulse"
       },
       {
-        "date": "2026-09-09",
-        "headline": "Amazon and Wiwynn expand Texas server-rack plant, targeting nearly 1,000 new jobs by end-2027",
-        "why": "Wiwynn builds server systems and racks for Amazon's data centers; the expansion builds on its $1.6B El Paso-area facility and moves custom hardware production to the US",
-        "src": "Amazon (aboutamazon.com); KVIA"
+        "date": "2026-10-08",
+        "headline": "Amazon unveils new Alexa tablet lineup with Alexa+ and Google Play Store access, replacing Fire brand",
+        "why": "New hardware category and a Google Play Store tie-up broaden device ecosystem and Alexa+ distribution",
+        "src": "TechCrunch"
       },
       {
-        "date": "2026-09-08",
-        "headline": "Qualcomm grants Amazon warrants for 25M shares (~$4B at $161.26) in AWS AI data center infrastructure deal",
-        "why": "Warrants vest as commercial milestones are met, including Amazon buying up to $60B of Qualcomm server chips; the two will co-develop multiple generations of custom AI inference silicon for AWS",
+        "date": "2026-10-07",
+        "headline": "AWS raises reserved GPU capacity prices ~15%, 4th straight quarterly hike",
+        "why": "Shows AWS pricing power on scarce AI compute, supporting cloud margin/revenue outlook",
+        "src": "The Inference"
+      },
+      {
+        "date": "2026-10-06",
+        "headline": "Amazon lays off employees in Stores retail division, confirmed during Prime Big Deal Days",
+        "why": "Signals continued cost-cutting in core e-commerce even as holiday sales push begins",
         "src": "CNBC"
       }
     ],
     "AMD": [
       {
-        "date": "2026-09-08",
-        "headline": "AMD CFO at Citi TMT: data center business expected to double in 2027 to about $70B; server CPU TAM raised to $220B",
-        "why": "Per Investing.com, AI GPUs are expected to be roughly $40B of the ~$70B and server CPUs the rest, and the 2030 server CPU TAM rises to $220B from a prior $60B.",
-        "src": "Investing.com (Citi 2026 Global TMT Conference transcript summary)"
+        "date": "2026-10-07",
+        "headline": "AMD CEO Lisa Su meets Samsung, SK hynix in Seoul on HBM4 and foundry ties",
+        "why": "Samsung confirmed as primary HBM4 supplier for AMD's Instinct MI455X and DDR5 for next-gen EPYC 'Venice'; foundry cooperation still exploratory, no deal signed",
+        "src": "Korea Herald / Seoul Economic Daily"
       },
       {
-        "date": "2026-09-08",
-        "headline": "AMD CFO: MI450 production shipments start Q3, big step-up in Q4; gross margin to be slightly lower in Q4 2026 and 2027",
-        "why": "Hu said AMD will focus on growing gross profit dollars rather than margin percentage during the MI450 ramp (Q3 GM guide 56%), with supply of wafers, HBM and packaging still tight.",
-        "src": "Investing.com (Citi 2026 Global TMT Conference transcript summary)"
+        "date": "2026-10-06",
+        "headline": "Citi raises AMD price target to $800 from $575, keeps Buy",
+        "why": "Analyst Atif Malik cites Meta's Muse AI agent running on AMD EPYC chips as driving a CPU market renaissance",
+        "src": "Yahoo Finance (Citi research note)"
+      },
+      {
+        "date": "2026-10-06",
+        "headline": "Mizuho lifts AMD price target to $705 from $580, Outperform",
+        "why": "Cites an $80B agentic-AI-driven CPU market forecast as a tailwind for AMD server demand",
+        "src": "GuruFocus"
+      },
+      {
+        "date": "2026-10-05",
+        "headline": "Stifel raises AMD price target to $700 from $635, Buy",
+        "why": "Cites server-segment strength as a core driver of AMD's AI-era earnings growth",
+        "src": "Investing.com"
       }
     ],
     "AVGO": [
       {
-        "date": "2026-09-08",
-        "headline": "Hock Tan at Goldman Sachs conference: AI revenue seen at $115B in 2027 and $230B in 2028, both supply-constrained",
-        "why": "Tan said the main limit is data-center build-out (power, permitting, transformers), not chip output; Broadcom works with six frontier-model customers including OpenAI, Google and Anthropic",
-        "src": "Investing.com (Goldman Sachs Communacopia + Technology Conference transcript summary)"
+        "date": "2026-10-08",
+        "headline": "Broadcom in talks to arrange $30-50B+ private financing for OpenAI's custom 'Nexus' AI chips",
+        "why": "Signals scale of OpenAI chip program and shifts financing risk/exposure onto Broadcom-arranged credit facilities, similar to its Anthropic structure",
+        "src": "Bloomberg / Wall Street Journal (via TrendForce)"
       },
       {
-        "date": "2026-09-03",
-        "headline": "Macquarie upgrades Broadcom to Outperform, raises price target 12% to $490",
-        "why": "Analyst Arthur Lai says Google's in-house chip threat is already priced in after a ~24% slide from the 2026 high, and forecasts over $40B of Anthropic purchases in FY2028",
-        "src": "Investing.com"
+        "date": "2026-10-08",
+        "headline": "Broadcom unveils Tomahawk 6, Tomahawk Ultra, Jericho4 switches and Thor NICs/CPO at OCP Summit",
+        "why": "New Ethernet switch and optics lineup targets scale-up/scale-out AI clusters, underpinning its AI networking revenue alongside custom accelerators",
+        "src": "Broadcom press release (GlobeNewswire)"
       }
     ],
     "INTC": [
       {
-        "date": "2026-09-08",
-        "headline": "Intel Foundry and ASML say High-NA EUV is in volume production, with over 1 million wafers processed",
-        "why": "Intel says High-NA EUV is now used in volume production on select layers of some Core Ultra Series 3 (Panther Lake) chips, with overlay, throughput and availability meeting its expectations",
-        "src": "Intel press release (intc.com); ASML press release"
+        "date": "2026-10-07",
+        "headline": "Intel to keep working on Musk's Terafab venture as Musk rules out TSMC taking an operational role",
+        "why": "Confirms Intel's anchor role (14A process) in the $120B Terafab project, a potential major external foundry customer",
+        "src": "Bloomberg"
       },
       {
-        "date": "2026-09-08",
-        "headline": "DIGITIMES: Intel plans about 10% PC CPU price increase around Oct 5, its third hike since late 2025",
-        "why": "Supply-chain sources say Tan is putting margins first and may drop low-margin Small Core parts. Intel hasn't confirmed; shares rose as much as 9.5% after the report",
-        "src": "DIGITIMES (via Yahoo Finance/BeInCrypto, The Motley Fool)"
+        "date": "2026-10-06",
+        "headline": "Applied Materials and Intel expand collaboration on next-gen AI chipmaking at EPIC Center",
+        "why": "Deepens Intel's access to leading-edge process/packaging tech (Foveros 3D stacking) needed to compete for AI foundry customers",
+        "src": "GlobeNewswire / Applied Materials press release"
       },
       {
-        "date": "2026-09-08",
-        "headline": "Northland upgrades Intel to Outperform from Market Perform with a $120 price target",
-        "why": "Gus Richard cited the turnaround, a server CPU shortage and the Terafab foundry deal; it reverses his May downgrade",
-        "src": "Investing.com"
-      },
-      {
-        "date": "2026-09-08",
-        "headline": "Mizuho keeps Intel at Hold and cuts its price target to $92 from $109",
-        "why": "Vijay Rakesh cited chip-sector rotation, the post-Q2 selloff with no outside 18A customer commitments, and dilution from the August equity raise",
+        "date": "2026-10-06",
+        "headline": "Mizuho raises Intel price target to $114 from $92",
+        "why": "Sell-side upgrade signals rising Street confidence ahead of Oct 29 Q3 earnings",
         "src": "TheStreet"
       }
     ],
     "TSM": [
       {
-        "date": "2026-09-10",
-        "headline": "TSMC August revenue NT$514.81B, up 53.3% YoY and 10.1% MoM; Jan-Aug NT$3,386.87B, up 39.3%",
-        "why": "Monthly revenue is up for a fourth straight month, which Investing.com attributes mainly to AI chip demand and sales of its most advanced processes",
-        "src": "TSMC Form 6-K (SEC), Sept 10 2026; CNBC; Investing.com"
+        "date": "2026-10-08",
+        "headline": "TSMC September revenue hits NT$511.86bn, up 54.6% YoY, capping record Q3",
+        "why": "Confirms AI-driven demand held through quarter-end, supporting the revenue growth narrative into Q3 earnings",
+        "src": "TSMC monthly sales report / SEC Form 6-K"
       },
       {
-        "date": "2026-09-08",
-        "headline": "TSMC and ASML launch industry push to 12-inch photomasks for High NA EUV; TSMC plans High NA in volume production from 2030",
-        "why": "First timeline from TSMC for using High NA EUV in advanced-node production; targets a 12-inch mask pilot line by 2031 and production use by 2033, which ASML says will raise fab productivity and lower chipmaking costs",
-        "src": "ASML press release, Sept 8 2026; Digitimes"
+        "date": "2026-10-08",
+        "headline": "GlobalFoundries signs $2bn, five-year deal to supply TSMC with US-made silicon interposers for CoWoS packaging",
+        "why": "Diversifies TSMC's advanced-packaging supply chain onshore in the US and eases a CoWoS capacity bottleneck tied to AI chip output",
+        "src": "GlobeNewswire (GlobalFoundries press release)"
+      },
+      {
+        "date": "2026-10-06",
+        "headline": "Barclays raises TSMC price target to $665 from $650, keeps Overweight ahead of Q3 earnings",
+        "why": "Signals sell-side confidence in Q3 results and raises the bar for the Oct 15 print",
+        "src": "Barclays note, via MarketBeat/GuruFocus"
       }
     ],
     "ASML": [
       {
-        "date": "2026-09-08",
-        "headline": "TSMC and Samsung commit to ASML High NA EUV tools, becoming its 2nd and 3rd High NA customers after Intel",
-        "why": "CNBC reports Samsung targets DRAM manufacturing by 2028 and TSMC high-volume advanced-node production from 2030; each machine costs about $400M",
-        "src": "CNBC"
+        "date": "2026-10-10",
+        "headline": "ASML and Zeiss outline Hyper NA EUV successor roadmap, say tool could be ready in about a decade",
+        "why": "First detailed technical roadmap beyond High-NA EUV, in a peer-reviewed paper, signals ASML's long-term lithography moat extends toward 5nm half-pitch",
+        "src": "Electronics Weekly"
       },
       {
-        "date": "2026-09-08",
-        "headline": "ASML and TSMC launch industry initiative to move from 6-inch to 12-inch photomasks for High NA EUV",
-        "why": "It targets a 12-inch mask pilot line by 2031 and production readiness by 2033, which ASML says raises fab productivity and cuts costs for High NA users",
-        "src": "ASML press release"
+        "date": "2026-10-06",
+        "headline": "BofA raises ASML price target to €2,557 from €2,452, lifts EUV and DUV unit forecasts",
+        "why": "Signals Street expects higher ASPs and higher 2027-28 EUV/DUV shipment volumes, raising consensus revenue trajectory",
+        "src": "Investing.com (BofA Securities note)"
       },
       {
-        "date": "2026-09-08",
-        "headline": "Intel Foundry and ASML say High NA EUV has processed over 1 million wafers and is in production for Core Ultra Series 3",
-        "why": "Shows High NA running in production at Intel, with reticle stitching letting customers use it on today's 6-inch masks",
-        "src": "ASML press release"
+        "date": "2026-10-05",
+        "headline": "Washington think tank finds China has stockpiled ~343 ASML DUV lithography systems, urges full export ban",
+        "why": "Report from Centre for Technology & Statecraft could fuel tighter US/Dutch export controls on ASML's immersion DUV business in China",
+        "src": "Digitimes / SCMP"
       }
     ],
     "MU": [
       {
-        "date": "2026-09-04",
-        "headline": "Micron reportedly plans to roughly double HBM capacity to ~100K wafers/month by end-2026, adding more 12-high HBM4",
-        "why": "Per the reports, Micron is shifting output toward 12-high HBM4 for Nvidia's Vera Rubin to narrow the capacity gap with SK Hynix and Samsung; this is unconfirmed by Micron and attributed to unnamed sources",
-        "src": "DigiTimes; TrendForce"
+        "date": "2026-10-09",
+        "headline": "Micron's FY2026 10-K shows record $133.19B revenue, up 256% YoY on DRAM/NAND pricing",
+        "why": "Confirms AI-driven memory pricing supercycle is flowing through to actual full-year results, not just guidance",
+        "src": "Micron FY2026 Form 10-K (SEC filing)"
+      },
+      {
+        "date": "2026-10-08",
+        "headline": "Micron board authorizes record buyback, raising total repurchase authorization to $35.16B",
+        "why": "Largest buyback in company history signals management confidence and capital return alongside heavy capex",
+        "src": "Micron 8-K filing / GuruFocus"
+      },
+      {
+        "date": "2026-10-07",
+        "headline": "D.A. Davidson triples Micron price target to $3,000 from $2,100, keeps Buy rating",
+        "why": "Cites 26 strategic customer agreements covering ~35% of revenue by 2030 and ~$150B in unfulfilled commitments as reducing cyclicality",
+        "src": "24/7 Wall St. (D.A. Davidson note)"
+      },
+      {
+        "date": "2026-10-07",
+        "headline": "Micron's Taoyuan, Taiwan union votes 99% to authorize a strike over bonus structure",
+        "why": "Labor action risk at Micron's largest manufacturing site; union seeks 83 months' bonus pay vs company's 68-month offer, next mediation Oct 22",
+        "src": "GuruFocus"
       }
     ],
     "MRVL": [
       {
-        "date": "2026-09-09",
-        "headline": "Marvell CEO reaffirms ~$12B FY27 and ~$18B FY28 revenue outlook at Citi's 2026 Global TMT Conference",
-        "why": "Management restated the targets first raised on the Aug 27 Q2 call, plus ~$1B of FY27 supplier capacity prepayments and a 38-40% operating margin goal; some Sept 9 coverage wrongly calls the targets new",
-        "src": "Investing.com (Citi 2026 Global TMT Conference transcript summary)"
+        "date": "2026-10-10",
+        "headline": "Bank of America raises Marvell price target to $400 from $365 on $80B mid-point sales outlook",
+        "why": "BofA models pro forma EPS above $32 by 2030 vs. consensus ~$18, reinforcing bullish re-rating after Investor Day",
+        "src": "Benzinga / ad-hoc-news.de"
       },
       {
-        "date": "2026-09-09",
-        "headline": "Marvell to showcase end-to-end AI data center connectivity and CXL memory portfolio at AI Infra Summit 2026",
-        "why": "Company press release covering next-gen switching, telemetry, optical interconnects and CXL memory; StockStory reported shares closed up 4.1% at $234.45 that day",
-        "src": "Marvell press release; StockStory"
+        "date": "2026-10-07",
+        "headline": "RBC Capital raises Marvell price target to $425 from $360, keeps Outperform",
+        "why": "Cites interconnect leadership and custom silicon progress following Investor Day, among the largest post-event target hikes",
+        "src": "GuruFocus (RBC Capital note)"
+      },
+      {
+        "date": "2026-10-06",
+        "headline": "Marvell sets FY2031 revenue target of $70B-$90B, raises FY2028 outlook to ~$20B at Investor Day",
+        "why": "Management's long-range targets reset the growth narrative around AI data-center demand, driving sharp sell-side price target increases",
+        "src": "Benzinga / Marvell Technology press release"
       }
     ],
     "9988": [
       {
-        "date": "2026-09-10",
-        "headline": "Alibaba set to lead a $300M round in AI model-testing startup UniPat AI at a $2.5B valuation, according to sources",
-        "why": "Another AI investment by Alibaba. Tencent and HSG (formerly Sequoia China) are also in the round, and UniPat's founder Li Kuan worked at Alibaba's Tongyi Lab",
-        "src": "Bloomberg"
+        "date": "2026-10-09",
+        "headline": "BofA raises Alibaba price target to $178 from $175, calls earnings inflection underpriced",
+        "why": "Analyst Joyce Ju lifts cloud revenue growth forecast to 52% from 45% and cloud margin forecast to 12.9% from 11.6%, arguing the stock doesn't reflect the improvement",
+        "src": "TipRanks"
       },
       {
-        "date": "2026-09-09",
-        "headline": "Alibaba Cloud's new QoderWake version lets AI 'digital employees' work inside ByteDance's Feishu and Tencent's WeCom as well as DingTalk",
-        "why": "Opens a new front against ByteDance and Tencent in enterprise AI, since Alibaba's agents can now run inside rival office platforms",
-        "src": "South China Morning Post"
-      },
-      {
-        "date": "2026-09-08",
-        "headline": "FBI, NSA and CISA alert names Alibaba among six Chinese AI firms accused of copying US AI models through distillation",
-        "why": "The US agencies describe 'industrial-scale' distillation of US frontier models since at least 2024. China called the claims groundless and its Commerce Ministry threatened 'resolute countermeasures'. The alert adds US regulatory risk for Qwen and Alibaba Cloud",
-        "src": "NBC News; CNN; Bloomberg; Al Jazeera"
-      },
-      {
-        "date": "2026-09-07",
-        "headline": "Bernstein cuts Alibaba price target to $165 from $180 and keeps Outperform, citing concerns about the equity raise",
-        "why": "Analyst Robin Zhu said investors questioned the timing and optics of the $10.2B raise when Alibaba holds $30.7B of net cash. Bernstein still backs the capex plan, saying the payback periods for datacenters and the M890 chip look favorable",
+        "date": "2026-10-08",
+        "headline": "Jefferies lifts Alibaba price target to $192 from $190, keeps Buy/Top Pick",
+        "why": "Jefferies forecasts Alibaba cloud revenue growth above 50% YoY in FY2028, reinforcing the cloud re-rating thesis ahead of Dec 1 earnings",
         "src": "Investing.com"
+      },
+      {
+        "date": "2026-10-08",
+        "headline": "Citi raises Alibaba price target to $193 from $190, maintains Buy",
+        "why": "Analyst Alicia Yap models Sept-quarter cloud revenue up 52% YoY to RMB60.5bn and consolidated revenue growth of 8.2% YoY ahead of the Dec 1 print",
+        "src": "TipRanks"
       }
     ],
     "0700": [
       {
-        "date": "2026-09-04",
-        "headline": "Tencent to sell ~US$400M of Bilibili shares and buy US$200M of Bilibili's 2031 convertible notes in a swap",
-        "why": "Tencent said on 9 Sep it sold 26.37M Bilibili shares at HK$115.38 and keeps the net proceeds; the US$200M note buy and Bilibili's US$200M buyback of Tencent-held shares still need Bilibili EGM approval",
-        "src": "Bilibili Inc. press release (GlobeNewswire, 2026-09-04); completion release 2026-09-09 (Stock Titan)"
+        "date": "2026-10-08",
+        "headline": "Tencent weighs up to $5B offshore bond sale to fund AI capex",
+        "why": "Additional debt financing need signals AI spending is outpacing operating cash flow, a leverage and capex-trajectory signal for investors",
+        "src": "Bloomberg"
+      },
+      {
+        "date": "2026-10-06",
+        "headline": "DeepSeek nears $12B funding round with Tencent and CATL as lead backers ahead of 2027 IPO",
+        "why": "Signals Tencent deepening its stake in a top rival/partner AI lab, relevant to its AI investment portfolio and ecosystem positioning",
+        "src": "Bloomberg / TechNode"
       }
     ],
     "3690": [
       {
-        "date": "2026-09-03",
-        "headline": "Brazil's Cade rejects Keeta appeal against 99's restaurant exclusivity deals, orders wider food-delivery antitrust review",
-        "why": "Meituan's Keeta loses its bid to get rival 99's (Didi) exclusivity terms stopped right away, so those contracts stay in force while Cade looks at the wider sector; iFood also filed a predatory-pricing complaint against Keeta in late August",
-        "src": "PYMNTS (CPI)"
+        "date": "2026-10-10",
+        "headline": "SAMR holds China's first public antitrust hearing on Meituan's bid for delivery-aggregator Maiyatian",
+        "why": "Combined delivery-aggregation share above 50% draws formal competition scrutiny, risking deal conditions or delay",
+        "src": "21jingji.com (21st Century Business Herald)"
+      },
+      {
+        "date": "2026-10-09",
+        "headline": "China publishes draft labor rules for 84M gig workers, naming Meituan, Alibaba and DiDi as covered platforms",
+        "why": "New employment-contract and algorithm-disclosure requirements could raise delivery-rider cost structure if finalized",
+        "src": "Caixin Global"
+      },
+      {
+        "date": "2026-10-07",
+        "headline": "Meituan's National Day report shows consecutive-night hotel bookings up 31% YoY, long-haul travel orders up 25% YoY",
+        "why": "Points to stronger-than-expected travel/hotel vertical demand into Q4, a read-through for in-destination services GMV",
+        "src": "AASTOCKS"
+      },
+      {
+        "date": "2026-10-06",
+        "headline": "Meituan's Keeta adds 21 cities in Brazil, now in 32 cities after court struck down rival's exclusivity clauses",
+        "why": "Signals accelerating overseas delivery expansion and removal of a legal barrier to share gains in a key growth market",
+        "src": "Futunn/InfoMoney"
       }
     ],
     "9618": [
       {
-        "date": "2026-09-07",
-        "headline": "Arete Research downgrades JD.com to Hold from Strong-Buy with a US$30 price target",
-        "why": "A rating cut from a broker that covers JD; the same source puts consensus at 8 Buy, 5 Hold, 1 Sell with a US$35.25 target on the US-listed shares (1 ADS = 2 shares of 9618)",
-        "src": "Daily Political (MarketBeat-syndicated), 2026-09-09, reporting Arete Research note released Monday 2026-09-07"
+        "date": "2026-10-09",
+        "headline": "JD.com set to win EU approval for $2.5bn Ceconomy takeover after revising remedies",
+        "why": "Clears a key regulatory hurdle for JD's largest European retail acquisition (85.2% of Ceconomy/MediaMarkt-Saturn); EU decision due by Nov 4",
+        "src": "TechNode / Reuters"
       }
     ],
     "6181": [
       {
-        "date": "2026-09-09",
-        "headline": "JPMorgan keeps Overweight on Laopu Gold, target HK$891; forecasts Q3/Q4 profit of about RMB0.8bn/1.2bn",
-        "why": "JPMorgan sees the Q2 sales slowdown as cyclical, not structural, and names the Mid-Autumn and National Day holidays as the next test of the earnings recovery it expects",
-        "src": "Zhitong Finance (via Investing.com China)"
-      },
-      {
-        "date": "2026-09-03",
-        "headline": "Shenwan Hongyuan keeps Buy on Laopu Gold with HK$639.25 target, based on 13x 2027 adjusted P/E",
-        "why": "Keeps adjusted net profit forecasts of RMB6.50bn/7.45bn/8.46bn for 2026-28 and cites premium positioning, membership base and overseas growth as long-term drivers",
-        "src": "Zhitong Finance (via Investing.com China)"
+        "date": "2026-10-06",
+        "headline": "Laopu Gold runs its first-ever discount, cutting prices up to 20-33% during Golden Week",
+        "why": "First markdown since founding breaks the brand's never-discount pricing power narrative, though stores reported discounts didn't meaningfully lift volume",
+        "src": "21jingji.com (21st Century Business Herald)"
       }
     ]
   }
