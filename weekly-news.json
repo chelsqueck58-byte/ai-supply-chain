@@ -9,58 +9,68 @@
       "src": "publication or filing the item came from - required for anything asserted as fact"
     }
   },
-  "generated": "2026-10-12T07:37:55+08:00",
+  "generated": "2026-10-13T07:34:03+08:00",
+  "refreshed": {
+    "META": "2026-10-13",
+    "INTC": "2026-10-13",
+    "TSM": "2026-10-13",
+    "ASML": "2026-10-13",
+    "MU": "2026-10-13",
+    "0700": "2026-10-13",
+    "3690": "2026-10-13",
+    "NVDA": "2026-10-13"
+  },
   "tickers": {
     "META": [
       {
-        "date": "2026-10-09",
-        "headline": "Meta bars ByteDance/TikTok from advertising on Facebook and Instagram in 7 countries",
-        "why": "Escalates platform rivalry with TikTok and cuts off a major ad-spend channel reciprocally, following TikTok's own restrictions on Meta links/ads",
+        "date": "2026-10-12",
+        "headline": "Meta launches Muse Wonder and Muse Wonder Full, its most capable AI models to date",
+        "why": "First frontier-class model release positions Meta to compete directly with OpenAI and Anthropic, with flagship model gated behind a new paid Muse Code subscription",
+        "src": "TechCrunch"
+      },
+      {
+        "date": "2026-10-12",
+        "headline": "Cantor Fitzgerald cuts Meta price target to $840 from $860",
+        "why": "Trim from a bullish shop on the same day as the Muse Wonder launch shows mixed near-term sentiment heading into Q3 earnings",
+        "src": "Defense World"
+      },
+      {
+        "date": "2026-10-08",
+        "headline": "Meta bars ByteDance/TikTok from buying ads on Facebook and Instagram in seven countries",
+        "why": "Escalates the Meta-TikTok rivalry over users and ad dollars, cutting off a competitor's access to Meta's ad inventory in key markets including the US",
         "src": "Bloomberg"
       },
       {
-        "date": "2026-10-07",
-        "headline": "Biohub adds Google, Meta and US government to $1.8B Virtual Biology Initiative",
-        "why": "Meta commits (jointly with Google DeepMind/Isomorphic, $300M combined) to an open AI-biology dataset effort, extending its AI capex into life-sciences research",
-        "src": "Endpoints News"
-      },
-      {
         "date": "2026-10-06",
-        "headline": "Citi projects Meta's Muse AI assistant could generate over $27B in annual revenue by 2030",
-        "why": "Citi models ~$23B from commerce transactions and ~$4.5B from subscriptions, framing Muse as a new monetization engine beyond core ads",
-        "src": "Reuters (via Investing.com)"
-      },
-      {
-        "date": "2026-10-06",
-        "headline": "Wells Fargo raises Meta price target to $1,000 from $796, highest on the Street",
-        "why": "Analyst Ken Gawrelski cites early Muse demand but also cut near-term earnings outlook, flagging Meta may keep AI compute capacity in-house rather than sell it",
-        "src": "Investing.com"
+        "headline": "Wells Fargo raises Meta price target to $1,000 from $796, keeps Overweight",
+        "why": "Sizable bullish target hike signals growing Street conviction on Meta's AI-driven growth ahead of Q3 earnings",
+        "src": "Wells Fargo research note (via Defense World/Benzinga)"
       }
     ],
     "NVDA": [
       {
+        "date": "2026-10-12",
+        "headline": "Nvidia opens Vera Rubin rack designs to Open Compute Project, unveils pluggable optics with Cisco",
+        "why": "Pushes Nvidia's next-gen AI-factory architecture toward an open industry standard, reinforcing its ecosystem lock-in ahead of Rubin ramp",
+        "src": "NVIDIA (company blog) / GlobeNewswire"
+      },
+      {
         "date": "2026-10-10",
-        "headline": "Nvidia in talks to acquire or boost its stake in Reflection AI at a $25B valuation",
-        "why": "Would deepen Nvidia's push into AI software/agents beyond chips and expand its already $800M bet on the startup",
+        "headline": "Nvidia in talks to acquire or raise its stake in AI startup Reflection AI, FT reports",
+        "why": "M&A optionality in open-weight AI models could extend Nvidia's software/model reach beyond chips",
         "src": "Financial Times (via Bloomberg)"
       },
       {
-        "date": "2026-10-08",
-        "headline": "Nvidia commits $1 billion over five years to U.S. science, including quantum computing and healthcare compute",
-        "why": "Signals deeper ties to U.S. government research priorities (Genesis Mission) that could support future public-sector demand",
-        "src": "NVIDIA Newsroom"
+        "date": "2026-10-09",
+        "headline": "Nvidia-backed Firmus withdraws $5.5B Australian IPO citing weak investor demand",
+        "why": "Signals investor pushback on AI data-center valuations within Nvidia's own backed-company ecosystem",
+        "src": "CNBC"
       },
       {
         "date": "2026-10-07",
-        "headline": "Nvidia and Microsoft launch RTX Spark AI PCs and co-engineered Windows agent platform",
-        "why": "Opens a new consumer/edge-AI hardware channel for Nvidia silicon alongside its core data-center business",
-        "src": "NVIDIA Blog / TechCrunch"
-      },
-      {
-        "date": "2026-10-06",
-        "headline": "Nvidia shares near record highs, pushing market cap toward $6 trillion",
-        "why": "Reflects investor re-rating of AI capex durability; sets a high valuation bar heading into next earnings",
-        "src": "Bloomberg"
+        "headline": "Nvidia and Microsoft launch RTX Spark hardware and AI-agent software for Windows PCs",
+        "why": "Extends Nvidia's AI stack into consumer PCs, a new demand channel alongside data-center GPUs",
+        "src": "NVIDIA (company newsroom)"
       }
     ],
     "AAPL": [
@@ -197,88 +207,100 @@
     ],
     "INTC": [
       {
+        "date": "2026-10-12",
+        "headline": "Microsoft unveils Maia 300 AI chip, built on TSMC's 2nm process, not Intel",
+        "why": "Marquee AI accelerator order went to TSMC, a setback for Intel Foundry's push to land flagship external customers",
+        "src": "The Next Web"
+      },
+      {
         "date": "2026-10-07",
-        "headline": "Intel to keep working on Musk's Terafab venture as Musk rules out TSMC taking an operational role",
-        "why": "Confirms Intel's anchor role (14A process) in the $120B Terafab project, a potential major external foundry customer",
+        "headline": "Intel CEO Tan says Intel stays involved in Musk's Terafab as TSMC sublease talk swirls",
+        "why": "Clarifies Intel won't be displaced from a major chip-fab venture after market speculation TSMC could take over",
         "src": "Bloomberg"
       },
       {
         "date": "2026-10-06",
-        "headline": "Applied Materials and Intel expand collaboration on next-gen AI chipmaking at EPIC Center",
-        "why": "Deepens Intel's access to leading-edge process/packaging tech (Foveros 3D stacking) needed to compete for AI foundry customers",
-        "src": "GlobeNewswire / Applied Materials press release"
+        "headline": "Applied Materials and Intel expand collaboration on AI chipmaking tech",
+        "why": "Deepens Intel's access to next-gen transistor, interconnect and Foveros packaging R&D needed to compete in AI chips",
+        "src": "HPCwire"
       },
       {
         "date": "2026-10-06",
-        "headline": "Mizuho raises Intel price target to $114 from $92",
-        "why": "Sell-side upgrade signals rising Street confidence ahead of Oct 29 Q3 earnings",
-        "src": "TheStreet"
+        "headline": "Mizuho raises Intel price target to $114 from $92, keeps Neutral rating",
+        "why": "Analyst cites stronger CPU demand tied to agentic AI applications, though rating stays Hold-equivalent",
+        "src": "MarketBeat (Mizuho research note)"
       }
     ],
     "TSM": [
       {
         "date": "2026-10-08",
-        "headline": "TSMC September revenue hits NT$511.86bn, up 54.6% YoY, capping record Q3",
-        "why": "Confirms AI-driven demand held through quarter-end, supporting the revenue growth narrative into Q3 earnings",
-        "src": "TSMC monthly sales report / SEC Form 6-K"
+        "headline": "TSMC Q3 revenue hits record NT$1.49tn (~$46.7B), up ~50% YoY, above top of guidance",
+        "why": "Confirms demand strength ahead of Oct 15 earnings; beat implies upside to consensus estimates",
+        "src": "Focus Taiwan / company Form 6-K filing"
       },
       {
         "date": "2026-10-08",
-        "headline": "GlobalFoundries signs $2bn, five-year deal to supply TSMC with US-made silicon interposers for CoWoS packaging",
-        "why": "Diversifies TSMC's advanced-packaging supply chain onshore in the US and eases a CoWoS capacity bottleneck tied to AI chip output",
-        "src": "GlobeNewswire (GlobalFoundries press release)"
+        "headline": "TSMC signs $2B deal for GlobalFoundries to make CoWoS silicon interposers in US from 2028",
+        "why": "Adds a second, US-based interposer source to ease TSMC's sold-out CoWoS packaging bottleneck",
+        "src": "The National News"
       },
       {
         "date": "2026-10-06",
-        "headline": "Barclays raises TSMC price target to $665 from $650, keeps Overweight ahead of Q3 earnings",
-        "why": "Signals sell-side confidence in Q3 results and raises the bar for the Oct 15 print",
-        "src": "Barclays note, via MarketBeat/GuruFocus"
+        "headline": "Barclays raises TSMC price target to $665 from $650, keeps Overweight/Buy",
+        "why": "Analyst Simon Coles cites improved industry fundamentals ahead of Q3 results despite recent chip-sector selloff",
+        "src": "MarketBeat (citing Barclays research note)"
       }
     ],
     "ASML": [
       {
-        "date": "2026-10-10",
-        "headline": "ASML and Zeiss outline Hyper NA EUV successor roadmap, say tool could be ready in about a decade",
-        "why": "First detailed technical roadmap beyond High-NA EUV, in a peer-reviewed paper, signals ASML's long-term lithography moat extends toward 5nm half-pitch",
-        "src": "Electronics Weekly"
+        "date": "2026-10-12",
+        "headline": "Samsung and SK Hynix accept ASML's 10% price hike on EUV/DUV replacement parts, effective Jan 2027",
+        "why": "Rare across-the-board pricing power move boosts near-term Installed Base revenue outlook",
+        "src": "Digitimes"
+      },
+      {
+        "date": "2026-10-12",
+        "headline": "ASML CEO Fouquet says AI chip demand boom could extend beyond 2028; Broadcom's Tan flags financing as bottleneck",
+        "why": "Extends visibility on demand duration but introduces financing/capital constraint as a new risk to the upgrade cycle",
+        "src": "Benzinga"
+      },
+      {
+        "date": "2026-10-08",
+        "headline": "ASML and Zeiss publish peer-reviewed paper on 'Hyper NA' EUV successor, ~10 years out",
+        "why": "Signals next lithography generation beyond High NA is technically feasible, extending ASML's long-term moat narrative",
+        "src": "Reuters"
       },
       {
         "date": "2026-10-06",
-        "headline": "BofA raises ASML price target to €2,557 from €2,452, lifts EUV and DUV unit forecasts",
-        "why": "Signals Street expects higher ASPs and higher 2027-28 EUV/DUV shipment volumes, raising consensus revenue trajectory",
-        "src": "Investing.com (BofA Securities note)"
-      },
-      {
-        "date": "2026-10-05",
-        "headline": "Washington think tank finds China has stockpiled ~343 ASML DUV lithography systems, urges full export ban",
-        "why": "Report from Centre for Technology & Statecraft could fuel tighter US/Dutch export controls on ASML's immersion DUV business in China",
-        "src": "Digitimes / SCMP"
+        "headline": "BofA and Barclays raise ASML price targets to €2,557 and €2,450 on higher ASPs/volumes",
+        "why": "Sell-side lifts EUV/DUV pricing and unit forecasts ahead of Q3 print, reinforcing AI-driven demand thesis",
+        "src": "Investing.com / ad-hoc-news.de"
       }
     ],
     "MU": [
       {
-        "date": "2026-10-09",
-        "headline": "Micron's FY2026 10-K shows record $133.19B revenue, up 256% YoY on DRAM/NAND pricing",
-        "why": "Confirms AI-driven memory pricing supercycle is flowing through to actual full-year results, not just guidance",
-        "src": "Micron FY2026 Form 10-K (SEC filing)"
+        "date": "2026-10-12",
+        "headline": "MU falls ~4.5%, erasing ~$52B, as China's CXMT flags denser server DRAM design",
+        "why": "Threatens Micron's server-memory pricing power, where adjusted gross margin hit 87% last quarter",
+        "src": "Benzinga/24/7 Wall St"
       },
       {
         "date": "2026-10-08",
-        "headline": "Micron board authorizes record buyback, raising total repurchase authorization to $35.16B",
-        "why": "Largest buyback in company history signals management confidence and capital return alongside heavy capex",
-        "src": "Micron 8-K filing / GuruFocus"
+        "headline": "Micron board raises buyback authorization to $35.16B, largest ever",
+        "why": "Signals confidence in free cash flow generation and capital return capacity",
+        "src": "Micron 8-K / Investing.com"
       },
       {
         "date": "2026-10-07",
-        "headline": "D.A. Davidson triples Micron price target to $3,000 from $2,100, keeps Buy rating",
-        "why": "Cites 26 strategic customer agreements covering ~35% of revenue by 2030 and ~$150B in unfulfilled commitments as reducing cyclicality",
-        "src": "24/7 Wall St. (D.A. Davidson note)"
+        "headline": "DA Davidson raises MU price target to $3,000 from $2,100, Street-high",
+        "why": "Analyst Gil Luria argues market still underestimates AI-driven HBM demand/supply imbalance into 2027-28",
+        "src": "DA Davidson (via CNBC/24/7 Wall St)"
       },
       {
-        "date": "2026-10-07",
-        "headline": "Micron's Taoyuan, Taiwan union votes 99% to authorize a strike over bonus structure",
-        "why": "Labor action risk at Micron's largest manufacturing site; union seeks 83 months' bonus pay vs company's 68-month offer, next mediation Oct 22",
-        "src": "GuruFocus"
+        "date": "2026-10-06",
+        "headline": "Micron to pay Netlist $600M in 5-year patent license, settling all litigation",
+        "why": "Removes legal overhang and patent-infringement liability tied to Micron's memory chips",
+        "src": "Reuters (via investing.com)"
       }
     ],
     "MRVL": [
@@ -323,42 +345,48 @@
     ],
     "0700": [
       {
-        "date": "2026-10-08",
-        "headline": "Tencent weighs up to $5B offshore bond sale to fund AI capex",
-        "why": "Additional debt financing need signals AI spending is outpacing operating cash flow, a leverage and capex-trajectory signal for investors",
+        "date": "2026-10-12",
+        "headline": "Morgan Stanley cuts Tencent price target to HK$650 from HK$735, keeps Overweight",
+        "why": "Cites AI investment pressure cutting 2026-27 non-IFRS operating profit estimates by 6-7%, a read on near-term margin risk",
+        "src": "Morgan Stanley via Futu/BigGo Finance"
+      },
+      {
+        "date": "2026-10-12",
+        "headline": "Tencent launches ~$5B bond offering (USD and offshore yuan notes) mainly to fund AI capex",
+        "why": "Shows Tencent financing its AI buildout via debt rather than only cash flow, raising leverage to support capex",
         "src": "Bloomberg"
       },
       {
+        "date": "2026-10-08",
+        "headline": "AI agent startup Manus raises $500M+ at ~$4B valuation with Tencent among investors",
+        "why": "Extends Tencent's strategic AI investment footprint following the collapse of Manus's Meta acquisition",
+        "src": "CNBC"
+      },
+      {
         "date": "2026-10-06",
-        "headline": "DeepSeek nears $12B funding round with Tencent and CATL as lead backers ahead of 2027 IPO",
-        "why": "Signals Tencent deepening its stake in a top rival/partner AI lab, relevant to its AI investment portfolio and ecosystem positioning",
-        "src": "Bloomberg / TechNode"
+        "headline": "DeepSeek nears $12B pre-IPO funding round backed by Tencent and CATL ahead of 2027 Shanghai listing",
+        "why": "Signals Tencent deepening its stake in a leading rival/partner AI model maker, adding to its AI investment portfolio exposure",
+        "src": "Bloomberg"
       }
     ],
     "3690": [
       {
         "date": "2026-10-10",
-        "headline": "SAMR holds China's first public antitrust hearing on Meituan's bid for delivery-aggregator Maiyatian",
-        "why": "Combined delivery-aggregation share above 50% draws formal competition scrutiny, risking deal conditions or delay",
-        "src": "21jingji.com (21st Century Business Herald)"
-      },
-      {
-        "date": "2026-10-09",
-        "headline": "China publishes draft labor rules for 84M gig workers, naming Meituan, Alibaba and DiDi as covered platforms",
-        "why": "New employment-contract and algorithm-disclosure requirements could raise delivery-rider cost structure if finalized",
-        "src": "Caixin Global"
+        "headline": "SAMR holds public hearing on Meituan's Maiyatian stake deal, flags risk to competition in delivery and instant retail",
+        "why": "First-ever Chinese review of a sub-threshold platform merger; adverse outcome could force deal changes or block Meituan's delivery-aggregation consolidation",
+        "src": "MLex / ION Analytics"
       },
       {
         "date": "2026-10-07",
-        "headline": "Meituan's National Day report shows consecutive-night hotel bookings up 31% YoY, long-haul travel orders up 25% YoY",
-        "why": "Points to stronger-than-expected travel/hotel vertical demand into Q4, a read-through for in-destination services GMV",
-        "src": "AASTOCKS"
+        "headline": "Meituan's National Day report shows consecutive-night hotel bookings up 31% YoY, long-haul travel orders up 25%",
+        "why": "Points to continued strength in the higher-margin in-store/hotel/travel segment during the Golden Week holiday",
+        "src": "AAStocks / Futunn"
       },
       {
         "date": "2026-10-06",
-        "headline": "Meituan's Keeta adds 21 cities in Brazil, now in 32 cities after court struck down rival's exclusivity clauses",
-        "why": "Signals accelerating overseas delivery expansion and removal of a legal barrier to share gains in a key growth market",
-        "src": "Futunn/InfoMoney"
+        "headline": "Keeta expands into 21 more Brazilian cities, reaching 32 total and 10m app downloads",
+        "why": "Shows overseas delivery expansion (a key growth/loss driver) accelerating again after a court struck down a rival's exclusivity clauses",
+        "src": "Futunn / BigGo Finance"
       }
     ],
     "9618": [
