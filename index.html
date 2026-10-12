@@ -330,7 +330,8 @@ let KEYNEWS = null;
 function renderKeyNews(category) {
   const el = document.getElementById("keynews");
   if (!el) return;
-  const items = (KEYNEWS && KEYNEWS.items) || [];
+  const recent = Date.now() - 15 * 864e5;   // never show anything older than 2 weeks, even if the data file stalls
+  const items = ((KEYNEWS && KEYNEWS.items) || []).filter(n => Date.parse(n.date) >= recent);
   if (category || STALE || !items.length) { el.innerHTML = ""; return; }
   const rows = items.slice(0, 12).map(n => {
     const chip = n.status === "reported"
@@ -343,7 +344,7 @@ function renderKeyNews(category) {
     </div>`;
   }).join("");
   const upd = (KEYNEWS.generated || "").slice(0, 10);
-  el.innerHTML = `<div class="ct-head">🗞 Key news — past 2 weeks <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">(updated ${esc(upd)})</span></div><div class="kn-list">${rows}</div>`;
+  el.innerHTML = `<div class="ct-head">🗞 Key AI news — past 2 weeks <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">(updated ${esc(upd)})</span></div><div class="kn-list">${rows}</div>`;
 }
 
 function renderCatalystsTable(category) {
