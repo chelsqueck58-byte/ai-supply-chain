@@ -73,6 +73,7 @@
   .kn-item { padding:6px 9px; border:1px solid var(--border); border-radius:8px; background:rgba(88,166,255,.04); }
   .kn-top { display:flex; gap:6px; align-items:center; font-size:10px; color:var(--muted); }
   .kn-cat { font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:#9fd0ff; }
+  .kn-cat.macro { color:#f5c518; }
   .kn-status { border-radius:8px; padding:0 5px; border:1px solid var(--border); }
   .kn-status.rep { color:var(--ema); border-color:rgba(227,179,65,.5); }
   .kn-head { font-weight:600; font-size:12px; margin:2px 0; }
@@ -603,13 +604,13 @@ function renderKeyNews(category) {
       ? `<span class="kn-status rep" title="Reported by a reputable outlet; not confirmed by the companies">reported</span>` : "";
     const tks = (n.tickers || []).map(t => `<span class="kn-tk" onclick="goTo('${esc(t)}')">${esc(t)}</span>`).join("");
     return `<div class="kn-item">
-      <div class="kn-top"><span>${esc((n.date || "").slice(5))}</span><span class="kn-cat">${esc(n.category || "")}</span>${chip}</div>
+      <div class="kn-top"><span>${esc((n.date || "").slice(5))}</span><span class="kn-cat${n.category === "Macro" ? " macro" : ""}">${esc(n.category || "")}</span>${chip}</div>
       <div class="kn-head">${esc(n.headline)}</div>
       <div class="kn-why">${esc(n.why || "")} <span class="kn-src">[${esc(n.src || "")}]</span>${tks}</div>
     </div>`;
   }).join("");
   const upd = (KEYNEWS.generated || "").slice(0, 10);
-  el.innerHTML = `<div class="ct-head">🗞 Key AI news — past 2 weeks <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">(updated ${esc(upd)})</span></div><div class="kn-list">${rows}</div>`;
+  el.innerHTML = `<div class="ct-head">🗞 Key news — AI &amp; macro, past 2 weeks <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">(updated ${esc(upd)})</span></div><div class="kn-list">${rows}</div>`;
 }
 
 function renderCatalystsTable(category) {
