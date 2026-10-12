@@ -133,10 +133,6 @@
     <button id="tab-china-internet" onclick="showTab('china-internet')">China Internet</button>
     <button id="tab-ai-tech" onclick="showTab('ai-tech')">AI & Big Tech</button>
     <button id="tab-semis" onclick="showTab('semis')">Semis</button>
-    <button id="tab-china-ev" onclick="showTab('china-ev')">China EV</button>
-    <button id="tab-singapore" onclick="showTab('singapore')">Singapore</button>
-    <button id="tab-sea-tech" onclick="showTab('sea-tech')">SE Asia Tech</button>
-    <button id="tab-consumer" onclick="showTab('consumer')">Consumer</button>
     <button id="tab-history" onclick="showTab('history')">History (Past Month)</button>
     <button id="tab-stock-history" onclick="showTab('stock-history')">Stock History</button>
   </nav>
@@ -147,10 +143,6 @@
 <main id="grid-china-internet" class="monitor-grid" style="display:none"></main>
 <main id="grid-ai-tech" class="monitor-grid" style="display:none"></main>
 <main id="grid-semis" class="monitor-grid" style="display:none"></main>
-<main id="grid-china-ev" class="monitor-grid" style="display:none"></main>
-<main id="grid-singapore" class="monitor-grid" style="display:none"></main>
-<main id="grid-sea-tech" class="monitor-grid" style="display:none"></main>
-<main id="grid-consumer" class="monitor-grid" style="display:none"></main>
 <div id="history" style="display:none;padding:12px"></div>
 <div id="stock-history" style="display:none;padding:12px;display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(470px,1fr))"></div>
 
@@ -167,10 +159,6 @@ const GROUP_TO_CATEGORY = {
   "China internet":      { key: "china-internet", label: "China Internet" },
   "AI & big tech":       { key: "ai-tech",         label: "AI & Big Tech" },
   "Semis":               { key: "semis",           label: "Semis" },
-  "China EV":            { key: "china-ev",        label: "China EV" },
-  "Singapore":           { key: "singapore",       label: "Singapore" },
-  "Southeast Asia tech": { key: "sea-tech",        label: "SE Asia Tech" },
-  "Consumer":            { key: "consumer",        label: "Consumer" },
 };
 const CATEGORIES = Object.values(GROUP_TO_CATEGORY);
 

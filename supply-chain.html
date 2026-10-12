@@ -286,12 +286,7 @@ const CATEGORIES = [
   { key: "foundry",           label: "Foundry" },
   { key: "memory",            label: "Memory" },
   { key: "equipment",         label: "Equipment" },
-  { key: "power-analog",      label: "Power/Analog" },
   { key: "china-internet",    label: "China Internet" },
-  { key: "china-ev",          label: "China EV" },
-  { key: "singapore",         label: "Singapore/SE Asia" },
-  { key: "consumer",          label: "Consumer" },
-  { key: "gold-jewelry",      label: "Gold & Jewelry" },
 ];
 const CAT_KEYS = new Set(CATEGORIES.map(c => c.key));
 
@@ -301,9 +296,6 @@ function getCategory(inst) {
   if (!m) return null;
   let c = m.category;
   if (c === "platform") c = "hyperscaler-cloud";
-  if (c.startsWith("singapore") || c === "se-asia-tech") c = "singapore";
-  if (c === "china-hardware") c = "china-ev";
-  if (c === "global-consumer" || c === "consumer-electronics") c = "consumer";
   return CAT_KEYS.has(c) ? c : null;   // benchmarks (SPY/QQQ) -> no tab, summary only
 }
 function getSubcategory(inst) {
@@ -461,7 +453,7 @@ function ideaBox(inst) {
   </div>`;
 }
 // Summary page focuses on the supply-chain core — periphery sectors excluded.
-const SUMMARY_EXCLUDE = new Set(["china-ev", "singapore", "consumer"]);
+const SUMMARY_EXCLUDE = new Set([]);
 function filterByCategory(instruments, category) {
   if (!category) return instruments.filter(i => !SUMMARY_EXCLUDE.has(getCategory(i)));
   return instruments.filter(i => getCategory(i) === category);
@@ -1855,7 +1847,7 @@ function buildHistPeSection() {
 // history/forward + re-rating narrative + guidance revisions.
 const STOCK_PAGES = ["META", "NVDA", "AAPL", "MSFT", "GOOGL", "AMZN",
                      "AMD", "AVGO", "INTC", "TSM", "ASML", "MU", "MRVL",
-                     "9988", "0700", "3690", "9618", "6181"];
+                     "9988", "0700", "3690", "9618"];
 const DELIVERY_WAR_TIDS = new Set(["9988", "3690", "9618"]);
 const AI_MODEL_TIDS = new Set(["META", "GOOGL", "MSFT", "AMZN", "9988", "0700"]);
 let PAGE_SEL = "META";
