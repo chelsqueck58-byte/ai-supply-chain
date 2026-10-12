@@ -68,6 +68,17 @@
   .chart { height:300px; }
   #ideas { padding:10px 12px; border-bottom:1px solid var(--border); background:#12161c; }
   #catalysts30 { padding:10px 12px; border-bottom:1px solid var(--border); background:#12161c; }
+  #keynews { padding:10px 12px; border-bottom:1px solid var(--border); background:#12161c; }
+  .kn-list { display:grid; grid-template-columns:repeat(auto-fill,minmax(380px,1fr)); gap:6px 12px; }
+  .kn-item { padding:6px 9px; border:1px solid var(--border); border-radius:8px; background:rgba(88,166,255,.04); }
+  .kn-top { display:flex; gap:6px; align-items:center; font-size:10px; color:var(--muted); }
+  .kn-cat { font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:#9fd0ff; }
+  .kn-status { border-radius:8px; padding:0 5px; border:1px solid var(--border); }
+  .kn-status.rep { color:var(--ema); border-color:rgba(227,179,65,.5); }
+  .kn-head { font-weight:600; font-size:12px; margin:2px 0; }
+  .kn-why { font-size:11px; color:var(--muted); }
+  .kn-src { font-size:10px; }
+  .kn-tk { cursor:pointer; color:#9fd0ff; font-size:10px; border:1px solid var(--border); border-radius:6px; padding:0 4px; margin-left:4px; }
   #pastCatalysts { padding:10px 12px; border-bottom:1px solid var(--border); background:#12161c; }
   .ct-head { font-size:11px; font-weight:700; letter-spacing:.5px; text-transform:uppercase;
     color:#9fd0ff; margin:2px 0 6px; }
@@ -261,6 +272,7 @@
   <nav class="tabs" id="tabs"></nav>
 </header>
 <div id="ideas"></div>
+<div id="keynews"></div>
 <div id="catalysts30"></div>
 <div id="pastCatalysts"></div>
 <div id="grids"></div>
@@ -576,6 +588,29 @@ function catalystRows(category) {
   rows.sort((a, b) => a.days - b.days || a.id.localeCompare(b.id));
   return rows;
 }
+let KEYNEWS = null;
+// Summary tab only: the handful of big stories from the last two weeks (AI-lab
+// financings, mega deals, policy, macro). "reported" = a reputable outlet says it
+// is in progress / from sources, not confirmed by the companies.
+function renderKeyNews(category) {
+  const el = document.getElementById("keynews");
+  if (!el) return;
+  const items = (KEYNEWS && KEYNEWS.items) || [];
+  if (category || STALE || !items.length) { el.innerHTML = ""; return; }
+  const rows = items.slice(0, 12).map(n => {
+    const chip = n.status === "reported"
+      ? `<span class="kn-status rep" title="Reported by a reputable outlet; not confirmed by the companies">reported</span>` : "";
+    const tks = (n.tickers || []).map(t => `<span class="kn-tk" onclick="goTo('${esc(t)}')">${esc(t)}</span>`).join("");
+    return `<div class="kn-item">
+      <div class="kn-top"><span>${esc((n.date || "").slice(5))}</span><span class="kn-cat">${esc(n.category || "")}</span>${chip}</div>
+      <div class="kn-head">${esc(n.headline)}</div>
+      <div class="kn-why">${esc(n.why || "")} <span class="kn-src">[${esc(n.src || "")}]</span>${tks}</div>
+    </div>`;
+  }).join("");
+  const upd = (KEYNEWS.generated || "").slice(0, 10);
+  el.innerHTML = `<div class="ct-head">🗞 Key news — past 2 weeks <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">(updated ${esc(upd)})</span></div><div class="kn-list">${rows}</div>`;
+}
+
 function renderCatalystsTable(category) {
   const el = document.getElementById("catalysts30");
   if (STALE) { el.innerHTML = ""; return; }
@@ -2586,6 +2621,7 @@ window.showTab = function (tabKey) {
   // tab was active before switching here.
   const showIdeas = tabKey !== "revenue" && tabKey !== "compare" && tabKey !== "pe" && tabKey !== "nvda-eco" && tabKey !== "circ-fin" && tabKey !== "semis" && tabKey !== "pages" && tabKey !== "macro-ev" && tabKey !== "deal-map" && tabKey !== "stock-cards";
   document.getElementById("ideas").style.display = showIdeas ? "" : "none";
+  document.getElementById("keynews").style.display = showIdeas ? "" : "none";
   document.getElementById("catalysts30").style.display = showIdeas ? "" : "none";
   document.getElementById("pastCatalysts").style.display = showIdeas ? "" : "none";
   if (tabKey === "revenue") {
@@ -2631,6 +2667,7 @@ window.showTab = function (tabKey) {
   const category = tabKey === "summary" ? null : tabKey;
   if (DATA) {
     renderIdeas(category);
+    renderKeyNews(category);
     renderCatalystsTable(category);
     renderPastCatalysts(category, 30);
     if (category) renderSectorHistory(category);
@@ -2732,7 +2769,9 @@ function load() {
     fetch("./model-launches.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./deal-map.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./weekly-news.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
-  ]).then(([data, moves, scmap, earnDates, revMix, deepFund, geoMix, fxRates, histPe, fwdPe, roic, nvdaPartnerships, nvdaDebt, circFin, deepFin, cal, pageExtras, delivery, models, deals, news]) => {
+    fetch("./key-news.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
+  ]).then(([data, moves, scmap, earnDates, revMix, deepFund, geoMix, fxRates, histPe, fwdPe, roic, nvdaPartnerships, nvdaDebt, circFin, deepFin, cal, pageExtras, delivery, models, deals, news, keyNews]) => {
+    KEYNEWS = keyNews;
     DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates; REV_MIX = revMix; DEEP_FUND = deepFund; GEO_MIX = geoMix; FX_RATES = fxRates; HIST_PE = histPe; FWD_PE = fwdPe; ROIC = roic; NVDA_PARTNERSHIPS = nvdaPartnerships; NVDA_DEBT = nvdaDebt; CIRC_FIN = circFin; DEEP_FIN = deepFin; CAL = cal; PAGE_EXTRAS = pageExtras; DELIVERY = delivery; MODELS = models; DEALS = deals; NEWS = news;
     STALE = checkStale(DATA);
     const ideas = DATA.instruments.filter(i => i.idea && i.idea.kind === "enter").length;
