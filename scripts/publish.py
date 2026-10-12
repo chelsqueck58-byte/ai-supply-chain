@@ -80,13 +80,31 @@ def restore_frontend() -> None:
     git("checkout", "--", *dirty)
 
 
+def rebase_keeping_generated() -> None:
+    """Rebase onto origin even when this run just rewrote generated files.
+
+    A plain `git rebase` refuses with "You have unstaged changes", which made
+    every publish fail once the clone fell behind (the news job then spent a
+    full day of tokens on output that never shipped). Generated files are
+    regenerated wholesale, so set our versions aside, rebase on a clean tree,
+    and put ours back on top - no stash, no conflicts.
+    """
+    dirty = [f for f in git("diff", "--name-only").splitlines() if f in GENERATED]
+    saved = {f: (REPO / f).read_bytes() for f in dirty}
+    if dirty:
+        git("checkout", "--", *dirty)
+    git("rebase", f"origin/{BRANCH}")
+    for name, content in saved.items():
+        (REPO / name).write_bytes(content)
+
+
 def sync_with_remote() -> None:
     git("fetch", "origin", BRANCH)
     behind = git("rev-list", "--count", f"HEAD..origin/{BRANCH}")
     if behind == "0":
         return
     log(f"{behind} new commit(s) on origin/{BRANCH} - rebasing onto them")
-    git("rebase", f"origin/{BRANCH}")
+    rebase_keeping_generated()
 
 
 def stage_generated() -> list[str]:
@@ -119,7 +137,7 @@ def publish(message: str, dry_run: bool) -> int:
         # a second failure is a real problem and should page a human.
         log("push rejected - rebasing once and retrying")
         git("fetch", "origin", BRANCH)
-        git("rebase", f"origin/{BRANCH}")
+        rebase_keeping_generated()
         git("push", "origin", BRANCH)
     log(f"pushed to origin/{BRANCH}: {git('rev-parse', '--short', 'HEAD')}")
     return 0
