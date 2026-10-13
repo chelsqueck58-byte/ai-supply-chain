@@ -15,7 +15,7 @@ REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LABEL="com.chels.ai-supply-chain.news"
 PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
 LOG="$HOME/Library/Logs/ai-supply-chain-news.log"
-HOUR=7
+HOUR=2   # overnight: own 5-hour usage window, never the 07:30 one the Morning Brief needs
 MINUTE=30
 
 fail() { echo "error: $*" >&2; exit 1; }
