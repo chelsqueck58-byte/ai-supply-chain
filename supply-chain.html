@@ -283,7 +283,7 @@
 "use strict";
 const TREND_ORDER = { up: 0, flat: 1, down: 2 };
 let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, DEEP_FUND = null, GEO_MIX = null, FX_RATES = null, HIST_PE = null, FWD_PE = null, ROIC = null, NVDA_PARTNERSHIPS = null, NVDA_DEBT = null, CIRC_FIN = null, DEEP_FIN = null, CAL = null, PAGE_EXTRAS = null, DELIVERY = null, MODELS = null, DEALS = null, NEWS = null, STALE = false, OBSERVER = null;
-const REVENUE_TAB_CATEGORIES = new Set(["china-internet", "compute", "hyperscaler-cloud", "platform"]);
+const REVENUE_TAB_CATEGORIES = new Set(["china-internet", "compute", "hyperscaler-cloud", "platform", "memory"]);
 // Individual tickers pulled in from a category that isn't otherwise in
 // scope (e.g. ASML from Equipment) - added one at a time on request rather
 // than including that whole category's other names.
@@ -1113,7 +1113,8 @@ function _renderRevenueMixImpl(wrap) {
     return m && inRevenueTabScope(i.id, m.category);
   });
   const CAT_LABEL = { "china-internet": "China Internet", "compute": "Compute",
-    "hyperscaler-cloud": "Tech Platforms", "platform": "Tech Platforms", "equipment": "Equipment" };
+    "hyperscaler-cloud": "Tech Platforms", "platform": "Tech Platforms", "equipment": "Equipment",
+    "memory": "Memory" };
   const byCat = new Map();
   for (const inst of insts) {
     const cat = CAT_LABEL[SC_MAP[inst.id].category] || SC_MAP[inst.id].category;
@@ -1260,7 +1261,8 @@ function _renderCompareTableImpl(wrap) {
     return m && inRevenueTabScope(i.id, m.category);
   });
   const CAT_LABEL = { "china-internet": "China Internet", "compute": "Compute",
-    "hyperscaler-cloud": "Tech Platforms", "platform": "Tech Platforms", "equipment": "Equipment" };
+    "hyperscaler-cloud": "Tech Platforms", "platform": "Tech Platforms", "equipment": "Equipment",
+    "memory": "Memory" };
   const byCat = new Map();
   for (const inst of insts) {
     const cat = CAT_LABEL[SC_MAP[inst.id].category] || SC_MAP[inst.id].category;
@@ -1778,7 +1780,8 @@ function buildHistPeSection() {
   });
   if (!insts.length) return "";
   const CAT_LABEL = { "china-internet": "China Internet", "compute": "Compute",
-    "hyperscaler-cloud": "Tech Platforms", "platform": "Tech Platforms", "equipment": "Equipment" };
+    "hyperscaler-cloud": "Tech Platforms", "platform": "Tech Platforms", "equipment": "Equipment",
+    "memory": "Memory" };
   const byCat = new Map();
   for (const inst of insts) {
     const cat = CAT_LABEL[SC_MAP[inst.id].category] || SC_MAP[inst.id].category;
