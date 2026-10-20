@@ -35,7 +35,7 @@ GENERATED = [
     "catalyst-calendar.json", "catalyst-deep.json", "circular-financing.json",
     "data.json", "deal-map.json", "deep-financials.json", "deep-fundamentals.json",
     "delivery-war.json", "earnings-dates.json", "forward-pe.json", "fundamentals.json",
-    "fx-rates.json", "geo-mix.json", "key-news.json", "historical-pe.json", "model-launches.json",
+    "fx-rates.json", "geo-mix.json", "investor-focus.json", "key-news.json", "historical-pe.json", "model-launches.json",
     "moves.json", "nvda-debt-financing.json", "nvda-partnerships.json",
     "off-bs-liabilities.json", "revenue-breakdown.json", "roic.json",
     "stock-page-extras.json", "supply-chain-map.json", "weekly-news.json",
