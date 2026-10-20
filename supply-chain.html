@@ -152,6 +152,15 @@
   .sc-news-row, .sc-cat-row { display:flex; gap:6px; align-items:baseline; font-size:11.5px;
     line-height:1.5; margin:2px 0; flex-wrap:wrap; }
   .sc-news-text { flex:1 1 auto; min-width:120px; }
+  .sc-focus { background:rgba(217,164,65,.08); border:1px solid rgba(217,164,65,.3); border-radius:6px;
+    padding:7px 9px; margin:2px 0 8px; }
+  .sc-focus-label { font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent);
+    font-weight:700; margin-bottom:2px; }
+  .sc-focus-text { font-size:12px; line-height:1.45; }
+  .sc-focus-src { font-size:10px; color:var(--muted); margin-top:3px; }
+  .sc-earn-badge { display:inline-block; font-size:11px; font-weight:600; color:#58a6ff;
+    background:rgba(88,166,255,.12); border:1px solid rgba(88,166,255,.35); border-radius:4px;
+    padding:2px 8px; margin-bottom:8px; }
   .sb-chip { font-size:11px; padding:0 5px; border-radius:3px; white-space:nowrap; cursor:help;
     font-variant-numeric:tabular-nums; display:inline-block; margin:1px 2px 1px 0; }
   .sb-chip.u { color:var(--up); background:rgba(63,185,80,.12); }
@@ -282,7 +291,7 @@
 <script>
 "use strict";
 const TREND_ORDER = { up: 0, flat: 1, down: 2 };
-let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, DEEP_FUND = null, GEO_MIX = null, FX_RATES = null, HIST_PE = null, FWD_PE = null, ROIC = null, NVDA_PARTNERSHIPS = null, NVDA_DEBT = null, CIRC_FIN = null, DEEP_FIN = null, CAL = null, PAGE_EXTRAS = null, DELIVERY = null, MODELS = null, DEALS = null, NEWS = null, STALE = false, OBSERVER = null;
+let DATA = null, MOVES = null, SC_MAP = null, EARN_DATES = null, REV_MIX = null, DEEP_FUND = null, GEO_MIX = null, FX_RATES = null, HIST_PE = null, FWD_PE = null, ROIC = null, NVDA_PARTNERSHIPS = null, NVDA_DEBT = null, CIRC_FIN = null, DEEP_FIN = null, CAL = null, PAGE_EXTRAS = null, DELIVERY = null, MODELS = null, DEALS = null, NEWS = null, INVESTOR_FOCUS = null, STALE = false, OBSERVER = null;
 const REVENUE_TAB_CATEGORIES = new Set(["china-internet", "compute", "hyperscaler-cloud", "platform", "memory"]);
 // Individual tickers pulled in from a category that isn't otherwise in
 // scope (e.g. ASML from Equipment) - added one at a time on request rather
@@ -2435,10 +2444,25 @@ function stockCardCatalysts(tid) {
     </div>`;
   }).join("");
 }
+function stockCardFocusHtml(tid) {
+  const f = (INVESTOR_FOCUS && INVESTOR_FOCUS.tickers && INVESTOR_FOCUS.tickers[tid]) || null;
+  if (!f) return "";
+  const asOf = f.as_of ? ` <span class="muted">(${esc(f.as_of)})</span>` : "";
+  return `<div class="sc-focus">
+    <div class="sc-focus-label">🎯 Investor focus</div>
+    <div class="sc-focus-text">${esc(f.focus)}</div>
+    <div class="sc-focus-src">${esc(f.source)}${asOf}</div>
+  </div>`;
+}
+function stockCardEarningsBadge(inst) {
+  const ne = inst.fund && inst.fund.next_earnings;
+  if (!ne) return "";
+  const d = daysTo(ne);
+  return `<div class="sc-earn-badge">📊 <b>EARNINGS</b> ${esc(ne)}${d != null ? ` <span class="muted">(${d}d)</span>` : ""}</div>`;
+}
 function renderStockCardOne(tid) {
   const inst = DATA.instruments.find(i => i.id === tid);
   if (!inst) return "";
-  const earnD = inst.fund && inst.fund.next_earnings ? daysTo(inst.fund.next_earnings) : null;
   return `<div class="sc-card">
     <div class="sc-card-head">
       ${dmBadge(tid)} <b>${esc(inst.label)}</b>
@@ -2446,8 +2470,10 @@ function renderStockCardOne(tid) {
         ${inst.ytd_pct != null ? ` <span class="pct ${inst.ytd_pct >= 0 ? "u" : "d"}">${inst.ytd_pct >= 0 ? "+" : ""}${inst.ytd_pct.toFixed(1)}%</span>` : ""}
       </span>
     </div>
+    ${stockCardFocusHtml(tid)}
+    ${stockCardEarningsBadge(inst)}
     <div class="sc-sec-label">Forward valuation</div>
-    <div class="sc-val-row">${stockCardValuation(tid, inst)}${inst.fund && inst.fund.next_earnings ? ` <span class="muted">· earnings ${esc(inst.fund.next_earnings)}${earnD != null ? ` (${earnD}d)` : ""}</span>` : ""}</div>
+    <div class="sc-val-row">${stockCardValuation(tid, inst)}</div>
     <div class="sc-sec-label">Latest 5 items</div>
     ${stockCardNews(tid, inst)}
     <div class="sc-sec-label">Upcoming catalysts</div>
@@ -2775,8 +2801,10 @@ function load() {
     fetch("./deal-map.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./weekly-news.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
     fetch("./key-news.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
-  ]).then(([data, moves, scmap, earnDates, revMix, deepFund, geoMix, fxRates, histPe, fwdPe, roic, nvdaPartnerships, nvdaDebt, circFin, deepFin, cal, pageExtras, delivery, models, deals, news, keyNews]) => {
+    fetch("./investor-focus.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).catch(() => ({})),
+  ]).then(([data, moves, scmap, earnDates, revMix, deepFund, geoMix, fxRates, histPe, fwdPe, roic, nvdaPartnerships, nvdaDebt, circFin, deepFin, cal, pageExtras, delivery, models, deals, news, keyNews, invFocus]) => {
     KEYNEWS = keyNews;
+    INVESTOR_FOCUS = invFocus;
     DATA = data; MOVES = moves; SC_MAP = scmap; EARN_DATES = earnDates; REV_MIX = revMix; DEEP_FUND = deepFund; GEO_MIX = geoMix; FX_RATES = fxRates; HIST_PE = histPe; FWD_PE = fwdPe; ROIC = roic; NVDA_PARTNERSHIPS = nvdaPartnerships; NVDA_DEBT = nvdaDebt; CIRC_FIN = circFin; DEEP_FIN = deepFin; CAL = cal; PAGE_EXTRAS = pageExtras; DELIVERY = delivery; MODELS = models; DEALS = deals; NEWS = news;
     STALE = checkStale(DATA);
     const ideas = DATA.instruments.filter(i => i.idea && i.idea.kind === "enter").length;
