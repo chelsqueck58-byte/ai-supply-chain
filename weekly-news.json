@@ -9,7 +9,7 @@
       "src": "publication or filing the item came from - required for anything asserted as fact"
     }
   },
-  "generated": "2026-10-13T07:34:03+08:00",
+  "generated": "2026-10-25T02:31:33+08:00",
   "refreshed": {
     "META": "2026-10-13",
     "INTC": "2026-10-13",
@@ -18,7 +18,8 @@
     "MU": "2026-10-13",
     "0700": "2026-10-13",
     "3690": "2026-10-13",
-    "NVDA": "2026-10-13"
+    "NVDA": "2026-10-13",
+    "AMZN": "2026-10-25"
   },
   "tickers": {
     "META": [
@@ -141,28 +142,28 @@
     ],
     "AMZN": [
       {
-        "date": "2026-10-09",
-        "headline": "Judge rejects Amazon's bid to delay FTC antitrust monopoly trial",
-        "why": "Keeps litigation risk and timeline (trial set for March 2027) intact, no relief on regulatory overhang",
-        "src": "Law360 Pulse"
+        "date": "2026-10-23",
+        "headline": "Amazon CEO Jassy says AWS cloud capacity largely sold out through 2027, chunk of 2028 also sold",
+        "why": "Direct management signal of AWS demand/capacity constraints underpinning bullish cloud growth and capex thesis",
+        "src": "Reuters"
       },
       {
-        "date": "2026-10-08",
-        "headline": "Amazon unveils new Alexa tablet lineup with Alexa+ and Google Play Store access, replacing Fire brand",
-        "why": "New hardware category and a Google Play Store tie-up broaden device ecosystem and Alexa+ distribution",
-        "src": "TechCrunch"
+        "date": "2026-10-20",
+        "headline": "Amazon pledges over €16bn ($17.9bn) investment in Germany for 2027",
+        "why": "Signals continued heavy AI/cloud/logistics infrastructure capex commitment in a key European market",
+        "src": "Amazon announcement at Invest in Germany Summit, reported by DataCenterDynamics"
       },
       {
-        "date": "2026-10-07",
-        "headline": "AWS raises reserved GPU capacity prices ~15%, 4th straight quarterly hike",
-        "why": "Shows AWS pricing power on scarce AI compute, supporting cloud margin/revenue outlook",
-        "src": "The Inference"
+        "date": "2026-10-20",
+        "headline": "Amazon to hire 300,000+ US seasonal workers for holiday 2026, pay and benefits raised",
+        "why": "First seasonal hiring increase in three years, signaling management's demand expectations for Q4 retail volume",
+        "src": "Amazon press release (press.aboutamazon.com)"
       },
       {
-        "date": "2026-10-06",
-        "headline": "Amazon lays off employees in Stores retail division, confirmed during Prime Big Deal Days",
-        "why": "Signals continued cost-cutting in core e-commerce even as holiday sales push begins",
-        "src": "CNBC"
+        "date": "2026-10-19",
+        "headline": "Morgan Stanley names Amazon top pick, raises price target to $350 from $335",
+        "why": "Cites AWS growth re-rating (47% 2027E, 42% 2028E) on AI demand, Bedrock, and robotics as underpriced catalysts",
+        "src": "Morgan Stanley note via Yahoo Finance/24/7 Wall St."
       }
     ],
     "AMD": [
