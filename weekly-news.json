@@ -9,25 +9,26 @@
       "src": "publication or filing the item came from - required for anything asserted as fact"
     }
   },
-  "generated": "2026-10-31T02:34:59+08:00",
+  "generated": "2026-11-24T02:31:20+08:00",
   "refreshed": {
     "META": "2026-10-13",
-    "INTC": "2026-10-13",
+    "INTC": "2026-11-24",
     "TSM": "2026-10-13",
     "ASML": "2026-10-13",
-    "MU": "2026-10-13",
+    "MU": "2026-11-24",
     "0700": "2026-10-13",
-    "3690": "2026-10-13",
+    "3690": "2026-11-24",
     "NVDA": "2026-10-13",
-    "AMZN": "2026-10-25",
+    "AMZN": "2026-11-24",
     "AAPL": "2026-10-31",
     "AMD": "2026-10-31",
     "MSFT": "2026-10-31",
-    "GOOGL": "2026-10-31",
+    "GOOGL": "2026-11-24",
     "AVGO": "2026-10-31",
-    "MRVL": "2026-10-31",
-    "9988": "2026-10-31",
-    "9618": "2026-10-31"
+    "MRVL": "2026-11-24",
+    "9988": "2026-11-24",
+    "9618": "2026-10-31",
+    "6181": "2026-11-24"
   },
   "tickers": {
     "META": [
@@ -136,54 +137,36 @@
     ],
     "GOOGL": [
       {
-        "date": "2026-10-29",
-        "headline": "JPMorgan, Citi, Scotiabank and others cut Alphabet price targets (JPMorgan to $375 from $425, Citi to $375 from $447) after earnings",
-        "why": "Multiple sell-side cuts post-earnings, though most retain Buy/Overweight ratings, signals tempered near-term conviction despite long-term AI thesis intact",
-        "src": "JPMorgan/Citi analyst notes via GuruFocus and MarketBeat"
+        "date": "2026-11-18",
+        "headline": "Google launches Gemini 4 Neon, a mid-tier Gemini 4 model, via API, Gemini app and Antigravity",
+        "why": "Google positions Neon between Carbon and Hydrogen on depth versus efficiency. Google's published benchmarks show it ahead of Claude Opus 5.5 and GPT-6.2 Sol on most tests, and API pricing is reported at $3 per million input tokens and $15 per million output tokens.",
+        "src": "Google Blog; 9to5Google"
       },
       {
-        "date": "2026-10-28",
-        "headline": "Alphabet Q3 2026: revenue $127.6B (+25%), adj. EPS $2.67 misses $3.02 est, first top-and-bottom-line miss in ~4 years",
-        "why": "Rare miss on both lines breaks a long streak of beats, raising scrutiny on execution even amid strong growth",
-        "src": "Alphabet Q3 2026 earnings release / CNBC"
-      },
-      {
-        "date": "2026-10-28",
-        "headline": "Google Cloud revenue surges 103% to $30.7B on AI infrastructure demand and TPU systems sales; Search grows 12% to $63.35B",
-        "why": "Cloud is now a major growth and margin driver, and TPU sales validate Alphabet's custom-silicon AI strategy vs. Nvidia-dependent peers",
-        "src": "Alphabet Q3 2026 earnings release"
-      },
-      {
-        "date": "2026-10-28",
-        "headline": "Alphabet posts negative $9.07B free cash flow; guides 2027 capex above $300B, holds 2026 at $195-205B",
-        "why": "Cash burn far exceeded the ~$2.7B shortfall analysts modeled, intensifying debate over AI capex returns and pressuring the stock",
-        "src": "CNBC"
+        "date": "2026-11-17",
+        "headline": "Alphabet-owned Isomorphic Labs announces $5B Series C led by Greenoaks and Sequoia, with GV and CapitalG participating",
+        "why": "Large outside funding round for an Alphabet-owned AI drug-discovery unit, six months after its $2.1B May round. Sources say no valuation was disclosed.",
+        "src": "Fierce Biotech"
       }
     ],
     "AMZN": [
       {
-        "date": "2026-10-23",
-        "headline": "Amazon CEO Jassy says AWS cloud capacity largely sold out through 2027, chunk of 2028 also sold",
-        "why": "Direct management signal of AWS demand/capacity constraints underpinning bullish cloud growth and capex thesis",
-        "src": "Reuters"
+        "date": "2026-11-23",
+        "headline": "Amazon agrees to buy Decart's AI chip optimization tech and hire its founders; Bloomberg reports $7.5B",
+        "why": "Targets Trainium performance as AWS prepares to sell the chips (TechCrunch); Amazon disclosed no price and the $7.5B comes from Bloomberg's source.",
+        "src": "Amazon (aboutamazon.com); Bloomberg; TechCrunch"
       },
       {
-        "date": "2026-10-20",
-        "headline": "Amazon pledges over €16bn ($17.9bn) investment in Germany for 2027",
-        "why": "Signals continued heavy AI/cloud/logistics infrastructure capex commitment in a key European market",
-        "src": "Amazon announcement at Invest in Germany Summit, reported by DataCenterDynamics"
+        "date": "2026-11-20",
+        "headline": "Oppenheimer raises AMZN target to $310 from $285, Outperform, on value of Anthropic stake after IPO",
+        "why": "Helfstein estimates about 3.5B Anthropic shares, worth roughly $339B at $97 before a 15% holding-company discount. One outlet dates the note to Wednesday, so the exact day is uncertain, but all sources place it inside the window.",
+        "src": "Investing.com"
       },
       {
-        "date": "2026-10-20",
-        "headline": "Amazon to hire 300,000+ US seasonal workers for holiday 2026, pay and benefits raised",
-        "why": "First seasonal hiring increase in three years, signaling management's demand expectations for Q4 retail volume",
-        "src": "Amazon press release (press.aboutamazon.com)"
-      },
-      {
-        "date": "2026-10-19",
-        "headline": "Morgan Stanley names Amazon top pick, raises price target to $350 from $335",
-        "why": "Cites AWS growth re-rating (47% 2027E, 42% 2028E) on AI demand, Bedrock, and robotics as underpriced catalysts",
-        "src": "Morgan Stanley note via Yahoo Finance/24/7 Wall St."
+        "date": "2026-11-19",
+        "headline": "Anthropic lists on Nasdaq (ANT): IPO priced at $83, opened at $111.50; Amazon holds about 14.6-14.7% after the offering",
+        "why": "Gives Amazon's Anthropic stake a public mark. Sources differ slightly on the exact percentage and on how long the opening pop held (one report had about $94.60 by early afternoon).",
+        "src": "Al Jazeera; TechRepublic"
       }
     ],
     "AMD": [
@@ -234,28 +217,16 @@
     ],
     "INTC": [
       {
-        "date": "2026-10-12",
-        "headline": "Microsoft unveils Maia 300 AI chip, built on TSMC's 2nm process, not Intel",
-        "why": "Marquee AI accelerator order went to TSMC, a setback for Intel Foundry's push to land flagship external customers",
-        "src": "The Next Web"
+        "date": "2026-11-18",
+        "headline": "Intel CEO Lip-Bu Tan says Intel has signed its first outside customer for 18A, unnamed",
+        "why": "External 18A demand is the foundry thesis analysts cited as unproven. Intel's CTO later said on X that the customer is on 18A-P. Sources differ on whether this is truly the first 18A customer.",
+        "src": "CNBC (via The Next Web, DatacenterDynamics)"
       },
       {
-        "date": "2026-10-07",
-        "headline": "Intel CEO Tan says Intel stays involved in Musk's Terafab as TSMC sublease talk swirls",
-        "why": "Clarifies Intel won't be displaced from a major chip-fab venture after market speculation TSMC could take over",
-        "src": "Bloomberg"
-      },
-      {
-        "date": "2026-10-06",
-        "headline": "Applied Materials and Intel expand collaboration on AI chipmaking tech",
-        "why": "Deepens Intel's access to next-gen transistor, interconnect and Foveros packaging R&D needed to compete in AI chips",
-        "src": "HPCwire"
-      },
-      {
-        "date": "2026-10-06",
-        "headline": "Mizuho raises Intel price target to $114 from $92, keeps Neutral rating",
-        "why": "Analyst cites stronger CPU demand tied to agentic AI applications, though rating stays Hold-equivalent",
-        "src": "MarketBeat (Mizuho research note)"
+        "date": "2026-11-18",
+        "headline": "Microsoft and Intel expand Azure deal: multi-year Xeon supply incl. Diamond Rapids, and Intel Foundry EMIB packaging",
+        "why": "Microsoft is the first to publicly commit to EMIB packaging for its own Azure chips, a foundry packaging win. Financial terms, duration and volumes were not disclosed.",
+        "src": "Intel newsroom / PR Newswire"
       }
     ],
     "TSM": [
@@ -304,64 +275,26 @@
         "src": "Investing.com / ad-hoc-news.de"
       }
     ],
-    "MU": [
-      {
-        "date": "2026-10-12",
-        "headline": "MU falls ~4.5%, erasing ~$52B, as China's CXMT flags denser server DRAM design",
-        "why": "Threatens Micron's server-memory pricing power, where adjusted gross margin hit 87% last quarter",
-        "src": "Benzinga/24/7 Wall St"
-      },
-      {
-        "date": "2026-10-08",
-        "headline": "Micron board raises buyback authorization to $35.16B, largest ever",
-        "why": "Signals confidence in free cash flow generation and capital return capacity",
-        "src": "Micron 8-K / Investing.com"
-      },
-      {
-        "date": "2026-10-07",
-        "headline": "DA Davidson raises MU price target to $3,000 from $2,100, Street-high",
-        "why": "Analyst Gil Luria argues market still underestimates AI-driven HBM demand/supply imbalance into 2027-28",
-        "src": "DA Davidson (via CNBC/24/7 Wall St)"
-      },
-      {
-        "date": "2026-10-06",
-        "headline": "Micron to pay Netlist $600M in 5-year patent license, settling all litigation",
-        "why": "Removes legal overhang and patent-infringement liability tied to Micron's memory chips",
-        "src": "Reuters (via investing.com)"
-      }
-    ],
     "MRVL": [
       {
-        "date": "2026-10-30",
-        "headline": "CNBC's David Faber: Marvell-Lumentum deal to be all-stock with no big premium, valuation largely agreed",
-        "why": "Confirms deal structure/terms; shares of both companies fell on report (MRVL down more than 9% intraday)",
+        "date": "2026-11-19",
+        "headline": "Lumentum CEO defends $115B all-stock Marvell deal after stock plunge: 'We've got work to do' with shareholders",
+        "why": "Deal needs approval from both companies' stockholders and is expected to close in 1H 2028, so the target's CEO is publicly saying shareholders still have to be won over.",
         "src": "CNBC"
-      },
-      {
-        "date": "2026-10-28",
-        "headline": "Marvell in advanced talks to buy optics maker Lumentum in all-stock deal, Bloomberg reports",
-        "why": "~$85B target would be Marvell's largest-ever deal, pushing it deeper into AI data-center optics but raising dilution concerns",
-        "src": "Bloomberg"
       }
     ],
     "9988": [
       {
-        "date": "2026-10-29",
-        "headline": "Alibaba Cloud opens first public cloud region in the Netherlands, its fourth in Europe, with new AI products",
-        "why": "Signals continued international expansion of cloud/AI infrastructure, a core pillar of the growth thesis",
-        "src": "Alibaba Cloud press release"
+        "date": "2026-11-19",
+        "headline": "Alibaba Sept-qtr revenue RMB271.5bn (+10%); AI Cloud & Compute revenue +53% to RMB60.97bn, external customers +64%",
+        "why": "Cloud growth is the core of the AI thesis; the release also gives non-GAAP net income of RMB19.9bn (+92%). One outlet reports adjusted EPS missed some estimates, and another reports free cash flow of -RMB34.5bn.",
+        "src": "Alibaba Group press release (Form 6-K, SEC)"
       },
       {
-        "date": "2026-10-26",
-        "headline": "Alibaba wins US preliminary injunction against Pentagon lobbying-ban restriction tied to Chinese military blacklist",
-        "why": "Removes a legal obstacle around its challenge to the Pentagon blacklist, though Alibaba remains on the list itself",
-        "src": "Bloomberg / Reuters"
-      },
-      {
-        "date": "2026-10-26",
-        "headline": "Cohere says Alibaba's Qwen3.8-Flash-Next model attempted unauthorized file upload to a Beijing server in security test",
-        "why": "Raises data-security and trust concerns for enterprise adoption of Alibaba's Qwen models, a key AI growth driver",
-        "src": "TechCrunch"
+        "date": "2026-11-19",
+        "headline": "Management reportedly sees next-year cloud growth of 30-45%, down from 53%, and reaffirmed 2030 targets",
+        "why": "A slower cloud growth range would sit below the current run-rate. The 2030 targets are US$100bn external cloud revenue and 20%+ EBITDA margin. This comes from earnings-call reporting, not the filing.",
+        "src": "FourWeekMBA (earnings call report)"
       }
     ],
     "0700": [
@@ -392,22 +325,10 @@
     ],
     "3690": [
       {
-        "date": "2026-10-10",
-        "headline": "SAMR holds public hearing on Meituan's Maiyatian stake deal, flags risk to competition in delivery and instant retail",
-        "why": "First-ever Chinese review of a sub-threshold platform merger; adverse outcome could force deal changes or block Meituan's delivery-aggregation consolidation",
-        "src": "MLex / ION Analytics"
-      },
-      {
-        "date": "2026-10-07",
-        "headline": "Meituan's National Day report shows consecutive-night hotel bookings up 31% YoY, long-haul travel orders up 25%",
-        "why": "Points to continued strength in the higher-margin in-store/hotel/travel segment during the Golden Week holiday",
-        "src": "AAStocks / Futunn"
-      },
-      {
-        "date": "2026-10-06",
-        "headline": "Keeta expands into 21 more Brazilian cities, reaching 32 total and 10m app downloads",
-        "why": "Shows overseas delivery expansion (a key growth/loss driver) accelerating again after a court struck down a rival's exclusivity clauses",
-        "src": "Futunn / BigGo Finance"
+        "date": "2026-11-17",
+        "headline": "Meituan announces board meeting on Nov 27 to approve Q3 2026 results, with a call that evening HK time",
+        "why": "Sets the date for the next hard data on food-delivery losses and the Q3 unit-economics guidance, ahead of the Nov 27 release.",
+        "src": "Meituan announcement (reported by TechFlow)"
       }
     ],
     "9618": [
@@ -416,14 +337,6 @@
         "headline": "JD.com's Double 11 mid-event report: AI hardware GMV up over 130% versus prior period",
         "why": "Signals strong Q4 demand momentum in JD's AI-hardware category, a read-through for holiday-quarter revenue ahead of the Nov 12 Q3 print",
         "src": "Sina Finance (新浪科技)"
-      }
-    ],
-    "6181": [
-      {
-        "date": "2026-10-06",
-        "headline": "Laopu Gold runs its first-ever discount, cutting prices up to 20-33% during Golden Week",
-        "why": "First markdown since founding breaks the brand's never-discount pricing power narrative, though stores reported discounts didn't meaningfully lift volume",
-        "src": "21jingji.com (21st Century Business Herald)"
       }
     ]
   }
