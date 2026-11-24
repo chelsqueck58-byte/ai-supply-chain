@@ -9,22 +9,22 @@
       "src": "publication or filing the item came from - required for anything asserted as fact"
     }
   },
-  "generated": "2026-11-24T02:31:20+08:00",
+  "generated": "2026-11-25T02:31:23+08:00",
   "refreshed": {
-    "META": "2026-10-13",
-    "INTC": "2026-11-24",
-    "TSM": "2026-10-13",
-    "ASML": "2026-10-13",
+    "META": "2026-11-25",
+    "INTC": "2026-11-25",
+    "TSM": "2026-11-25",
+    "ASML": "2026-11-25",
     "MU": "2026-11-24",
     "0700": "2026-10-13",
     "3690": "2026-11-24",
-    "NVDA": "2026-10-13",
-    "AMZN": "2026-11-24",
+    "NVDA": "2026-11-25",
+    "AMZN": "2026-11-25",
     "AAPL": "2026-10-31",
-    "AMD": "2026-10-31",
+    "AMD": "2026-11-25",
     "MSFT": "2026-10-31",
     "GOOGL": "2026-11-24",
-    "AVGO": "2026-10-31",
+    "AVGO": "2026-11-25",
     "MRVL": "2026-11-24",
     "9988": "2026-11-24",
     "9618": "2026-10-31",
@@ -33,54 +33,36 @@
   "tickers": {
     "META": [
       {
-        "date": "2026-10-12",
-        "headline": "Meta launches Muse Wonder and Muse Wonder Full, its most capable AI models to date",
-        "why": "First frontier-class model release positions Meta to compete directly with OpenAI and Anthropic, with flagship model gated behind a new paid Muse Code subscription",
-        "src": "TechCrunch"
+        "date": "2026-11-23",
+        "headline": "Instagram launches Direct, a standalone messaging app for one-on-one and group chats",
+        "why": "A new messaging surface from Meta; the post gives no usage, monetization or financial detail.",
+        "src": "Meta Newsroom"
       },
       {
-        "date": "2026-10-12",
-        "headline": "Cantor Fitzgerald cuts Meta price target to $840 from $860",
-        "why": "Trim from a bullish shop on the same day as the Muse Wonder launch shows mixed near-term sentiment heading into Q3 earnings",
-        "src": "Defense World"
+        "date": "2026-11-19",
+        "headline": "Meta says it is re-evaluating its 2030 net-zero goal after AI buildout lifted emissions 45% in 2025",
+        "why": "The 2026 sustainability report ties the rethink to data-center growth and stalled clean-energy deployment. Entergy is pursuing more than 5.2 GW of gas units in Louisiana to serve Meta.",
+        "src": "Axios"
       },
       {
-        "date": "2026-10-08",
-        "headline": "Meta bars ByteDance/TikTok from buying ads on Facebook and Instagram in seven countries",
-        "why": "Escalates the Meta-TikTok rivalry over users and ad dollars, cutting off a competitor's access to Meta's ad inventory in key markets including the US",
-        "src": "Bloomberg"
-      },
-      {
-        "date": "2026-10-06",
-        "headline": "Wells Fargo raises Meta price target to $1,000 from $796, keeps Overweight",
-        "why": "Sizable bullish target hike signals growing Street conviction on Meta's AI-driven growth ahead of Q3 earnings",
-        "src": "Wells Fargo research note (via Defense World/Benzinga)"
+        "date": "2026-11-18",
+        "headline": "Meta agrees not to issue Class C shares while Delaware shareholder suits are pending; trial proposed April 2027",
+        "why": "Delays the non-voting share plan meant for capital raising, compensation and M&A; CalSTRS and PFA are among the challengers. The restated charter (effective 2027-01-19) is unaffected.",
+        "src": "Meta Form 8-K (SEC), dated 2026-11-18"
       }
     ],
     "NVDA": [
       {
-        "date": "2026-10-12",
-        "headline": "Nvidia opens Vera Rubin rack designs to Open Compute Project, unveils pluggable optics with Cisco",
-        "why": "Pushes Nvidia's next-gen AI-factory architecture toward an open industry standard, reinforcing its ecosystem lock-in ahead of Rubin ramp",
-        "src": "NVIDIA (company blog) / GlobeNewswire"
+        "date": "2026-11-19",
+        "headline": "House Foreign Affairs Committee releases data: US approved about 879,000 Nvidia and AMD AI chips for China out of 3.4M requested",
+        "why": "The release shows how many chips were licensed for China; reports say Nvidia has already stopped shipping H200s there, and its Q4 outlook assumes no China Data Center compute revenue.",
+        "src": "House Foreign Affairs Committee (Al Jazeera, Benzinga coverage)"
       },
       {
-        "date": "2026-10-10",
-        "headline": "Nvidia in talks to acquire or raise its stake in AI startup Reflection AI, FT reports",
-        "why": "M&A optionality in open-weight AI models could extend Nvidia's software/model reach beyond chips",
-        "src": "Financial Times (via Bloomberg)"
-      },
-      {
-        "date": "2026-10-09",
-        "headline": "Nvidia-backed Firmus withdraws $5.5B Australian IPO citing weak investor demand",
-        "why": "Signals investor pushback on AI data-center valuations within Nvidia's own backed-company ecosystem",
-        "src": "CNBC"
-      },
-      {
-        "date": "2026-10-07",
-        "headline": "Nvidia and Microsoft launch RTX Spark hardware and AI-agent software for Windows PCs",
-        "why": "Extends Nvidia's AI stack into consumer PCs, a new demand channel alongside data-center GPUs",
-        "src": "NVIDIA (company newsroom)"
+        "date": "2026-11-18",
+        "headline": "Analysts reset NVDA targets after earnings: Freedom Broker cuts to $230 from $305, Buy kept",
+        "why": "Reported post-earnings target moves, with Lynx Equity's cut to $135 attributed to leadership-transition uncertainty. The dates and figures come from aggregator pages, not the firms' own notes.",
+        "src": "Benzinga"
       }
     ],
     "AAPL": [
@@ -151,128 +133,54 @@
     ],
     "AMZN": [
       {
-        "date": "2026-11-23",
-        "headline": "Amazon agrees to buy Decart's AI chip optimization tech and hire its founders; Bloomberg reports $7.5B",
-        "why": "Targets Trainium performance as AWS prepares to sell the chips (TechCrunch); Amazon disclosed no price and the $7.5B comes from Bloomberg's source.",
-        "src": "Amazon (aboutamazon.com); Bloomberg; TechCrunch"
-      },
-      {
-        "date": "2026-11-20",
-        "headline": "Oppenheimer raises AMZN target to $310 from $285, Outperform, on value of Anthropic stake after IPO",
-        "why": "Helfstein estimates about 3.5B Anthropic shares, worth roughly $339B at $97 before a 15% holding-company discount. One outlet dates the note to Wednesday, so the exact day is uncertain, but all sources place it inside the window.",
-        "src": "Investing.com"
-      },
-      {
         "date": "2026-11-19",
-        "headline": "Anthropic lists on Nasdaq (ANT): IPO priced at $83, opened at $111.50; Amazon holds about 14.6-14.7% after the offering",
-        "why": "Gives Amazon's Anthropic stake a public mark. Sources differ slightly on the exact percentage and on how long the opening pop held (one report had about $94.60 by early afternoon).",
-        "src": "Al Jazeera; TechRepublic"
+        "headline": "Anthropic debuts on Nasdaq (ANT) after a $107.3B IPO; Amazon reported to hold about 14.6% of it",
+        "why": "Amazon's mostly non-voting stake is carried at about $190B on its books; Motley Fool puts it near $394B at a $2T valuation (Amazon does not disclose its percentage).",
+        "src": "Fortune"
       }
     ],
     "AMD": [
       {
-        "date": "2026-10-29",
-        "headline": "HGS selects Rackspace Technology for private AI infrastructure powered by AMD",
-        "why": "First named customer deployment under Rackspace's multiyear AMD compute agreement, evidence of deal pipeline converting to deployments",
-        "src": "GlobeNewswire (Rackspace Technology press release)"
+        "date": "2026-11-23",
+        "headline": "AMD files S-3 registering up to ~337M shares for resale, mostly OpenAI and Meta warrants; stock falls about 9-10% on Nov 24",
+        "why": "The shares are mainly 160M warrants each for OpenAI and Meta at $0.01, which vest as they buy Instinct GPUs. The filing is about 20% of shares outstanding. AMD is not selling stock itself.",
+        "src": "Investing.com"
       },
       {
-        "date": "2026-10-28",
-        "headline": "Susquehanna raises AMD price target to $650 from $620, reiterates positive rating",
-        "why": "Sell-side target hike reflects rising conviction in AMD's AI/data-center trajectory ahead of Q3 earnings",
-        "src": "GuruFocus (citing Susquehanna analyst note)"
-      },
-      {
-        "date": "2026-10-27",
-        "headline": "AMD to invest $1B in Meta's equity offering as Helios rack systems begin running at Meta",
-        "why": "Deepens AMD's compute relationship with a top hyperscaler and gives AMD a financial stake in Meta's AI buildout",
-        "src": "AMD Newsroom"
-      },
-      {
-        "date": "2026-10-27",
-        "headline": "AMD expands Oracle deal: 6th Gen EPYC CPUs and Pensando DPUs to power new OCI Compute E7 instances",
-        "why": "Broadens AMD's data-center silicon footprint inside Oracle Cloud Infrastructure, both CPU and networking",
-        "src": "AMD Newsroom"
+        "date": "2026-11-19",
+        "headline": "Hunterbrook short report alleges AMD firmware reached Entity-Listed China server maker IEIT; AMD denies, shares fall",
+        "why": "Report alleges export-control exposure and says over 20% of AMD revenue is billed to China/HK customers. Reuters could not verify it, and AMD says it complies with export laws.",
+        "src": "CNBC"
       }
     ],
     "AVGO": [
       {
-        "date": "2026-10-27",
-        "headline": "D.A. Davidson upgrades Broadcom to Buy, raises price target to $400 from $350",
-        "why": "Analyst Gil Luria cites Anthropic's S-1 filing as evidence AI capex cycle and Broadcom's custom-chip demand will hold up",
-        "src": "TipRanks"
-      },
-      {
-        "date": "2026-10-27",
-        "headline": "William Blair downgrades Broadcom to Market Perform from Outperform",
-        "why": "Cites valuation above 40x earnings and risk from Broadcom's concentrated AI customer base plus its Anthropic financing backstop exposure",
-        "src": "StreetInsider"
-      },
-      {
-        "date": "2026-10-26",
-        "headline": "Broadcom arranges $63B financing deal with banks to fund Anthropic's chip purchases",
-        "why": "Locks in long-term custom AI chip demand from Anthropic but adds backstop/residual-value exposure to Broadcom's balance sheet",
-        "src": "Bloomberg"
+        "date": "2026-11-20",
+        "headline": "Broadcom falls about 12% after analyst Ming-Chi Kuo says Google cut 2027 TPU 8i volume by roughly 1M chips (about 20%)",
+        "why": "Unconfirmed supply-chain estimate; Kuo says volume shifts to MediaTek-designed TPU 8t chips. Google and Broadcom have not commented, and Broadcom's Dec 9 FQ4 print is the first chance to address it.",
+        "src": "Yahoo Finance; stockanalysis.com; TradingKey"
       }
     ],
     "INTC": [
       {
         "date": "2026-11-18",
-        "headline": "Intel CEO Lip-Bu Tan says Intel has signed its first outside customer for 18A, unnamed",
-        "why": "External 18A demand is the foundry thesis analysts cited as unproven. Intel's CTO later said on X that the customer is on 18A-P. Sources differ on whether this is truly the first 18A customer.",
-        "src": "CNBC (via The Next Web, DatacenterDynamics)"
+        "headline": "Intel CEO Tan says Intel has signed its first outside customer for 18A; CTO later says it is 18A-P",
+        "why": "First external 18A-family customer is unnamed, and no volume, value or timing was disclosed. Intel did not say how it differs from Socionext's August 18A-P commitment.",
+        "src": "CNBC"
       },
       {
         "date": "2026-11-18",
-        "headline": "Microsoft and Intel expand Azure deal: multi-year Xeon supply incl. Diamond Rapids, and Intel Foundry EMIB packaging",
-        "why": "Microsoft is the first to publicly commit to EMIB packaging for its own Azure chips, a foundry packaging win. Financial terms, duration and volumes were not disclosed.",
-        "src": "Intel newsroom / PR Newswire"
+        "headline": "Intel names Microsoft as first publicly named customer for its EMIB advanced packaging",
+        "why": "This is a named external customer for Intel Foundry's packaging business. No terms were disclosed in the coverage I found.",
+        "src": "CNBC"
       }
     ],
     "TSM": [
       {
-        "date": "2026-10-08",
-        "headline": "TSMC Q3 revenue hits record NT$1.49tn (~$46.7B), up ~50% YoY, above top of guidance",
-        "why": "Confirms demand strength ahead of Oct 15 earnings; beat implies upside to consensus estimates",
-        "src": "Focus Taiwan / company Form 6-K filing"
-      },
-      {
-        "date": "2026-10-08",
-        "headline": "TSMC signs $2B deal for GlobalFoundries to make CoWoS silicon interposers in US from 2028",
-        "why": "Adds a second, US-based interposer source to ease TSMC's sold-out CoWoS packaging bottleneck",
-        "src": "The National News"
-      },
-      {
-        "date": "2026-10-06",
-        "headline": "Barclays raises TSMC price target to $665 from $650, keeps Overweight/Buy",
-        "why": "Analyst Simon Coles cites improved industry fundamentals ahead of Q3 results despite recent chip-sector selloff",
-        "src": "MarketBeat (citing Barclays research note)"
-      }
-    ],
-    "ASML": [
-      {
-        "date": "2026-10-12",
-        "headline": "Samsung and SK Hynix accept ASML's 10% price hike on EUV/DUV replacement parts, effective Jan 2027",
-        "why": "Rare across-the-board pricing power move boosts near-term Installed Base revenue outlook",
-        "src": "Digitimes"
-      },
-      {
-        "date": "2026-10-12",
-        "headline": "ASML CEO Fouquet says AI chip demand boom could extend beyond 2028; Broadcom's Tan flags financing as bottleneck",
-        "why": "Extends visibility on demand duration but introduces financing/capital constraint as a new risk to the upgrade cycle",
-        "src": "Benzinga"
-      },
-      {
-        "date": "2026-10-08",
-        "headline": "ASML and Zeiss publish peer-reviewed paper on 'Hyper NA' EUV successor, ~10 years out",
-        "why": "Signals next lithography generation beyond High NA is technically feasible, extending ASML's long-term moat narrative",
-        "src": "Reuters"
-      },
-      {
-        "date": "2026-10-06",
-        "headline": "BofA and Barclays raise ASML price targets to €2,557 and €2,450 on higher ASPs/volumes",
-        "why": "Sell-side lifts EUV/DUV pricing and unit forecasts ahead of Q3 print, reinforcing AI-driven demand thesis",
-        "src": "Investing.com / ad-hoc-news.de"
+        "date": "2026-11-19",
+        "headline": "New US BIS rule prompts TSMC and Samsung to pause some chip shipments to Chinese customers pending export licences",
+        "why": "The rule removes a transistor-count self-clearance route. TSMC is reportedly limiting affected Chinese designers to older nodes, which puts China-linked revenue at risk. Reports differ on the exact node cutoff, and in-transit goods can ship under old terms until Dec 21.",
+        "src": "Financial Times (via Taipei Times, 2026-11-20)"
       }
     ],
     "MRVL": [
