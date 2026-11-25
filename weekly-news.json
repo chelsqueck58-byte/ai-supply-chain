@@ -9,23 +9,23 @@
       "src": "publication or filing the item came from - required for anything asserted as fact"
     }
   },
-  "generated": "2026-11-25T02:31:23+08:00",
+  "generated": "2026-11-26T02:31:36+08:00",
   "refreshed": {
-    "META": "2026-11-25",
+    "META": "2026-11-26",
     "INTC": "2026-11-25",
     "TSM": "2026-11-25",
     "ASML": "2026-11-25",
-    "MU": "2026-11-24",
+    "MU": "2026-11-26",
     "0700": "2026-10-13",
-    "3690": "2026-11-24",
-    "NVDA": "2026-11-25",
-    "AMZN": "2026-11-25",
+    "3690": "2026-11-26",
+    "NVDA": "2026-11-26",
+    "AMZN": "2026-11-26",
     "AAPL": "2026-10-31",
-    "AMD": "2026-11-25",
+    "AMD": "2026-11-26",
     "MSFT": "2026-10-31",
     "GOOGL": "2026-11-24",
-    "AVGO": "2026-11-25",
-    "MRVL": "2026-11-24",
+    "AVGO": "2026-11-26",
+    "MRVL": "2026-11-26",
     "9988": "2026-11-24",
     "9618": "2026-10-31",
     "6181": "2026-11-24"
@@ -33,36 +33,30 @@
   "tickers": {
     "META": [
       {
-        "date": "2026-11-23",
-        "headline": "Instagram launches Direct, a standalone messaging app for one-on-one and group chats",
-        "why": "A new messaging surface from Meta; the post gives no usage, monetization or financial detail.",
-        "src": "Meta Newsroom"
-      },
-      {
-        "date": "2026-11-19",
-        "headline": "Meta says it is re-evaluating its 2030 net-zero goal after AI buildout lifted emissions 45% in 2025",
-        "why": "The 2026 sustainability report ties the rethink to data-center growth and stalled clean-energy deployment. Entergy is pursuing more than 5.2 GW of gas units in Louisiana to serve Meta.",
-        "src": "Axios"
-      },
-      {
-        "date": "2026-11-18",
-        "headline": "Meta agrees not to issue Class C shares while Delaware shareholder suits are pending; trial proposed April 2027",
-        "why": "Delays the non-voting share plan meant for capital raising, compensation and M&A; CalSTRS and PFA are among the challengers. The restated charter (effective 2027-01-19) is unaffected.",
-        "src": "Meta Form 8-K (SEC), dated 2026-11-18"
+        "date": "2026-11-25",
+        "headline": "JPMorgan cuts META price target to $775 from $940, stays Overweight, citing 2027 spending and capital raises",
+        "why": "Anmuth models 2027 capex of about $255B and trims 2027-28 profit forecasts 8-9%. He cites worry over 2027 spend, the equity and debt raises, and legal issues around the Class C share plan, which has put the $60B at-the-market program on hold.",
+        "src": "Investing.com"
       }
     ],
     "NVDA": [
       {
-        "date": "2026-11-19",
-        "headline": "House Foreign Affairs Committee releases data: US approved about 879,000 Nvidia and AMD AI chips for China out of 3.4M requested",
-        "why": "The release shows how many chips were licensed for China; reports say Nvidia has already stopped shipping H200s there, and its Q4 outlook assumes no China Data Center compute revenue.",
-        "src": "House Foreign Affairs Committee (Al Jazeera, Benzinga coverage)"
+        "date": "2026-11-23",
+        "headline": "US adds Singapore data-center operator Megaspeed to trade-restriction list; House panels to interview Huang and Nvidia's top lawyer",
+        "why": "Megaspeed is at the center of chip-smuggling allegations, and the planned House interviews of Huang and general counsel Tim Teter raise regulatory and headline risk.",
+        "src": "TechCrunch"
       },
       {
-        "date": "2026-11-18",
-        "headline": "Analysts reset NVDA targets after earnings: Freedom Broker cuts to $230 from $305, Buy kept",
-        "why": "Reported post-earnings target moves, with Lynx Equity's cut to $135 attributed to leadership-transition uncertainty. The dates and figures come from aggregator pages, not the firms' own notes.",
-        "src": "Benzinga"
+        "date": "2026-11-20",
+        "headline": "Washington Post: officials approved sale of about 580,000 Nvidia AI chips to Chinese companies",
+        "why": "Congressional documents reportedly show buyers included two firms the Pentagon lists as military-linked, which adds export-compliance scrutiny on NVDA's China sales.",
+        "src": "The Washington Post"
+      },
+      {
+        "date": "2026-11-20",
+        "headline": "Treasury's Bessent says no further restrictions needed on older Nvidia chip exports to China",
+        "why": "The Treasury Secretary's stance reduces the near-term risk of tighter US limits on older Nvidia chips sold to China.",
+        "src": "ABC News / PBS NewsHour"
       }
     ],
     "AAPL": [
@@ -133,32 +127,26 @@
     ],
     "AMZN": [
       {
-        "date": "2026-11-19",
-        "headline": "Anthropic debuts on Nasdaq (ANT) after a $107.3B IPO; Amazon reported to hold about 14.6% of it",
-        "why": "Amazon's mostly non-voting stake is carried at about $190B on its books; Motley Fool puts it near $394B at a $2T valuation (Amazon does not disclose its percentage).",
-        "src": "Fortune"
+        "date": "2026-11-23",
+        "headline": "Amazon signs deal to buy Decart's AI optimization software and hire its three co-founders; price reported at about $7.5B",
+        "why": "Targets Trainium/Inferentia chip performance via Annapurna Labs; Amazon did not disclose terms, the $7.5B comes from sources cited in press reports, and the deal needs regulatory approval.",
+        "src": "CNBC; GeekWire"
       }
     ],
     "AMD": [
       {
-        "date": "2026-11-23",
-        "headline": "AMD files S-3 registering up to ~337M shares for resale, mostly OpenAI and Meta warrants; stock falls about 9-10% on Nov 24",
-        "why": "The shares are mainly 160M warrants each for OpenAI and Meta at $0.01, which vest as they buy Instinct GPUs. The filing is about 20% of shares outstanding. AMD is not selling stock itself.",
-        "src": "Investing.com"
-      },
-      {
         "date": "2026-11-19",
-        "headline": "Hunterbrook short report alleges AMD firmware reached Entity-Listed China server maker IEIT; AMD denies, shares fall",
-        "why": "Report alleges export-control exposure and says over 20% of AMD revenue is billed to China/HK customers. Reuters could not verify it, and AMD says it complies with export laws.",
-        "src": "CNBC"
+        "headline": "Hunterbrook Capital discloses AMD short, alleging AMD firmware appears in servers from blacklisted Chinese maker IEIT",
+        "why": "Raises US export-control risk on China revenue (22.4% of 2025 revenue billed to China/HK per Hunterbrook); shares fell roughly 9% intraday, and the report is from a fund that holds a short position.",
+        "src": "Motley Fool; IBTimes"
       }
     ],
     "AVGO": [
       {
-        "date": "2026-11-20",
-        "headline": "Broadcom falls about 12% after analyst Ming-Chi Kuo says Google cut 2027 TPU 8i volume by roughly 1M chips (about 20%)",
-        "why": "Unconfirmed supply-chain estimate; Kuo says volume shifts to MediaTek-designed TPU 8t chips. Google and Broadcom have not commented, and Broadcom's Dec 9 FQ4 print is the first chance to address it.",
-        "src": "Yahoo Finance; stockanalysis.com; TradingKey"
+        "date": "2026-11-22",
+        "headline": "Analyst Ming-Chi Kuo says Google cut 2027 TPU 8i orders by about 1M units; AVGO falls about 11-12%",
+        "why": "Kuo's survey-based claim (mostly 8i Max) is unconfirmed by Google or Broadcom, and Google reportedly shifts some volume to MediaTek's TPU 8t. Broadcom's fiscal Q4 report is due Dec 9. Sources conflict on the day (Sunday post vs Friday Nov 20 drop).",
+        "src": "Yahoo Finance; MLQ.ai; StockAnalysis"
       }
     ],
     "INTC": [
@@ -183,12 +171,18 @@
         "src": "Financial Times (via Taipei Times, 2026-11-20)"
       }
     ],
-    "MRVL": [
+    "MU": [
       {
-        "date": "2026-11-19",
-        "headline": "Lumentum CEO defends $115B all-stock Marvell deal after stock plunge: 'We've got work to do' with shareholders",
-        "why": "Deal needs approval from both companies' stockholders and is expected to close in 1H 2028, so the target's CEO is publicly saying shareholders still have to be won over.",
-        "src": "CNBC"
+        "date": "2026-11-24",
+        "headline": "BNP Paribas downgrades Micron to Neutral from Outperform, cuts price target to $775 from $1,700",
+        "why": "The note warns DRAM/NAND supply and demand could balance as early as mid-2027, and flags 2028 hyperscaler capacity risk and less HBM content in Nvidia's Vera Rubin Ultra; the stock reportedly fell about 11% that day.",
+        "src": "Benzinga"
+      },
+      {
+        "date": "2026-11-24",
+        "headline": "UBS keeps Buy on Micron but cuts price target to $1,100 from $1,625",
+        "why": "A large target cut from a bullish house, reported alongside the BNP downgrade; $1,100 is about 75% above the Nov 24 close of $629.79.",
+        "src": "Benzinga"
       }
     ],
     "9988": [
@@ -229,14 +223,6 @@
         "headline": "DeepSeek nears $12B pre-IPO funding round backed by Tencent and CATL ahead of 2027 Shanghai listing",
         "why": "Signals Tencent deepening its stake in a leading rival/partner AI model maker, adding to its AI investment portfolio exposure",
         "src": "Bloomberg"
-      }
-    ],
-    "3690": [
-      {
-        "date": "2026-11-17",
-        "headline": "Meituan announces board meeting on Nov 27 to approve Q3 2026 results, with a call that evening HK time",
-        "why": "Sets the date for the next hard data on food-delivery losses and the Q3 unit-economics guidance, ahead of the Nov 27 release.",
-        "src": "Meituan announcement (reported by TechFlow)"
       }
     ],
     "9618": [
