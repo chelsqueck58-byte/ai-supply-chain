@@ -9,54 +9,34 @@
       "src": "publication or filing the item came from - required for anything asserted as fact"
     }
   },
-  "generated": "2026-11-26T02:31:36+08:00",
+  "generated": "2026-11-27T02:31:33+08:00",
   "refreshed": {
-    "META": "2026-11-26",
-    "INTC": "2026-11-25",
-    "TSM": "2026-11-25",
-    "ASML": "2026-11-25",
+    "META": "2026-11-27",
+    "INTC": "2026-11-27",
+    "TSM": "2026-11-27",
+    "ASML": "2026-11-27",
     "MU": "2026-11-26",
     "0700": "2026-10-13",
     "3690": "2026-11-26",
-    "NVDA": "2026-11-26",
-    "AMZN": "2026-11-26",
+    "NVDA": "2026-11-27",
+    "AMZN": "2026-11-27",
     "AAPL": "2026-10-31",
     "AMD": "2026-11-26",
     "MSFT": "2026-10-31",
-    "GOOGL": "2026-11-24",
+    "GOOGL": "2026-11-27",
     "AVGO": "2026-11-26",
     "MRVL": "2026-11-26",
     "9988": "2026-11-24",
-    "9618": "2026-10-31",
+    "9618": "2026-11-27",
     "6181": "2026-11-24"
   },
   "tickers": {
     "META": [
       {
         "date": "2026-11-25",
-        "headline": "JPMorgan cuts META price target to $775 from $940, stays Overweight, citing 2027 spending and capital raises",
-        "why": "Anmuth models 2027 capex of about $255B and trims 2027-28 profit forecasts 8-9%. He cites worry over 2027 spend, the equity and debt raises, and legal issues around the Class C share plan, which has put the $60B at-the-market program on hold.",
-        "src": "Investing.com"
-      }
-    ],
-    "NVDA": [
-      {
-        "date": "2026-11-23",
-        "headline": "US adds Singapore data-center operator Megaspeed to trade-restriction list; House panels to interview Huang and Nvidia's top lawyer",
-        "why": "Megaspeed is at the center of chip-smuggling allegations, and the planned House interviews of Huang and general counsel Tim Teter raise regulatory and headline risk.",
-        "src": "TechCrunch"
-      },
-      {
-        "date": "2026-11-20",
-        "headline": "Washington Post: officials approved sale of about 580,000 Nvidia AI chips to Chinese companies",
-        "why": "Congressional documents reportedly show buyers included two firms the Pentagon lists as military-linked, which adds export-compliance scrutiny on NVDA's China sales.",
-        "src": "The Washington Post"
-      },
-      {
-        "date": "2026-11-20",
-        "headline": "Treasury's Bessent says no further restrictions needed on older Nvidia chip exports to China",
-        "why": "The Treasury Secretary's stance reduces the near-term risk of tighter US limits on older Nvidia chips sold to China.",
-        "src": "ABC News / PBS NewsHour"
+        "headline": "Meta and Amazon reportedly in talks to restore Muse AI shopping agent's access to Amazon's store",
+        "why": "Amazon blocked Muse in September. Fortune's report says the sticking points are ad and search presentation, a deal needs both CEOs' approval, and none has been announced.",
+        "src": "Fortune (via Neowin, Stocktwits, Yahoo Finance)"
       }
     ],
     "AAPL": [
@@ -111,26 +91,12 @@
         "src": "GuruFocus (Bernstein note)"
       }
     ],
-    "GOOGL": [
-      {
-        "date": "2026-11-18",
-        "headline": "Google launches Gemini 4 Neon, a mid-tier Gemini 4 model, via API, Gemini app and Antigravity",
-        "why": "Google positions Neon between Carbon and Hydrogen on depth versus efficiency. Google's published benchmarks show it ahead of Claude Opus 5.5 and GPT-6.2 Sol on most tests, and API pricing is reported at $3 per million input tokens and $15 per million output tokens.",
-        "src": "Google Blog; 9to5Google"
-      },
-      {
-        "date": "2026-11-17",
-        "headline": "Alphabet-owned Isomorphic Labs announces $5B Series C led by Greenoaks and Sequoia, with GV and CapitalG participating",
-        "why": "Large outside funding round for an Alphabet-owned AI drug-discovery unit, six months after its $2.1B May round. Sources say no valuation was disclosed.",
-        "src": "Fierce Biotech"
-      }
-    ],
     "AMZN": [
       {
-        "date": "2026-11-23",
-        "headline": "Amazon signs deal to buy Decart's AI optimization software and hire its three co-founders; price reported at about $7.5B",
-        "why": "Targets Trainium/Inferentia chip performance via Annapurna Labs; Amazon did not disclose terms, the $7.5B comes from sources cited in press reports, and the deal needs regulatory approval.",
-        "src": "CNBC; GeekWire"
+        "date": "2026-11-25",
+        "headline": "CPSC says federal court rejected Amazon's challenge to orders covering 400,000+ hazardous products sold via Fulfillment by Amazon",
+        "why": "The ruling supports CPSC treating Amazon as a regulated entity for FBA listings. The release says the court ruled on Nov 24.",
+        "src": "PR Newswire (CPSC release)"
       }
     ],
     "AMD": [
@@ -149,26 +115,32 @@
         "src": "Yahoo Finance; MLQ.ai; StockAnalysis"
       }
     ],
-    "INTC": [
-      {
-        "date": "2026-11-18",
-        "headline": "Intel CEO Tan says Intel has signed its first outside customer for 18A; CTO later says it is 18A-P",
-        "why": "First external 18A-family customer is unnamed, and no volume, value or timing was disclosed. Intel did not say how it differs from Socionext's August 18A-P commitment.",
-        "src": "CNBC"
-      },
-      {
-        "date": "2026-11-18",
-        "headline": "Intel names Microsoft as first publicly named customer for its EMIB advanced packaging",
-        "why": "This is a named external customer for Intel Foundry's packaging business. No terms were disclosed in the coverage I found.",
-        "src": "CNBC"
-      }
-    ],
     "TSM": [
       {
-        "date": "2026-11-19",
-        "headline": "New US BIS rule prompts TSMC and Samsung to pause some chip shipments to Chinese customers pending export licences",
-        "why": "The rule removes a transistor-count self-clearance route. TSMC is reportedly limiting affected Chinese designers to older nodes, which puts China-linked revenue at risk. Reports differ on the exact node cutoff, and in-transit goods can ship under old terms until Dec 21.",
-        "src": "Financial Times (via Taipei Times, 2026-11-20)"
+        "date": "2026-11-25",
+        "headline": "Trump to attend TSMC's Arizona fab groundbreaking on Dec 4, per White House and TSMC",
+        "why": "The event starts construction of a new phase of the Phoenix expansion. It falls under the $265B total US investment TSMC has pledged, per AP's report.",
+        "src": "Bloomberg; AP"
+      },
+      {
+        "date": "2026-11-20",
+        "headline": "TSMC reportedly tells some China-linked chip designers to halt 16nm-and-below orders unless they hold a US export licence",
+        "why": "Reuters-sourced reports say a US rule effective Nov 19 prompted the halt. TSMC said it would comply with US export controls but did not confirm customer-level details.",
+        "src": "TrendForce / 24/7 Wall St. (citing Reuters)"
+      }
+    ],
+    "ASML": [
+      {
+        "date": "2026-11-25",
+        "headline": "ASML shares fall as much as 6% as Dutch lawmakers oppose US MATCH Act chip export curbs",
+        "why": "The bill would push allies to tighten China tool exports. China is about 20% of ASML's expected 2026 sales, so the Dutch response affects that exposure.",
+        "src": "Invezz"
+      },
+      {
+        "date": "2026-11-25",
+        "headline": "CEO Fouquet tells Semafor a full China cutoff would backfire and push Beijing toward domestic tool makers",
+        "why": "This is management's public position against tighter export controls, while the MATCH Act debate is live.",
+        "src": "Semafor"
       }
     ],
     "MU": [
@@ -227,10 +199,10 @@
     ],
     "9618": [
       {
-        "date": "2026-10-30",
-        "headline": "JD.com's Double 11 mid-event report: AI hardware GMV up over 130% versus prior period",
-        "why": "Signals strong Q4 demand momentum in JD's AI-hardware category, a read-through for holiday-quarter revenue ahead of the Nov 12 Q3 print",
-        "src": "Sina Finance (新浪科技)"
+        "date": "2026-11-24",
+        "headline": "JPMorgan raises JD.com price target to $42 from $38, keeps Overweight",
+        "why": "Rare target increase after a Q3 print that missed consensus EPS and drew cuts from Bernstein and Barclays. The target applies to the US ADR (JD), not the HK line.",
+        "src": "MarketBeat"
       }
     ]
   }
